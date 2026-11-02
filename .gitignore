@@ -1,0 +1,21 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.log
+*.tmp
+
+# Uploads (keep directory structure via .gitkeep)
+assets/uploads/places/*
+!assets/uploads/places/.gitkeep
+assets/uploads/avatars/*
+!assets/uploads/avatars/.gitkeep
+assets/uploads/reviews/*
+!assets/uploads/reviews/.gitkeep

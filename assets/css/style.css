@@ -1,0 +1,167 @@
+/* =========================================================================
+   StudySpot - Stylesheet chính (Tông màu Cà phê & Học tập sinh viên)
+   Responsive Mobile-First | Bootstrap 5.3 Custom Theme
+   ========================================================================= */
+:root {
+    --coffee-primary: #6f4e37;
+    --coffee-dark: #4b3424;
+    --coffee-light: #f8f3ee;
+    --coffee-accent: #d4a373;
+    --warm-bg: #faf7f4;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #2b2b2b;
+    overflow-x: hidden;
+}
+
+.bg-light-warm {
+    background-color: var(--warm-bg);
+}
+
+.text-coffee {
+    color: var(--coffee-primary) !important;
+}
+
+.bg-coffee {
+    background-color: var(--coffee-primary) !important;
+    color: #ffffff !important;
+}
+
+/* Nút bấm thương hiệu StudySpot */
+.btn-coffee {
+    background-color: var(--coffee-primary);
+    border-color: var(--coffee-primary);
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.btn-coffee:hover,
+.btn-coffee:focus,
+.btn-coffee:active {
+    background-color: var(--coffee-dark) !important;
+    border-color: var(--coffee-dark) !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-coffee {
+    color: var(--coffee-primary);
+    border-color: var(--coffee-primary);
+    transition: all 0.2s ease;
+}
+
+.btn-outline-coffee:hover,
+.btn-outline-coffee:focus,
+.btn-outline-coffee:active {
+    background-color: var(--coffee-primary) !important;
+    border-color: var(--coffee-primary) !important;
+    color: #ffffff !important;
+}
+
+/* Logo Badge */
+.brand-badge {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--coffee-primary), var(--coffee-dark));
+    box-shadow: 0 3px 8px rgba(111, 78, 55, 0.25);
+}
+
+/* Banner Trang chủ */
+.hero-banner {
+    background: linear-gradient(135deg, #3e2723 0%, #6f4e37 60%, #8d6e63 100%);
+    color: #ffffff;
+    border-radius: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Thẻ địa điểm (Place Card) */
+.place-card {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.place-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px rgba(75, 52, 36, 0.12) !important;
+}
+
+.place-card-img {
+    height: 205px;
+    object-fit: cover;
+    background-color: #f3e9df;
+}
+
+/* Nút Yêu thích nổi trên ảnh */
+.btn-favorite-toggle {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-favorite-toggle:hover {
+    transform: scale(1.08);
+}
+
+/* Thanh phân trang tông màu cà phê */
+.pagination .page-link {
+    color: var(--coffee-primary);
+    border-radius: 0.5rem;
+    margin: 0 2px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--coffee-primary);
+    border-color: var(--coffee-primary);
+    color: #ffffff;
+}
+
+/* Tabs trong Trang cá nhân */
+.nav-pills .nav-link.active {
+    background-color: var(--coffee-primary);
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+}
+
+/* Footer link hover */
+.hover-white {
+    transition: color 0.15s ease;
+}
+
+.hover-white:hover {
+    color: #ffffff !important;
+}
+
+/* Nút cuộn lên đầu trang (Back to top) */
+#btnBackToTop {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1040;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Tối ưu hiển thị trên thiết bị di động (Mobile First Adjustments) */
+@media (max-width: 767.98px) {
+    .hero-banner {
+        border-radius: 1rem;
+    }
+
+    .hero-banner h1 {
+        font-size: 1.65rem;
+    }
+
+    .place-card-img {
+        height: 185px;
+    }
+}

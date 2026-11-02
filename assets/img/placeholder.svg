@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8efe6"/>
+      <stop offset="100%" stop-color="#e7d4c0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bgGrad)"/>
+  <circle cx="400" cy="215" r="92" fill="#ffffff" opacity="0.75"/>
+  <!-- Biểu tượng tách cà phê & cuốn sách StudySpot -->
+  <g transform="translate(345, 155)" fill="none" stroke="#6f4e37" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 45 H82 V78 C82 96 68 110 50 110 C32 110 18 96 18 78 Z" fill="#d9b99b"/>
+    <path d="M82 55 H94 C103 55 110 62 110 71 C110 80 103 87 94 87 H82"/>
+    <line x1="10" y1="120" x2="90" y2="120"/>
+    <path d="M36 28 C36 18 44 18 44 8"/>
+    <path d="M54 28 C54 18 62 18 62 8"/>
+    <path d="M72 28 C72 18 80 18 80 8"/>
+  </g>
+  <text x="400" y="355" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" fill="#5c3d28" text-anchor="middle">StudySpot</text>
+  <text x="400" y="390" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#8b6b52" text-anchor="middle">Không gian học tập &amp; cà phê sinh viên</text>
+</svg>

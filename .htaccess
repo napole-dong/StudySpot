@@ -1,0 +1,17 @@
+# Bật mod_rewrite của Apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /studyspot/
+
+    # Chặn truy cập trực tiếp vào các thư mục nhạy cảm (ngoại trừ file database/seed_users.php chạy 1 lần)
+    RewriteCond %{REQUEST_URI} !/database/seed_users\.php$
+    RewriteRule ^(config|core|models|controllers|views|helpers|database)/ - [F,L]
+
+    # Nếu đường dẫn không phải là file thật hoặc thư mục thật thì điều hướng về index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>
+
+# Chặn liệt kê danh sách thư mục
+Options -Indexes
