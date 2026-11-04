@@ -1,223 +1,307 @@
 -- =========================================================================
 -- ĐỒ ÁN HỌC PHẦN: CÔNG NGHỆ WEB - PHP (SEE518)
--- DỰ ÁN: StudySpot - Website review quán ăn & cà phê học bài cho sinh viên
+-- DỰ ÁN: StudySpot - Website review quán nước tại TP. Long Xuyên, An Giang (Khu ĐH An Giang - AGU)
 -- Hệ quản trị CSDL: MySQL / MariaDB (XAMPP) - Charset: utf8mb4
+-- File này được ĐỒNG BỘ từ database live ngày 2026-11-04 (33 quán, 4 danh mục, 5 tiện ích).
+-- Seed này ĐÃ BAO GỒM bảng amenities, place_amenities, cột price_min/price_max
+-- và cột google_rating/google_rating_count/google_maps_place_url,
+-- nên khi setup mới chỉ cần import file này, KHÔNG cần chạy các file migrate_20261103 nữa.
 -- =========================================================================
 
-SET NAMES utf8mb4;
-SET time_zone = '+07:00';
-SET FOREIGN_KEY_CHECKS = 0;
+-- MariaDB dump 10.19  Distrib 10.4.28-MariaDB, for Linux (x86_64)
+--
+-- Host: localhost    Database: studyspot
+-- ------------------------------------------------------
+-- Server version	10.4.28-MariaDB
 
--- 1. KHỞI TẠO CƠ SỞ DỮ LIỆU
-CREATE DATABASE IF NOT EXISTS `studyspot`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Current Database: `studyspot`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `studyspot` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 
 USE `studyspot`;
 
--- Xóa các bảng cũ nếu tồn tại để tránh lỗi khi import lại
-DROP TABLE IF EXISTS `favorites`;
-DROP TABLE IF EXISTS `reviews`;
-DROP TABLE IF EXISTS `place_images`;
-DROP TABLE IF EXISTS `places`;
-DROP TABLE IF EXISTS `categories`;
-DROP TABLE IF EXISTS `users`;
+--
+-- Table structure for table `amenities`
+--
 
--- =========================================================================
--- 2. ĐỊNH NGHĨA CẤU TRÚC CÁC BẢNG (6 BẢNG)
--- =========================================================================
-
--- 2.1. Bảng người dùng (users)
-CREATE TABLE `users` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL COMMENT 'Họ và tên hiển thị',
-  `email` VARCHAR(150) NOT NULL COMMENT 'Email đăng nhập duy nhất',
-  `password` VARCHAR(255) NOT NULL COMMENT 'Mật khẩu mã hóa bằng password_hash',
-  `phone` VARCHAR(20) DEFAULT NULL COMMENT 'Số điện thoại liên hệ',
-  `avatar` VARCHAR(255) DEFAULT NULL COMMENT 'Đường dẫn ảnh đại diện',
-  `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user' COMMENT 'Vai trò người dùng',
-  `status` ENUM('active', 'locked') NOT NULL DEFAULT 'active' COMMENT 'Trạng thái tài khoản',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+DROP TABLE IF EXISTS `amenities`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `amenities` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_users_email` (`email`),
-  KEY `idx_users_role_status` (`role`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `uq_amenities_slug` (`slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 2.2. Bảng danh mục loại hình quán (categories)
+--
+-- Dumping data for table `amenities`
+--
+
+LOCK TABLES `amenities` WRITE;
+/*!40000 ALTER TABLE `amenities` DISABLE KEYS */;
+INSERT INTO `amenities` VALUES (1,'Wifi mạnh','wifi',1,1,'2026-11-03 18:10:19'),(2,'Ổ cắm điện','outlet',2,1,'2026-11-03 18:10:19'),(3,'Máy lạnh','ac',3,1,'2026-11-03 18:10:19'),(5,'Có chỗ đậu xe','co-cho-dau-xe',4,1,'2026-11-03 18:20:04'),(6,'Có thú cưng','co-thu-cung',5,1,'2026-11-03 18:20:23');
+/*!40000 ALTER TABLE `amenities` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `categories`
+--
+
+DROP TABLE IF EXISTS `categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `categories` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL COMMENT 'Tên danh mục loại hình',
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL COMMENT 'Tên danh mục loại hình',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 2.3. Bảng địa điểm / quán học bài (places)
+--
+-- Dumping data for table `categories`
+--
+
+LOCK TABLES `categories` WRITE;
+/*!40000 ALTER TABLE `categories` DISABLE KEYS */;
+INSERT INTO `categories` VALUES (1,'Cà phê Học bài & Đọc sách'),(2,'Cà phê Mở khuya'),(3,'Không gian Yên tĩnh & Học nhóm'),(4,'Trà sữa & Bánh ngọt Sinh viên');
+/*!40000 ALTER TABLE `categories` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `favorites`
+--
+
+DROP TABLE IF EXISTS `favorites`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `favorites` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `place_id` int(10) unsigned NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_favorites_user_place` (`user_id`,`place_id`),
+  KEY `idx_favorites_place` (`place_id`),
+  CONSTRAINT `fk_favorites_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_favorites_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `favorites`
+--
+
+LOCK TABLES `favorites` WRITE;
+/*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
+INSERT INTO `favorites` VALUES (1,2,1,'2026-11-02 20:12:28'),(2,2,2,'2026-11-02 20:12:28'),(3,2,6,'2026-11-02 20:12:28'),(4,2,10,'2026-11-02 20:12:28'),(5,3,1,'2026-11-02 20:12:28'),(6,3,3,'2026-11-02 20:12:28'),(7,3,4,'2026-11-02 20:12:28'),(8,4,1,'2026-11-02 20:12:28'),(9,4,6,'2026-11-02 20:12:28'),(11,5,2,'2026-11-02 20:12:28'),(12,5,7,'2026-11-02 20:12:28'),(13,5,9,'2026-11-02 20:12:28'),(14,1,1,'2026-11-03 17:57:42');
+/*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `place_amenities`
+--
+
+DROP TABLE IF EXISTS `place_amenities`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `place_amenities` (
+  `place_id` int(10) unsigned NOT NULL,
+  `amenity_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`place_id`,`amenity_id`),
+  KEY `idx_pa_amenity` (`amenity_id`),
+  CONSTRAINT `fk_pa_amenity` FOREIGN KEY (`amenity_id`) REFERENCES `amenities` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pa_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `place_amenities`
+--
+
+LOCK TABLES `place_amenities` WRITE;
+/*!40000 ALTER TABLE `place_amenities` DISABLE KEYS */;
+INSERT INTO `place_amenities` VALUES (1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3),(4,1),(4,2),(4,3),(5,1),(5,2),(5,3),(6,1),(6,2),(6,3),(7,1),(7,2),(8,1),(9,1),(9,2),(9,3),(10,1),(10,2),(10,3),(11,1),(11,2),(11,3),(16,1),(16,2),(16,3),(17,1),(17,2),(17,3);
+/*!40000 ALTER TABLE `place_amenities` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `place_images`
+--
+
+DROP TABLE IF EXISTS `place_images`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `place_images` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `place_id` int(10) unsigned NOT NULL,
+  `image_path` varchar(255) NOT NULL COMMENT 'Đường dẫn ảnh trong assets/uploads/places/',
+  `is_cover` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1: Ảnh bìa chính, 0: Ảnh phụ',
+  PRIMARY KEY (`id`),
+  KEY `idx_place_images_place` (`place_id`,`is_cover`),
+  CONSTRAINT `fk_place_images_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `place_images`
+--
+
+LOCK TABLES `place_images` WRITE;
+/*!40000 ALTER TABLE `place_images` DISABLE KEYS */;
+INSERT INTO `place_images` VALUES (1,1,'uploads/places/sample_library_1.jpg',1),(2,2,'uploads/places/sample_lac_1.jpg',1),(3,3,'uploads/places/sample_tramtra_1.jpg',1),(4,4,'uploads/places/sample_napsg_1.jpg',1),(5,5,'uploads/places/sample_workflow_1.jpg',1),(6,6,'uploads/places/sample_thuc_1.jpg',1),(7,7,'uploads/places/sample_lac_1.jpg',1),(8,8,'uploads/places/sample_cutrencay_1.jpg',1),(9,9,'uploads/places/sample_workflow_1.jpg',1),(10,10,'uploads/places/sample_cutrencay_2.jpg',1),(11,11,'uploads/places/sample_library_2.jpg',1),(16,16,'uploads/places/sample_library_1.jpg',1),(17,17,'uploads/places/sample_tramtra_1.jpg',1);
+/*!40000 ALTER TABLE `place_images` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `places`
+--
+
+DROP TABLE IF EXISTS `places`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `places` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `category_id` INT UNSIGNED NOT NULL COMMENT 'Khóa ngoại tới categories',
-  `name` VARCHAR(180) NOT NULL COMMENT 'Tên quán',
-  `slug` VARCHAR(200) NOT NULL COMMENT 'Đường dẫn thân thiện SEO',
-  `address` VARCHAR(255) NOT NULL COMMENT 'Địa chỉ chi tiết',
-  `district` VARCHAR(100) NOT NULL COMMENT 'Quận / Khu vực đại học',
-  `description` TEXT NOT NULL COMMENT 'Mô tả chi tiết không gian, menu, chỗ gửi xe',
-  `price_range` TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT 'Mức giá: 1 (<35k), 2 (35-50k), 3 (50-80k), 4 (>80k)',
-  `has_wifi` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Có Wifi mạnh, 0: Không',
-  `has_outlet` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Nhiều ổ cắm điện, 0: Ít/Không',
-  `has_ac` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1: Có máy lạnh, 0: Không gian mở',
-  `noise_level` ENUM('yen_tinh', 'vua', 'on') NOT NULL DEFAULT 'yen_tinh' COMMENT 'Mức độ tiếng ồn',
-  `open_time` TIME NOT NULL DEFAULT '07:00:00' COMMENT 'Giờ mở cửa',
-  `close_time` TIME NOT NULL DEFAULT '22:30:00' COMMENT 'Giờ đóng cửa',
-  `google_map_url` TEXT DEFAULT NULL COMMENT 'URL nhúng iframe Google Maps',
-  `avg_rating` DECIMAL(3,2) NOT NULL DEFAULT 0.00 COMMENT 'Điểm trung bình từ các review đã duyệt',
-  `total_reviews` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Tổng số review đã duyệt',
-  `status` ENUM('active', 'hidden') NOT NULL DEFAULT 'active' COMMENT 'Trạng thái hiển thị quán',
-  `created_by` INT UNSIGNED DEFAULT NULL COMMENT 'Người tạo địa điểm',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `category_id` int(10) unsigned NOT NULL COMMENT 'Khóa ngoại tới categories',
+  `name` varchar(180) NOT NULL COMMENT 'Tên quán',
+  `slug` varchar(200) NOT NULL COMMENT 'Đường dẫn thân thiện SEO',
+  `address` varchar(255) NOT NULL COMMENT 'Địa chỉ chi tiết',
+  `district` varchar(100) NOT NULL COMMENT 'Quận / Khu vực đại học',
+  `description` text NOT NULL COMMENT 'Mô tả chi tiết không gian, menu, chỗ gửi xe',
+  `price_range` tinyint(3) unsigned NOT NULL DEFAULT 2 COMMENT 'Mức giá: 1 (<35k), 2 (35-50k), 3 (50-80k), 4 (>80k)',
+  `price_min` int(10) unsigned DEFAULT NULL,
+  `price_max` int(10) unsigned DEFAULT NULL,
+  `noise_level` enum('yen_tinh','vua','on') NOT NULL DEFAULT 'yen_tinh' COMMENT 'Mức độ tiếng ồn',
+  `open_time` time NOT NULL DEFAULT '07:00:00' COMMENT 'Giờ mở cửa',
+  `close_time` time NOT NULL DEFAULT '22:30:00' COMMENT 'Giờ đóng cửa',
+  `google_map_url` text DEFAULT NULL COMMENT 'URL nhúng iframe Google Maps',
+  `avg_rating` decimal(3,2) NOT NULL DEFAULT 0.00 COMMENT 'Điểm trung bình từ các review đã duyệt',
+  `total_reviews` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Tổng số review đã duyệt',
+  `status` enum('active','hidden') NOT NULL DEFAULT 'active' COMMENT 'Trạng thái hiển thị quán',
+  `created_by` int(10) unsigned DEFAULT NULL COMMENT 'Người tạo địa điểm',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `google_rating` decimal(3,2) DEFAULT NULL,
+  `google_rating_count` int(10) unsigned DEFAULT NULL,
+  `google_maps_place_url` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_places_slug` (`slug`),
   KEY `idx_places_category` (`category_id`),
   KEY `idx_places_district` (`district`),
   KEY `idx_places_status` (`status`),
-  KEY `idx_places_filter` (`status`, `category_id`, `district`, `price_range`, `noise_level`),
+  KEY `idx_places_filter` (`status`,`category_id`,`district`,`price_range`,`noise_level`),
   KEY `fk_places_created_by` (`created_by`),
-  CONSTRAINT `fk_places_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_places_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `fk_places_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 2.4. Bảng hình ảnh của quán (place_images)
-CREATE TABLE `place_images` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `place_id` INT UNSIGNED NOT NULL,
-  `image_path` VARCHAR(255) NOT NULL COMMENT 'Đường dẫn ảnh trong assets/uploads/places/',
-  `is_cover` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1: Ảnh bìa chính, 0: Ảnh phụ',
-  PRIMARY KEY (`id`),
-  KEY `idx_place_images_place` (`place_id`, `is_cover`),
-  CONSTRAINT `fk_place_images_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--
+-- Dumping data for table `places`
+--
 
--- 2.5. Bảng đánh giá của sinh viên (reviews)
+LOCK TABLES `places` WRITE;
+/*!40000 ALTER TABLE `places` DISABLE KEYS */;
+INSERT INTO `places` VALUES (1,1,'NHÀ KHO Coffee','nha-kho-coffee','Đường Ung Văn Khiêm, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Tọa lạc ngay trục đường Ung Văn Khiêm sầm uất sát cổng Trường Đại học An Giang (AGU), NHÀ KHO Coffee là \"trạm đóng quân\" quen thuộc của sinh viên mỗi mùa thi học kỳ. Không gian decor kiểu Industrial rộng thoáng, bàn gỗ dài thoải mái đặt laptop và giáo trình, Wifi cáp quang mạnh ổn định cùng hệ thống ổ cắm điện bố trí dày đặc dọc các dãy bàn.',2,25000,45000,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=NH%C3%80+KHO+Coffee+%C4%90%C6%B0%E1%BB%9Dng+Ung+V%C4%83n+Khi%C3%AAm%2C+Ph%C6%B0%E1%BB%9Dng+%C4%90%C3%B4ng+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,3,'active',1,'2026-09-28 20:12:28',NULL,NULL,NULL),(2,1,'Cồ-Lá Coffee','co-la-coffee','Đường Ung Văn Khiêm, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Không gian xanh mát, yên tĩnh nằm trên đường Ung Văn Khiêm ngay gần Trường Đại học An Giang. Cồ-Lá Coffee sở hữu nhiều góc ngồi khuất gió, ánh sáng tự nhiên dịu mắt kết hợp đèn vàng ấm áp, rất lý tưởng để sinh viên AGU ngồi đọc tài liệu, ôn luyện ngoại ngữ hoặc gõ code đồ án suốt cả buổi chiều.',2,17000,35000,'yen_tinh','06:00:00','22:30:00','https://maps.google.com/maps?q=C%E1%BB%93-L%C3%A1+Coffee+%C4%90%C6%B0%E1%BB%9Dng+Ung+V%C4%83n+Khi%C3%AAm%2C+Ph%C6%B0%E1%BB%9Dng+%C4%90%C3%B4ng+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',4.50,2,'active',1,'2026-09-29 20:12:28',NULL,NULL,NULL),(3,4,'Mia Maia Café & Savoury','mia-maia-cafe-savoury','Số 3 Lý Thái Tổ, Phường Mỹ Long, TP. Long Xuyên, An Giang','Phường Mỹ Long','Tiệm bánh ngọt & cà phê học nhóm cực kỳ nổi tiếng tại số 3 Lý Thái Tổ, Phường Mỹ Long. Phòng máy lạnh mát rượi, hương thơm bánh nướng bơ sữa dịu nhẹ cùng những bộ bàn ghế êm ái giúp các nhóm sinh viên thảo luận thuyết trình, làm bài tập lớn trong không gian hiện đại và truyền cảm hứng.',2,25000,45000,'vua','07:30:00','22:30:00','https://maps.google.com/maps?q=Mia+Maia+Caf%C3%A9+%26+Savoury+S%E1%BB%91+3+L%C3%BD+Th%C3%A1i+T%E1%BB%95%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Long%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,2,'active',1,'2026-09-30 20:12:28',NULL,NULL,NULL),(4,1,'Cafe 1985 in An Giang','cafe-1985-in-an-giang','33/3 Trần Hưng Đạo, Phường Mỹ Xuyên, TP. Long Xuyên, An Giang','Phường Mỹ Xuyên','Nằm nép mình trong Hẻm 3 Trần Hưng Đạo (Phường Mỹ Xuyên), Cafe 1985 in An Giang tách biệt hẳn khỏi tiếng còi xe ồn ào ngoài trục đường lớn. Quán mang đậm phong cách Vintage hoài cổ, nhạc không lời du dương, nhiều bàn đơn và bàn đôi yên tĩnh tuyệt đối cho những bạn cần sự tập trung cao độ.',2,20000,35000,'yen_tinh','06:30:00','22:00:00','https://maps.google.com/maps?q=Cafe+1985+in+An+Giang+H%E1%BA%BBm+3+Tr%E1%BA%A7n+H%C6%B0ng+%C4%90%E1%BA%A1o%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,2,'active',1,'2026-10-01 20:12:28',NULL,NULL,NULL),(5,3,'Panda Cafe','panda-cafe','Số 9/9 Trần Hưng Đạo, Phường Mỹ Xuyên, TP. Long Xuyên, An Giang','Phường Mỹ Xuyên','Tọa lạc tại số 9/9 Trần Hưng Đạo, Phường Mỹ Xuyên, Panda Cafe nổi bật với không gian sân vườn kết hợp tầng cao thoáng rộng nhìn ra toàn cảnh thành phố Long Xuyên. Quán có cả khu phòng lạnh yên tĩnh để học bài lẫn khu vực bàn dài rộng rãi cho các câu lạc bộ, nhóm sinh viên AGU tổ chức họp mặt.',2,25000,45000,'vua','06:30:00','22:00:00','https://maps.google.com/maps?q=Panda+Cafe+S%E1%BB%91+9%2F9+Tr%E1%BA%A7n+H%C6%B0ng+%C4%90%E1%BA%A1o%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',4.00,1,'active',1,'2026-10-02 20:12:28',4.46,110,'https://maps.google.com/maps?q=Panda+Cafe+S%E1%BB%91+9%2F9+Tr%E1%BA%A7n+H%C6%B0ng+%C4%90%E1%BA%A1o%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed'),(6,2,'Mo Đen Café','mo-den-cafe','710/11 Bùi Văn Danh, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Địa điểm cứu cánh cho những đêm chạy deadline đồ án của sinh viên khu vực Đông Xuyên. Nằm tại hẻm 710/11 Bùi Văn Danh sát bên trường, Mo Đen Café mở cửa tới 22:30 đêm với không gian yên tĩnh, cà phê pha phin và pha máy đậm vị giúp giữ sự tỉnh táo suốt buổi tối.',1,NULL,25000,'yen_tinh','06:30:00','22:30:00','https://maps.google.com/maps?q=Mo+%C4%90en+Caf%C3%A9+710%2F11+B%C3%B9i+V%C4%83n+Danh%2C+Ph%C6%B0%E1%BB%9Dng+%C4%90%C3%B4ng+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,2,'active',1,'2026-10-03 20:12:28',NULL,NULL,NULL),(7,1,'Quán Bình Yên','quan-binh-yen','521A Hẻm Võ Thị Sáu, Phường Mỹ Xuyên, TP. Long Xuyên, An Giang','Phường Mỹ Xuyên','Đúng như tên gọi \"Bình Yên\", quán nằm trong Hẻm 181 Võ Thị Sáu (Phường Mỹ Xuyên) mang lại cảm giác thư thái, nhẹ nhàng ngay từ khi bước vào. Không gian nhiều cây xanh, bàn học sạch sẽ, ổ điện bố trí thuận tiện và mức giá nước uống rất mềm cho sinh viên ngồi đọc sách cả ngày.',1,20000,25000,'yen_tinh','14:00:00','21:00:00','https://maps.google.com/maps?q=Qu%C3%A1n+B%C3%ACnh+Y%C3%AAn+H%E1%BA%BBm+181+V%C3%B5+Th%E1%BB%8B+S%C3%A1u%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,1,'active',1,'2026-10-04 20:12:28',NULL,NULL,NULL),(8,1,'Cà phê vợt Hai Ngầu','ca-phe-vot-hai-ngau','Số 9 Bùi Văn Danh, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Quán cà phê vợt truyền thống lâu đời tại số 9 Bùi Văn Danh, Phường Đông Xuyên, ngay sát khu giảng đường Đại học An Giang. Hương vị cà phê vợt thơm lừng đặc trưng miền Tây với mức giá siêu bình dân dưới 25.000đ, thích hợp cho sinh viên ghé uống cà phê sáng và ôn bài nhanh trước giờ vào lớp.',1,10000,20000,'vua','04:00:00','19:00:00','https://maps.google.com/maps?q=C%C3%A0+ph%C3%AA+v%E1%BB%A3t+Hai+Ng%E1%BA%A7u+S%E1%BB%91+9+B%C3%B9i+V%C4%83n+Danh%2C+Ph%C6%B0%E1%BB%9Dng+%C4%90%C3%B4ng+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',4.00,1,'active',1,'2026-10-05 20:12:28',NULL,NULL,NULL),(9,3,'Đĩa Than Coffee','dia-than-coffee','Đường Số 12, KDC Tây Sông Hậu, Phường Mỹ Quý, TP. Long Xuyên, An Giang','Phường Mỹ Quý','Nằm trong Khu dân cư Tây Sông Hậu yên tĩnh (Phường Mỹ Quý), Đĩa Than Coffee gây ấn tượng với bộ sưu tập đĩa than cổ điển, âm nhạc Acoustic/Jazz nhẹ nhàng và hệ thống bàn gỗ nguyên tấm cực rộng để đặt laptop, bản vẽ hay tài liệu khóa luận tốt nghiệp.',3,25000,50000,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=%C4%90%C4%A9a+Than+Coffee+S%E1%BB%91+C12+%C4%90%C6%B0%E1%BB%9Dng+S%E1%BB%91+12%2C+KDC+T%C3%A2y+S%C3%B4ng+H%E1%BA%ADu%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Qu%C3%BD%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,2,'active',1,'2026-10-06 20:12:28',NULL,NULL,NULL),(10,2,'Pi Kafé Long Xuyên','pi-kafe-long-xuyen','Đường Số 5G, Phường Mỹ Quý, TP. Long Xuyên, An Giang','Phường Mỹ Quý','Một trong những quán cà phê học bài mở khuya tới 23:00 đêm tại khu vực Phường Mỹ Quý, TP. Long Xuyên. Pi Kafé được thiết kế theo phong cách tối giản hiện đại, ánh sáng trắng - vàng tiêu chuẩn chống mỏi mắt, Wifi tốc độ cao và ổ cắm điện tại mọi góc ngồi cho các \"cú đêm\" AGU chạy đồ án.',3,30000,50000,'yen_tinh','07:00:00','23:00:00','https://maps.google.com/maps?q=Pi+Kaf%C3%A9+Long+Xuy%C3%AAn+%C4%90%C6%B0%E1%BB%9Dng+S%E1%BB%91+5G%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+Qu%C3%BD%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,2,'active',1,'2026-10-07 20:12:28',NULL,NULL,NULL),(11,2,'Cafe Lá','cafe-la','Đường Ung Văn Khiêm, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Quán cà phê lá đối diện bệnh viện đa khoa mới của tỉnh, không gian rộng rãi mát mẻ, phía sau có khu cà phê võng thoáng mát thích hợp nghỉ trưa, có phục vụ cờ tướng. Giá mỗi ly cà phê 10.000₫, nằm võng 12.000₫.',1,10000,12000,'vua','07:00:00','22:00:00','https://maps.google.com/maps?q=Cafe+L%C3%A1+Ng%C3%A3+4+Ung+V%C4%83n+Khi%C3%AAm+-+L%C3%BD+Th%C3%A1i+T%E1%BB%95%2C+Ph%C6%B0%E1%BB%9Dng+%C4%90%C3%B4ng+Xuy%C3%AAn%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',4.00,1,'active',1,'2026-10-08 20:12:28',NULL,NULL,NULL),(16,3,'LangThang Coffee & Study','langthang-coffee-study','Số 18 Tôn Đức Thắng, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Không gian học bài và làm việc yên tĩnh ngay trung tâm Phường Mỹ Bình, gần Công viên Nguyễn Du và bờ hồ Nguyễn Du. Quán có phòng máy lạnh rộng rãi, bàn học cao đúng chuẩn công thái học, rất hợp cho sinh viên AGU đổi gió ngồi làm khóa luận cuối tuần.',2,25000,45000,'yen_tinh','06:30:00','22:30:00','https://maps.google.com/maps?q=LangThang+Coffee+%26+Study+S%E1%BB%91+18+T%C3%B4n+%C4%90%E1%BB%A9c+Th%E1%BA%AFng%2C+Ph%C6%B0%E1%BB%9Dng+M%E1%BB%B9+B%C3%ACnh%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',5.00,1,'active',1,'2026-10-13 20:12:28',NULL,NULL,NULL),(17,4,'Tiệm Trà Tháng Tư - Bình Khánh','tiem-tra-thang-tu-binh-khanh','Số 245 Hàm Nghi, Phường Bình Khánh, TP. Long Xuyên, An Giang','Phường Bình Khánh','Góc trà trái cây & cà phê học bài thoáng mát trên đường Hàm Nghi, Phường Bình Khánh. Phù hợp cho các bạn sinh viên nhà ở khu vực Bình Khánh tụ họp ôn bài nhóm, có đầy đủ ổ điện 3 chấu và Wifi 5GHz tốc độ cao.',1,NULL,25000,'vua','07:00:00','22:00:00','https://maps.google.com/maps?q=Ti%E1%BB%87m+Tr%C3%A0+Th%C3%A1ng+T%C6%B0+-+B%C3%ACnh+Kh%C3%A1nh+S%E1%BB%91+245+H%C3%A0m+Nghi%2C+Ph%C6%B0%E1%BB%9Dng+B%C3%ACnh+Kh%C3%A1nh%2C+TP.+Long+Xuy%C3%AAn%2C+An+Giang&t=&z=16&ie=UTF8&iwloc=&output=embed',4.00,1,'active',1,'2026-10-14 20:12:28',NULL,NULL,NULL),(18,4,'Yotsubato Cakes & Coffee','yotsubato-cakes-coffee','Số 9 Ung Văn Khiêm, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Quán cà phê và bánh tại đường Ung Văn Khiêm, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=Yotsubato%20Cakes%20%26%20Coffee%209%20Ung%20V%C4%83n%20Khi%C3%AAm%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(19,1,'BỐI Coffee & Tea','boi-coffee-tea','Số 95 Bùi Văn Danh, Phường Mỹ Xuyên, TP. Long Xuyên, An Giang','Phường Mỹ Xuyên','Quán cà phê và trà tại đường Bùi Văn Danh, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=B%E1%BB%90I%20Coffee%20%26%20Tea%2095%20B%C3%B9i%20V%C4%83n%20Danh%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(20,1,'Méc Coffee','mec-coffee','Đường D5, KDC Tây Sông Hậu, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Quán chuyên cà phê tại KDC Tây Sông Hậu, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=M%C3%A9c%20Coffee%20M%C3%A9c%20Coffee%20T%C3%A2y%20S%C3%B4ng%20H%E1%BA%ADu%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(21,1,'Art Coffee Shop','art-coffee-shop','Số 9A Lương Văn Cù, Phường Mỹ Long, TP. Long Xuyên, An Giang','Phường Mỹ Long','Quán cà phê tại đường Lương Văn Cù, TP. Long Xuyên. Có phục vụ kèm một số món ăn.',0,NULL,NULL,'yen_tinh','07:00:00','21:00:00','https://maps.google.com/maps?q=Art%20Coffee%20Shop%209A%20L%C6%B0%C6%A1ng%20V%C4%83n%20C%C3%B9%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(22,1,'Cây Mận Cà Phê','cay-man-ca-phe','Hẻm 1 Nguyễn Du, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Quán cà phê tại đường Nguyễn Du, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=C%C3%A2y%20M%E1%BA%ADn%20C%C3%A0%20Ph%C3%AA%20C%C3%A2y%20M%E1%BA%ADn%20C%C3%A0%20Ph%C3%AA%20Nguy%E1%BB%85n%20Du%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(23,1,'Cà phê Nhà 57','ca-phe-nha-57','Số 57/1 Cô Bắc, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Quán cà phê tại đường Cô Bắc, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=C%C3%A0%20ph%C3%AA%20Nh%C3%A0%2057%2057/1%20C%C3%B4%20B%E1%BA%AFc%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(24,1,'Café Đại Lộc','cafe-dai-loc','Số 96 Lê Lợi, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Quán cà phê tại đường Lê Lợi, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','21:00:00','https://maps.google.com/maps?q=Caf%C3%A9%20%C4%90%E1%BA%A1i%20L%E1%BB%99c%2096%20L%C3%AA%20L%E1%BB%A3i%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(25,1,'Indochine Cafe','indochine-cafe','Số 57-58 Nguyễn Văn Linh, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Quán cà phê tại đường Nguyễn Văn Linh, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=Indochine%20Cafe%2057%20Nguy%E1%BB%85n%20V%C4%83n%20Linh%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(26,1,'Cafe Thảo Mộc','cafe-thao-moc','Số 3/6 Tôn Đức Thắng, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Quán cà phê tại đường Tôn Đức Thắng, TP. Long Xuyên. Có thêm chi nhánh tại 92 Tôn Đức Thắng.',0,NULL,NULL,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=Cafe%20Th%E1%BA%A3o%20M%E1%BB%99c%20Th%E1%BA%A3o%20M%E1%BB%99c%20Modern%20T%C3%B4n%20%C4%90%E1%BB%A9c%20Th%E1%BA%AFng%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',4.00,610,'https://maps.google.com/maps?q=Cafe%20Th%E1%BA%A3o%20M%E1%BB%99c%20Th%E1%BA%A3o%20M%E1%BB%99c%20Modern%20T%C3%B4n%20%C4%90%E1%BB%A9c%20Th%E1%BA%AFng%20Long%20Xuy%C3%AAn'),(27,1,'Lang Thang An Giang Cafe','lang-thang-an-giang-cafe','Số 3E3 Lý Thái Tổ, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Quán cà phê vintage tại đường Lý Thái Tổ, TP. Long Xuyên. Có đêm acoustic tối thứ 3 hằng tuần.',2,15000,30000,'yen_tinh','07:00:00','22:00:00','https://maps.google.com/maps?q=Lang%20Thang%20An%20Giang%20Cafe%203E3%20L%C3%BD%20Th%C3%A1i%20T%E1%BB%95%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(28,1,'Coffee Y5','coffee-y5','G1-G2 Lý Thái Tổ, Phường Mỹ Long, TP. Long Xuyên, An Giang','Phường Mỹ Long','Quán cà phê tại đường Lý Thái Tổ, gần Phà An Hòa, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','21:30:00','https://maps.google.com/maps?q=Coffee%20Y5%20Coffee%20Y5%20L%C3%BD%20Th%C3%A1i%20T%E1%BB%95%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(29,1,'Windows Coffee','windows-coffee','Số 1 Đường Số 8, Diamond City, TP. Long Xuyên, An Giang','Long Xuyên','Quán cà phê tại khu Diamond City, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=Windows%20Coffee%20Windows%20Coffee%20Diamond%20City%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(30,1,'Golden Coffee','golden-coffee','Số 30 Trần Hưng Đạo, TP. Long Xuyên, An Giang','Long Xuyên','Quán cà phê tại đường Trần Hưng Đạo, gần tượng đài Bác Tôn, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=Golden%20Coffee%20Golden%20Coffee%20Tr%E1%BA%A7n%20H%C6%B0ng%20%C4%90%E1%BA%A1o%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(31,4,'Trà Sữa Mayzi','tra-sua-mayzi','Số 1116 Trần Hưng Đạo, Phường Mỹ Bình, TP. Long Xuyên, An Giang','Phường Mỹ Bình','Quán trà sữa tại đường Trần Hưng Đạo, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=Tr%C3%A0%20S%E1%BB%AFa%20Mayzi%20Tr%C3%A0%20S%E1%BB%AFa%20Mayzi%20Tr%E1%BA%A7n%20H%C6%B0ng%20%C4%90%E1%BA%A1o%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(32,4,'Tiệm Nhà Tô Coffee & Matcha','tiem-nha-to-coffee-matcha','Số 29 Thành Thái, Phường Bình Khánh, TP. Long Xuyên, An Giang','Phường Bình Khánh','Quán cà phê và matcha tại đường Thành Thái, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=Ti%E1%BB%87m%20Nh%C3%A0%20T%C3%B4%20Coffee%20%26%20Matcha%2029%20Th%C3%A0nh%20Th%C3%A1i%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(33,1,'Cũ Café','cu-cafe','Hẻm 9 Trần Hưng Đạo, Phường Mỹ Xuyên, TP. Long Xuyên, An Giang','Phường Mỹ Xuyên','Quán cà phê tại hẻm 9 Trần Hưng Đạo, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','07:00:00','22:30:00','https://maps.google.com/maps?q=C%C5%A9%20Caf%C3%A9%20C%C5%A9%20Caf%C3%A9%20Tr%E1%BA%A7n%20H%C6%B0ng%20%C4%90%E1%BA%A1o%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(34,1,'Hương Vị Quê Nhà Coffee','huong-vi-que-nha-coffee','Số 51 Rạch Cái Sơn, Phường Mỹ Phước, TP. Long Xuyên, An Giang','Phường Mỹ Phước','Quán cà phê tại đường Rạch Cái Sơn, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','05:30:00','22:00:00','https://maps.google.com/maps?q=H%C6%B0%C6%A1ng%20V%E1%BB%8B%20Qu%C3%AA%20Nh%C3%A0%20Coffee%2051%20R%E1%BA%A1ch%20C%C3%A1i%20S%C6%A1n%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(35,1,'Trung Nguyên E-Coffee - Fam Garden','trung-nguyen-e-coffee-fam-garden','Đường Ung Văn Khiêm, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Quán cà phê nhượng quyền Trung Nguyên E-Coffee tại đường Ung Văn Khiêm, gần cổng ĐHAG mới, TP. Long Xuyên.',0,NULL,NULL,'yen_tinh','06:00:00','22:00:00','https://maps.google.com/maps?q=Trung%20Nguy%C3%AAn%20E-Coffee%20-%20Fam%20Garden%20Trung%20Nguy%C3%AAn%20E-Coffee%20Ung%20V%C4%83n%20Khi%C3%AAm%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 20:25:28',NULL,NULL,NULL),(36,1,'La Kaffé','la-kaffe','Số 12 Ung Văn Khiêm, Phường Đông Xuyên, TP. Long Xuyên, An Giang','Phường Đông Xuyên','Quán cà phê trên đường Ung Văn Khiêm, TP. Long Xuyên. Không gian rộng rãi, phù hợp sinh viên, cặp đôi, gia đình và nhóm bạn.',2,12000,35000,'yen_tinh','07:00:00','22:00:00','https://maps.google.com/maps?q=La%20Kaff%C3%A9%2012%20Ung%20V%C4%83n%20Khi%C3%AAm%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 21:06:32',NULL,NULL,NULL),(37,1,'LÀ CAFE – LÀ GAME','la-cafe-la-game','Đường Nguyễn Văn Linh, TP. Long Xuyên, An Giang','Long Xuyên','Quán cà phê kết hợp game, sách và không gian nghỉ ngơi tại TP. Long Xuyên. Có khu gaming máy cấu hình cao, tường sách nhiều tầng để check-in và sleep pod. Quán vừa tái khai trương với diện mạo mới sau 8 năm, từng tổ chức giải đấu Liên Minh Huyền Thoại. Mở cửa 24/24.',0,NULL,NULL,'yen_tinh','00:00:00','23:59:59','https://maps.google.com/maps?q=L%C3%80%20CAFE%20L%C3%80%20GAME%20Long%20Xuy%C3%AAn',0.00,0,'active',NULL,'2026-11-03 21:12:15',NULL,NULL,NULL);
+/*!40000 ALTER TABLE `places` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reviews`
+--
+
+DROP TABLE IF EXISTS `reviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `reviews` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `place_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `rating_overall` TINYINT UNSIGNED NOT NULL COMMENT 'Điểm tổng thể 1-5 sao',
-  `rating_wifi` TINYINT UNSIGNED NOT NULL DEFAULT 5 COMMENT 'Điểm tốc độ Wifi 1-5 sao',
-  `rating_space` TINYINT UNSIGNED NOT NULL DEFAULT 5 COMMENT 'Điểm không gian & bàn ghế 1-5 sao',
-  `rating_price` TINYINT UNSIGNED NOT NULL DEFAULT 5 COMMENT 'Điểm mức giá hợp lý 1-5 sao',
-  `content` TEXT NOT NULL COMMENT 'Nội dung nhận xét chi tiết',
-  `image_path` VARCHAR(255) DEFAULT NULL COMMENT 'Ảnh chụp thực tế đính kèm (tùy chọn)',
-  `status` ENUM('pending', 'approved', 'hidden') NOT NULL DEFAULT 'pending' COMMENT 'Trạng thái kiểm duyệt',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `place_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `rating_overall` tinyint(3) unsigned NOT NULL COMMENT 'Điểm tổng thể 1-5 sao',
+  `rating_wifi` tinyint(3) unsigned NOT NULL DEFAULT 5 COMMENT 'Điểm tốc độ Wifi 1-5 sao',
+  `rating_space` tinyint(3) unsigned NOT NULL DEFAULT 5 COMMENT 'Điểm không gian & bàn ghế 1-5 sao',
+  `rating_price` tinyint(3) unsigned NOT NULL DEFAULT 5 COMMENT 'Điểm mức giá hợp lý 1-5 sao',
+  `content` text NOT NULL COMMENT 'Nội dung nhận xét chi tiết',
+  `image_path` varchar(255) DEFAULT NULL COMMENT 'Ảnh chụp thực tế đính kèm (tùy chọn)',
+  `status` enum('pending','approved','hidden') NOT NULL DEFAULT 'pending' COMMENT 'Trạng thái kiểm duyệt',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_reviews_place_user` (`place_id`, `user_id`),
+  UNIQUE KEY `uk_reviews_place_user` (`place_id`,`user_id`),
   KEY `idx_reviews_status` (`status`),
   KEY `idx_reviews_user` (`user_id`),
   KEY `idx_reviews_created_at` (`created_at`),
   CONSTRAINT `fk_reviews_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_reviews_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 2.6. Bảng danh sách quán yêu thích đã lưu (favorites)
-CREATE TABLE `favorites` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `place_id` INT UNSIGNED NOT NULL,
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--
+-- Dumping data for table `reviews`
+--
+
+LOCK TABLES `reviews` WRITE;
+/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
+INSERT INTO `reviews` VALUES (1,1,2,5,5,5,5,'Quán ruột của tụi mình bên khoa CNTT ĐH An Giang! Tan ca học ở khu giảng đường đi bộ qua đường Ung Văn Khiêm vài bước là tới NHÀ KHO. Bàn gỗ rộng để vừa 4 cái laptop, ổ cắm điện ngay tầm tay, Wifi kéo source code và xem bài giảng mượt cực kỳ.',NULL,'approved','2026-06-12 14:20:00'),(2,1,3,5,5,5,4,'Không gian ở NHÀ KHO Coffee rất hợp để ngồi giải đề TOEIC và làm đồ án môn Công nghệ Web. Nước uống pha ngon, giá tầm 30k-40k mà ngồi máy lạnh mát rượi từ trưa tới tối không bị thúc giục.',NULL,'approved','2026-06-25 09:40:00'),(3,2,4,5,5,5,5,'Cồ-Lá Coffee trên đường Ung Văn Khiêm đúng chuẩn góc trốn ồn ào cho sinh viên AGU. Cây xanh nhiều, ánh sáng dịu mắt, ly bạc xỉu đá chỉ 25k siêu hạt dẻ cho túi tiền sinh viên cuối tháng.',NULL,'approved','2026-07-05 15:10:00'),(4,2,5,4,5,4,5,'Quán gần trường nên trưa nào học 2 ca liên tiếp mình cũng ghé Cồ-Lá nghỉ trưa rồi ôn bài luôn. Các bạn nhân viên toàn là sinh viên làm part-time nên dễ thương và nhiệt tình lắm.',NULL,'approved','2026-07-18 13:05:00'),(5,3,3,5,5,5,4,'Bánh ngọt ở Mia Maia Lý Thái Tổ ngon xuất sắc! Nhóm mình 5 đứa bên khoa Kinh tế - Quản trị kinh doanh AGU hay hẹn ở đây làm slide thuyết trình, phòng lạnh thơm mùi bơ sữa dễ chịu vô cùng.',NULL,'approved','2026-07-29 16:30:00'),(6,4,2,5,5,5,5,'Ai cần sự yên tĩnh tuyệt đối để viết khóa luận tốt nghiệp thì cứ chui vào Hẻm 3 Trần Hưng Đạo ghé Cafe 1985 nhé. Không gian vintage hoài niệm, nhạc nhẹ nhàng, mọi người vào quán đều tự giác giữ trật tự.',NULL,'approved','2026-08-04 10:15:00'),(7,4,5,5,4,5,5,'Góc ngồi cạnh cửa sổ ở Cafe 1985 in An Giang ánh sáng rất đẹp. Wifi ổn định, ổ điện có sẵn dưới chân bàn, cà phê sữa pha đậm đà đúng gu miền Tây.',NULL,'approved','2026-08-14 14:50:00'),(8,5,4,4,4,5,4,'Panda Cafe ở hẻm 9/9 Trần Hưng Đạo có khu sân vườn trên cao thoáng gió cực kỳ. Buổi chiều ngồi học nhóm xong ngắm hoàng hôn Long Xuyên rất chill, giữ xe dưới tầng trệt rộng rãi có chú bảo vệ dắt phụ.',NULL,'approved','2026-08-22 17:20:00'),(9,6,2,5,5,5,5,'Mo Đen Café bên Bùi Văn Danh đúng là cứu tinh mùa chạy deadline đồ án! Quán mở tới 22h30 đêm, yên tĩnh, ổ điện nhiều, tụi mình ngồi debug PHP tới lúc quán đóng cửa vẫn được anh chủ hỗ trợ nhiệt tình.',NULL,'approved','2026-09-02 21:10:00'),(10,7,3,5,4,5,5,'Quán Bình Yên trong hẻm 181 Võ Thị Sáu đúng như cái tên, yên ắng và mát mẻ lắm. Sinh viên Sư phạm tụi mình hay ra đây soạn giáo án và đọc sách chuyên ngành, giá nước siêu rẻ.',NULL,'approved','2026-09-11 09:30:00'),(11,8,4,4,3,4,5,'Sáng nào trước khi vào tiết 1 ở AGU cũng ghé Cà phê vợt Hai Ngầu bên số 9 Bùi Văn Danh làm một ly cà phê sữa nóng. Giá bình dân chỉ mười mấy ngàn mà thơm nức mũi, đúng chất Long Xuyên xưa.',NULL,'approved','2026-09-19 06:45:00'),(12,9,5,5,5,5,4,'Đĩa Than Coffee bên KDC Tây Sông Hậu (Phường Mỹ Quý) bàn gỗ siêu rộng, để laptop 16 inch với đống tài liệu vẫn dư chỗ. Nhạc đĩa than nhẹ nhàng, không gian lịch sự cực hợp để học sâu.',NULL,'approved','2026-09-27 15:00:00'),(13,10,2,5,5,5,5,'Ở Long Xuyên hiếm quán nào mở tới 23h đêm mà chuẩn gu học bài như Pi Kafé bên đường 5G Mỹ Quý. Đèn sáng rõ không bị tối mờ, Wifi 5GHz căng đét, ổ cắm điện từng bàn luôn.',NULL,'approved','2026-10-03 21:40:00'),(14,11,3,4,5,4,5,'Cafe Lá ngay ngã 4 Ung Văn Khiêm - Lý Thái Tổ quá tiện cho sinh viên AGU tụi mình. Chiều tan học ghé uống ly trà đào cam sả rồi ngồi gõ báo cáo thực tập tới tối mới về nhà trọ.',NULL,'approved','2026-10-09 17:15:00'),(19,16,4,5,5,5,4,'LangThang Coffee bên Phường Mỹ Bình yên tĩnh, bàn ghế ngồi lâu không mỏi lưng. Cuối tuần mình hay chạy từ Đông Xuyên qua đây đổi gió ngồi ôn thi.',NULL,'approved','2026-10-30 14:10:00'),(20,17,5,4,5,4,5,'Tiệm Trà Tháng Tư ở đường Hàm Nghi, Phường Bình Khánh tiện cho mấy đứa ở trọ khu Bình Khánh như mình, đỡ phải chạy xa mà vẫn có chỗ học nhóm máy lạnh mát mẻ.',NULL,'approved','2026-10-31 16:00:00'),(21,1,4,5,5,5,5,'Hôm qua nhóm mình vừa ngồi ôn thi ở NHÀ KHO Coffee tới 21h30, quán mới lắp thêm dãy ổ cắm điện mới ở khu bàn dài rất tiện cho sinh viên AGU.',NULL,'approved','2026-11-01 10:20:00'),(22,3,2,5,5,5,4,'Bánh tiramisu và trà bá tước ở Mia Maia Lý Thái Tổ rất hợp để vừa nhâm nhi vừa làm bài tập nhóm. Mong quán mở thêm tới 22h30.',NULL,'approved','2026-11-01 15:45:00'),(23,6,5,5,5,4,5,'Mo Đen Café tối qua yên tĩnh cực kỳ, mình ngồi hoàn thành xong toàn bộ phần giao diện Bootstrap cho đồ án mà không bị xao nhãng.',NULL,'approved','2026-11-01 20:10:00'),(24,9,3,5,5,5,4,'Không gian ở Đĩa Than Coffee KDC Tây Sông Hậu thực sự rất chất lượng, bàn gỗ rộng rãi và ánh sáng ấm áp.',NULL,'approved','2026-11-02 08:30:00'),(25,10,4,5,5,5,5,'Pi Kafé mở tới 23h đêm nên rất hợp cho anh em IT Đại học An Giang thức chạy đồ án cuối kỳ.',NULL,'approved','2026-11-02 09:15:00');
+/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL COMMENT 'Họ và tên hiển thị',
+  `email` varchar(150) NOT NULL COMMENT 'Email đăng nhập duy nhất',
+  `password` varchar(255) NOT NULL COMMENT 'Mật khẩu mã hóa bằng password_hash',
+  `phone` varchar(20) DEFAULT NULL COMMENT 'Số điện thoại liên hệ',
+  `avatar` varchar(255) DEFAULT NULL COMMENT 'Đường dẫn ảnh đại diện',
+  `role` enum('user','admin') NOT NULL DEFAULT 'user' COMMENT 'Vai trò người dùng',
+  `status` enum('active','locked') NOT NULL DEFAULT 'active' COMMENT 'Trạng thái tài khoản',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_favorites_user_place` (`user_id`, `place_id`),
-  KEY `idx_favorites_place` (`place_id`),
-  CONSTRAINT `fk_favorites_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_favorites_place` FOREIGN KEY (`place_id`) REFERENCES `places` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `uk_users_email` (`email`),
+  KEY `idx_users_role_status` (`role`,`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- =========================================================================
--- 3. DỮ LIỆU MẪU (SEED DATA)
--- =========================================================================
+--
+-- Dumping data for table `users`
+--
 
--- 3.1. Dữ liệu bảng users (1 Admin + 5 Sinh viên)
--- Lưu ý: Cột password đang chứa giá trị tạm 'TEMP_PASSWORD_RUN_SEED_USERS_PHP'.
--- Hãy chạy http://localhost/studyspot/database/seed_users.php để cập nhật bcrypt thật của '123456'.
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `phone`, `avatar`, `role`, `status`, `created_at`) VALUES
-(1, 'Quản Trị Viên StudySpot', 'admin@studyspot.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0901234567', NULL, 'admin', 'active', '2026-08-01 08:00:00'),
-(2, 'Nguyễn Minh Khôi', 'khoi.nguyen@student.edu.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0912345678', NULL, 'user', 'active', '2026-08-10 09:30:00'),
-(3, 'Trần Thảo Vy', 'vy.tran@student.edu.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0987654321', NULL, 'user', 'active', '2026-08-12 14:15:00'),
-(4, 'Lê Hoàng Nam', 'nam.le@student.edu.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0933445566', NULL, 'user', 'active', '2026-08-20 19:45:00'),
-(5, 'Phạm Ngọc Ánh', 'anh.pham@student.edu.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0977889900', NULL, 'user', 'active', '2026-09-02 10:20:00'),
-(6, 'Võ Quốc Bảo', 'bao.vo@student.edu.vn', 'TEMP_PASSWORD_RUN_SEED_USERS_PHP', '0966112233', NULL, 'user', 'locked', '2026-09-05 16:00:00');
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'Quản Trị Viên StudySpot AGU','admin@studyspot.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0901234567',NULL,'admin','active','2026-06-01 08:00:00'),(2,'Nguyễn Minh Khôi (DH23TH)','khoi.nguyen@student.edu.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0912345678',NULL,'user','active','2026-06-05 09:30:00'),(3,'Trần Thảo Vy (DH23QT)','vy.tran@student.edu.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0987654321',NULL,'user','active','2026-06-10 14:15:00'),(4,'Lê Hoàng Nam (DH22PM)','nam.le@student.edu.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0933445566',NULL,'user','active','2026-06-18 19:45:00'),(5,'Phạm Ngọc Ánh (DH24AV)','anh.pham@student.edu.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0977889900',NULL,'user','active','2026-07-02 10:20:00'),(6,'Võ Quốc Bảo (DH23KT)','bao.vo@student.edu.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0966112233',NULL,'user','locked','2026-07-05 16:00:00');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
--- 3.2. Dữ liệu bảng categories (5 danh mục thực tế)
-INSERT INTO `categories` (`id`, `name`) VALUES
-(1, 'Cà phê Học bài & Đọc sách'),
-(2, 'Cà phê Mở xuyên đêm 24/7'),
-(3, 'Co-working & Study Hub'),
-(4, 'Trà sữa & Bánh ngọt Học nhóm'),
-(5, 'Quán ăn nhẹ & Cơm trưa Sinh viên');
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- 3.3. Dữ liệu bảng places (9 quán thực tế gần các cụm trường Đại học)
-INSERT INTO `places` (`id`, `category_id`, `name`, `slug`, `address`, `district`, `description`, `price_range`, `has_wifi`, `has_outlet`, `has_ac`, `noise_level`, `open_time`, `close_time`, `google_map_url`, `avg_rating`, `total_reviews`, `status`, `created_by`, `created_at`) VALUES
-(1, 1, 'The Library Coffee & Study Hub', 'the-library-coffee-study-hub', '24 Đường D2 (Nguyễn Gia Trí), Phường 25', 'Quận Bình Thạnh', 'Không gian thiết kế theo mô hình thư viện mở cực kỳ yên tĩnh, nằm ngay sát cụm trường ĐH HUTECH, ĐH Giao Thông Vận Tải và ĐH Ngoại Thương. Mỗi bàn đều được trang bị 2 ổ cắm điện 3 chấu, đèn vàng chống mỏi mắt và tốc độ Wifi cáp quang 300Mbps riêng cho từng tầng. Giữ xe miễn phí có bảo vệ trông coi.', 2, 1, 1, 1, 'yen_tinh', '07:00:00', '23:00:00', 'https://www.google.com/maps?q=Nguyen+Gia+Tri+Binh+Thanh+Ho+Chi+Minh&output=embed', 5.00, 2, 'active', 1, '2026-08-05 08:30:00'),
-
-(2, 2, 'Cú Trên Cây Coffee & Beer 24/7', 'cu-tren-cay-coffee-24-7', '128 Khu phố 6, Làng Đại Học Quốc Gia', 'TP. Thủ Đức', 'Điểm hẹn chạy đồ án quen thuộc của sinh viên Bách Khoa, Tự Nhiên, CNTT tại Làng Đại Học Thủ Đức. Quán mở cửa xuyên đêm, khu vực tầng 2 có phòng lạnh yên tĩnh trải thảm và bàn dài cho nhóm 6-8 bạn làm tiểu luận. Menu nước giá sinh viên chỉ từ 25k, có bán kèm mì trộn và bánh mì nóng ban đêm.', 1, 1, 1, 1, 'vua', '00:00:00', '23:59:00', 'https://www.google.com/maps?q=Lang+Dai+Hoc+Thu+Duc+Ho+Chi+Minh&output=embed', 4.50, 2, 'active', 1, '2026-08-08 10:00:00'),
-
-(3, 3, 'WorkFlow Space & Roastery', 'workflow-space-roastery', '195/10 Điện Biên Phủ, Phường 15', 'Quận Bình Thạnh', 'Mô hình kết hợp giữa quán cà phê Specialty và không gian làm việc Co-working dành cho sinh viên làm khóa luận tốt nghiệp hoặc freelancer. Ghế công thái học ngồi lâu không đau lưng, có bảng trắng (whiteboard) cho nhóm brainstorm và khu vực gọi điện/họp Zoom riêng biệt.', 3, 1, 1, 1, 'yen_tinh', '07:30:00', '22:30:00', 'https://www.google.com/maps?q=195+Dien+Bien+Phu+Binh+Thanh+Ho+Chi+Minh&output=embed', 5.00, 1, 'active', 1, '2026-08-12 11:20:00'),
-
-(4, 1, 'Lạc Concept - Góc Nhỏ Học Bài', 'lac-concept-goc-nho-hoc-bai', '310/15 Sư Vạn Hạnh, Phường 12', 'Quận 10', 'Nằm trong con hẻm yên bình ngay gần ĐH Ngoại Ngữ - Tin Học (HUFLIT) và ĐH Kinh Tế (UEH). Quán mang phong cách tối giản kiểu Nhật, nhạc Lofi không lời âm lượng vừa phải, cực kỳ hợp để ngồi giải đề TOEIC/IELTS hoặc code đồ án suốt cả buổi chiều.', 2, 1, 1, 1, 'yen_tinh', '08:00:00', '22:30:00', 'https://www.google.com/maps?q=310+Su+Van+Hanh+Quan+10+Ho+Chi+Minh&output=embed', 4.50, 2, 'active', 1, '2026-08-15 14:00:00'),
-
-(5, 2, 'Thức Coffee - Chạy Deadline Xuyên Đêm', 'thuc-coffee-chay-deadline-xuyen-dem', '42 Nguyễn Thị Minh Khai, Phường Đa Kao', 'Quận 1', 'Địa điểm cứu cánh cho những đêm chạy deadline gấp trước ngày bảo vệ đồ án. Quán sáng đèn 24/24, luôn có nhân viên và bảo vệ trực đêm an toàn. Tầng lửng có máy lạnh và ổ điện dọc theo tường, cà phê sữa đá đậm vị giúp tỉnh táo suốt đêm.', 2, 1, 1, 1, 'vua', '00:00:00', '23:59:00', 'https://www.google.com/maps?q=42+Nguyen+Thi+Minh+Khai+Quan+1+Ho+Chi+Minh&output=embed', 4.00, 1, 'active', 1, '2026-08-18 16:40:00'),
-
-(6, 4, 'Trạm Trà & Bánh Ngọt Học Nhóm', 'tram-tra-banh-ngot-hoc-nhom', '85 Nguyễn Hữu Thọ, Phường Tân Phong', 'Quận 7', 'Cách cổng trường ĐH Tôn Đức Thắng và RMIT chỉ 3 phút đi bộ. Không gian rộng rãi, thoáng đãng với nhiều bàn tròn và bàn dài 10 người, rất thích hợp để họp nhóm thuyết trình hoặc thảo luận bài tập lớn. Combo trà trái cây + bánh sừng bò giảm 15% khi xuất trình thẻ sinh viên.', 2, 1, 1, 1, 'vua', '07:00:00', '22:30:00', 'https://www.google.com/maps?q=85+Nguyen+Huu+Tho+Quan+7+Ho+Chi+Minh&output=embed', 4.00, 1, 'active', 1, '2026-08-22 09:15:00'),
-
-(7, 5, 'Bếp Sinh Viên & Cà Phê Sách', 'bep-sinh-vien-ca-phe-sach', '56 Hoàng Diệu 2, Phường Linh Chiểu', 'TP. Thủ Đức', 'Quán tích hợp ăn trưa văn phòng - sinh viên và cà phê học bài buổi chiều. Sinh viên có thể ăn cơm phần sạch sẽ chỉ 32k rồi ở lại tầng 2 có máy lạnh mát rượi để ôn bài đến tối mà không cần di chuyển nhiều nơi.', 1, 1, 1, 1, 'vua', '06:30:00', '22:00:00', 'https://www.google.com/maps?q=56+Hoang+Dieu+2+Thu+Duc+Ho+Chi+Minh&output=embed', 5.00, 1, 'active', 1, '2026-08-26 13:00:00'),
-
-(8, 3, 'Nấp Sài Gòn - Study & Chill', 'nap-sai-gon-study-chill', '3/5 Nguyễn Văn Thủ, Phường Đa Kao', 'Quận 1', 'Không gian xanh mát tách biệt khỏi tiếng còi xe ồn ào, nổi tiếng với món cà phê trứng và cacao nóng. Tầng trên được quy hoạch thành khu Quiet Zone (Hạn chế nói chuyện lớn tiếng), cực kỳ lý tưởng cho các bạn cần sự tập trung tuyệt đối.', 3, 1, 1, 1, 'yen_tinh', '08:00:00', '21:30:00', 'https://www.google.com/maps?q=3+Nguyen+Van+Thu+Quan+1+Ho+Chi+Minh&output=embed', 5.00, 1, 'active', 1, '2026-09-01 08:45:00'),
-
-(9, 4, 'Góc Sân Thượng Acoustic & Tea', 'goc-san-thuong-acoustic-tea', '212 Lê Văn Sỹ, Phường 10', 'Quận Phú Nhuận', 'Quán nằm trên tầng thượng thoáng gió, buổi sáng và chiều khá mát mẻ, tuy nhiên buổi tối từ 19h30 có giao lưu nhạc Acoustic nên hơi ồn, phù hợp để thư giãn sau giờ thi hơn là ngồi học bài cần sự yên tĩnh.', 3, 1, 0, 0, 'on', '15:00:00', '23:00:00', 'https://www.google.com/maps?q=212+Le+Van+Sy+Phu+Nhuan+Ho+Chi+Minh&output=embed', 3.00, 1, 'active', 1, '2026-09-04 17:10:00');
-
--- 3.4. Dữ liệu bảng place_images (Ảnh mẫu của các quán - Hệ thống sẽ tự động fallback về placeholder.svg nếu file chưa có trên đĩa)
-INSERT INTO `place_images` (`id`, `place_id`, `image_path`, `is_cover`) VALUES
-(1, 1, 'uploads/places/sample_library_1.jpg', 1),
-(2, 1, 'uploads/places/sample_library_2.jpg', 0),
-(3, 2, 'uploads/places/sample_cutrencay_1.jpg', 1),
-(4, 2, 'uploads/places/sample_cutrencay_2.jpg', 0),
-(5, 3, 'uploads/places/sample_workflow_1.jpg', 1),
-(6, 4, 'uploads/places/sample_lac_1.jpg', 1),
-(7, 5, 'uploads/places/sample_thuc_1.jpg', 1),
-(8, 6, 'uploads/places/sample_tramtra_1.jpg', 1),
-(9, 7, 'uploads/places/sample_bepsv_1.jpg', 1),
-(10, 8, 'uploads/places/sample_napsg_1.jpg', 1),
-(11, 9, 'uploads/places/sample_santhuong_1.jpg', 1);
-
--- 3.5. Dữ liệu bảng reviews (18 đánh giá chia đều: 12 approved + 6 pending, rải qua các tháng để vẽ biểu đồ Chart.js)
-INSERT INTO `reviews` (`id`, `place_id`, `user_id`, `rating_overall`, `rating_wifi`, `rating_space`, `rating_price`, `content`, `image_path`, `status`, `created_at`) VALUES
--- Các review ĐÃ DUYỆT (approved) -> khớp chính xác với avg_rating và total_reviews của từng quán
-(1, 1, 2, 5, 5, 5, 5, 'Quán ruột của mình mỗi mùa thi cuối kỳ! Bàn học rộng rãi, ổ điện ngay tầm tay không cần cúi xuống gầm bàn. Wifi tải tài liệu và xem bài giảng video cực mượt.', NULL, 'approved', '2026-06-15 14:20:00'),
-(2, 1, 3, 5, 5, 5, 4, 'Không gian tầng 2 yên tĩnh tuyệt đối, mọi người đều tự giác giữ trật tự. Nước uống tầm 40k-45k nhưng ngồi học từ sáng tới tối vẫn rất thoải mái, nhân viên châm trà đá liên tục.', NULL, 'approved', '2026-07-10 09:40:00'),
-(3, 2, 2, 5, 4, 5, 5, 'Đúng chuẩn quán quốc dân ở Làng Đại Học. Tụi mình ngồi code đồ án PHP tới 3h sáng vẫn rất đông các bạn sinh viên khác cùng chạy deadline nên có động lực hẳn!', NULL, 'approved', '2026-07-22 23:15:00'),
-(4, 2, 4, 4, 4, 4, 5, 'Giá nước siêu hạt dẻ cho sinh viên, chỉ 28k ly bạc xỉu lớn. Giờ cao điểm buổi tối hơi đông nên bạn nào đi nhóm nhớ tới sớm trước 19h để chọn bàn dài nhé.', NULL, 'approved', '2026-08-05 20:10:00'),
-(5, 3, 3, 5, 5, 5, 4, 'Ghế ngồi cực êm, điều hòa mát lạnh và có sẵn bảng trắng cho nhóm thảo luận. Giá nước nhỉnh hơn một chút nhưng chất lượng không gian hoàn toàn xứng đáng.', NULL, 'approved', '2026-08-19 15:30:00'),
-(6, 4, 5, 5, 5, 5, 5, 'Quán nhỏ xinh trong hẻm Sư Vạn Hạnh nên cực kỳ yên tĩnh. Nhạc Lofi nhẹ nhàng, ánh sáng đèn vàng ấm áp, ngồi luyện đề Reading rất vào.', NULL, 'approved', '2026-09-03 10:05:00'),
-(7, 4, 2, 4, 5, 4, 4, 'Wifi mạnh, mỗi bàn đều có ổ cắm. Điểm trừ nhỏ là chỗ để xe trong hẻm hơi hẹp vào giờ chiều, nhưng bác bảo vệ dắt xe giúp rất nhiệt tình.', NULL, 'approved', '2026-09-14 16:50:00'),
-(8, 5, 4, 4, 4, 4, 4, 'Mở xuyên đêm ở ngay trung tâm Quận 1 nên rất tiện. Phù hợp khi cần hoàn thiện gấp slide báo cáo ban đêm, cà phê đậm đà giúp tỉnh ngủ.', NULL, 'approved', '2026-09-25 01:30:00'),
-(9, 6, 3, 4, 4, 5, 4, 'Bàn dài rộng rãi, nhóm mình 7 người họp làm tiểu luận thoải mái không sợ ảnh hưởng bàn bên cạnh. Trà đào cam sả uống rất tươi mát.', NULL, 'approved', '2026-10-04 14:00:00'),
-(10, 7, 5, 5, 5, 4, 5, 'Cơm trưa sinh viên 32k đầy đặn, ăn xong lên lầu 2 bật laptop học bài tới chiều luôn. Tiết kiệm được rất nhiều thời gian và chi phí cho sinh viên Thủ Đức.', NULL, 'approved', '2026-10-12 12:30:00'),
-(11, 8, 4, 5, 5, 5, 4, 'Khu Quiet Zone trên lầu thực sự đỉnh cao cho ai cần tập trung 100%. Mùi cà phê thơm dịu, bàn gỗ cao vừa tầm gõ phím.', NULL, 'approved', '2026-10-20 09:15:00'),
-(12, 9, 5, 3, 3, 3, 3, 'Cảnh hoàng hôn trên sân thượng đẹp nhưng không có ổ cắm điện ở khu ngoài trời và buổi tối nhạc khá lớn, chỉ hợp đi chill cuối tuần chứ khó học bài.', NULL, 'approved', '2026-10-28 19:45:00'),
-
--- Các review CHỜ DUYỆT (pending) -> để Admin kiểm thử chức năng Duyệt / Ẩn / Xóa và tự động tính lại điểm
-(13, 1, 4, 4, 5, 4, 4, 'Hôm qua mình mới ghé học thử, tầng 3 mới mở thêm nhiều bàn đơn có vách ngăn riêng tư rất thích.', NULL, 'pending', '2026-11-01 08:30:00'),
-(14, 3, 2, 5, 5, 5, 4, 'Quán mới nâng cấp đường truyền Wifi 5GHz riêng cho từng lầu, họp Google Meet 2 tiếng liền không bị giật lag chút nào.', NULL, 'pending', '2026-11-01 11:00:00'),
-(15, 5, 3, 5, 4, 4, 5, 'Đêm qua nhóm mình ngồi sửa báo cáo tới 4h sáng, nhân viên vẫn vui vẻ hỗ trợ mượn ổ điện nối dài.', NULL, 'pending', '2026-11-01 15:20:00'),
-(16, 6, 2, 4, 4, 5, 5, 'Có chương trình giảm giá 15% khi đưa thẻ sinh viên nên tính ra mỗi đứa chỉ tốn hơn 30k cho cả buổi chiều họp nhóm.', NULL, 'pending', '2026-11-01 18:10:00'),
-(17, 7, 3, 5, 5, 5, 5, 'Món bún thịt nướng buổi trưa rất ngon, trà tắc khổng lồ chỉ 20k, ổ cắm điện có ở mọi góc tường.', NULL, 'pending', '2026-11-02 07:45:00'),
-(18, 8, 2, 4, 5, 5, 4, 'Cà phê trứng béo thơm, không gian cực kỳ yên tĩnh, sẽ quay lại vào tuần ôn thi sắp tới.', NULL, 'pending', '2026-11-02 09:00:00');
-
--- 3.6. Dữ liệu bảng favorites (Quán yêu thích của các tài khoản mẫu)
-INSERT INTO `favorites` (`id`, `user_id`, `place_id`, `created_at`) VALUES
-(1, 2, 1, '2026-09-10 10:00:00'),
-(2, 2, 2, '2026-09-12 11:30:00'),
-(3, 2, 4, '2026-09-15 14:20:00'),
-(4, 3, 1, '2026-09-18 09:00:00'),
-(5, 3, 3, '2026-09-20 16:45:00'),
-(6, 4, 2, '2026-10-01 21:00:00'),
-(7, 5, 7, '2026-10-15 13:10:00');
-
-SET FOREIGN_KEY_CHECKS = 1;
+-- Dump completed on 2026-11-04 16:19:47

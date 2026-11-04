@@ -1,6 +1,6 @@
 <?php
 /**
- * AdminPlaceController: Quản lý Quán học bài dành cho Admin
+ * AdminPlaceController: Quản lý Quán học bài & Ăn uống tại TP. Long Xuyên, An Giang dành cho Admin
  * Bao gồm: Danh sách (tìm kiếm, lọc, phân trang), Thêm mới, Sửa, Xóa, Ẩn/Hiện, Upload nhiều ảnh & Chọn ảnh bìa
  */
 class AdminPlaceController extends Controller
@@ -8,6 +8,7 @@ class AdminPlaceController extends Controller
     private Place $placeModel;
     private Category $categoryModel;
     private PlaceImage $placeImageModel;
+    private Amenity $amenityModel;
 
     public function __construct()
     {
@@ -15,6 +16,24 @@ class AdminPlaceController extends Controller
         $this->placeModel = new Place();
         $this->categoryModel = new Category();
         $this->placeImageModel = new PlaceImage();
+        $this->amenityModel = new Amenity();
+    }
+
+    /**
+     * Lấy danh sách Phường chuẩn tại TP. Long Xuyên kết hợp dữ liệu thực tế từ CSDL
+     */
+    private function getLongXuyenDistricts(): array
+    {
+        $standardWards = [
+            'Phường Đông Xuyên',
+            'Phường Mỹ Xuyên',
+            'Phường Mỹ Long',
+            'Phường Mỹ Bình',
+            'Phường Mỹ Quý',
+            'Phường Bình Khánh',
+        ];
+        $dbDistricts = $this->placeModel->getDistinctDistricts();
+        return array_values(array_unique(array_merge($standardWards, $dbDistricts)));
     }
 
     /**
@@ -31,7 +50,7 @@ class AdminPlaceController extends Controller
         $categories = $this->categoryModel->getAll();
 
         $this->render('admin/places/index', [
-            'pageTitle'   => 'Quản lý Quán học bài',
+            'pageTitle'   => 'Quản lý Quán học bài — TP. Long Xuyên',
             'places'      => $result['items'],
             'total'       => $result['total'],
             'currentPage' => $result['currentPage'],
@@ -51,20 +70,20 @@ class AdminPlaceController extends Controller
     public function create(): void
     {
         $categories = $this->categoryModel->getAll();
+        $districts = $this->getLongXuyenDistricts();
         $errors = [];
         $old = [
             'category_id'    => '',
             'name'           => '',
             'address'        => '',
-            'district'       => 'Quận Bình Thạnh',
+            'district'       => 'Phường Đông Xuyên',
             'description'    => '',
-            'price_range'    => 2,
-            'has_wifi'       => 1,
-            'has_outlet'     => 1,
-            'has_ac'         => 1,
+            'price_min'      => '',
+            'price_max'      => '',
+            'amenity_ids'    => [],
             'noise_level'    => 'yen_tinh',
-            'open_time'      => '07:00',
-            'close_time'     => '22:30',
+            'open_time'      => '06:30',
+            'close_time'     => '22:00',
             'google_map_url' => '',
             'status'         => 'active',
         ];
@@ -92,16 +111,19 @@ class AdminPlaceController extends Controller
                         'warning'
                     );
                 } else {
-                    Session::flash('alert', 'Đã thêm quán "' . $old['name'] . '" thành công!', 'success');
+                    Session::flash('alert', 'Đã thêm quán "' . $old['name'] . '" tại TP. Long Xuyên thành công!', 'success');
                 }
 
                 $this->redirect('admin/place');
             }
         }
 
+        $amenities = $this->amenityModel->getAll();
         $this->render('admin/places/create', [
-            'pageTitle'  => 'Thêm Quán học bài mới',
+            'pageTitle'  => 'Thêm Quán học bài mới — TP. Long Xuyên',
             'categories' => $categories,
+            'districts'  => $districts,
+            'amenities'  => $amenities,
             'errors'     => $errors,
             'old'        => $old,
         ], 'admin');
@@ -121,6 +143,7 @@ class AdminPlaceController extends Controller
         }
 
         $categories = $this->categoryModel->getAll();
+        $districts = $this->getLongXuyenDistricts();
         $images = $this->placeImageModel->getByPlaceId($placeId);
         $errors = [];
         $old = $place;
@@ -160,10 +183,13 @@ class AdminPlaceController extends Controller
             }
         }
 
+        $amenities = $this->amenityModel->getAll();
         $this->render('admin/places/edit', [
             'pageTitle'  => 'Chỉnh sửa Quán: ' . $place['name'],
             'place'      => $place,
             'categories' => $categories,
+            'districts'  => $districts,
+            'amenities'  => $amenities,
             'images'     => $images,
             'errors'     => $errors,
             'old'        => $old,
@@ -279,13 +305,12 @@ class AdminPlaceController extends Controller
             'address'        => trim($_POST['address'] ?? ''),
             'district'       => trim($_POST['district'] ?? ''),
             'description'    => trim($_POST['description'] ?? ''),
-            'price_range'    => (int) ($_POST['price_range'] ?? 2),
-            'has_wifi'       => isset($_POST['has_wifi']) ? 1 : 0,
-            'has_outlet'     => isset($_POST['has_outlet']) ? 1 : 0,
-            'has_ac'         => isset($_POST['has_ac']) ? 1 : 0,
+            'price_min'      => trim($_POST['price_min'] ?? '') === '' ? null : max(0, (int) $_POST['price_min']),
+            'price_max'      => trim($_POST['price_max'] ?? '') === '' ? null : max(0, (int) $_POST['price_max']),
+            'amenity_ids'    => array_values(array_unique(array_map('intval', is_array($_POST['amenity_ids'] ?? []) ? $_POST['amenity_ids'] : []))),
             'noise_level'    => trim($_POST['noise_level'] ?? 'yen_tinh'),
-            'open_time'      => trim($_POST['open_time'] ?? '07:00'),
-            'close_time'     => trim($_POST['close_time'] ?? '22:30'),
+            'open_time'      => trim($_POST['open_time'] ?? '06:30'),
+            'close_time'     => trim($_POST['close_time'] ?? '22:00'),
             'google_map_url' => trim($_POST['google_map_url'] ?? ''),
             'status'         => in_array($_POST['status'] ?? '', ['active', 'hidden'], true) ? $_POST['status'] : 'active',
         ];
@@ -309,19 +334,19 @@ class AdminPlaceController extends Controller
         }
 
         if ($data['address'] === '') {
-            $errors['address'] = 'Vui lòng nhập địa chỉ chi tiết của quán.';
+            $errors['address'] = 'Vui lòng nhập địa chỉ chi tiết của quán tại TP. Long Xuyên.';
         }
 
         if ($data['district'] === '') {
-            $errors['district'] = 'Vui lòng nhập hoặc chọn Quận / Khu vực.';
+            $errors['district'] = 'Vui lòng nhập hoặc chọn Phường / Khu vực tại TP. Long Xuyên.';
         }
 
         if ($data['description'] === '') {
             $errors['description'] = 'Vui lòng nhập mô tả không gian học tập của quán.';
         }
 
-        if (!in_array($data['price_range'], [1, 2, 3, 4], true)) {
-            $errors['price_range'] = 'Mức giá không hợp lệ.';
+        if (($data['price_min'] ?? null) !== null && ($data['price_max'] ?? null) !== null && (int) $data['price_max'] < (int) $data['price_min']) {
+            $errors['price_max'] = 'Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất.';
         }
 
         if (!in_array($data['noise_level'], ['yen_tinh', 'vua', 'on'], true)) {

@@ -6,25 +6,25 @@ $isEditing = !empty($editCategory);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h4 fw-bold mb-1"><i class="bi bi-tags text-coffee me-2"></i>Quản lý Danh mục Loại hình</h1>
-        <p class="text-muted small mb-0">Phân loại các nhóm địa điểm học bài, cà phê sách, co-working và quán ăn sinh viên</p>
+        <h1 class="page-title"><i class="bi bi-tags me-2"></i>Quản lý danh mục loại hình</h1>
+        <p class="text-muted small mb-0">Phân loại các nhóm địa điểm học bài, cà phê sách và co-working tại TP. Long Xuyên</p>
     </div>
 </div>
 
 <div class="row g-4">
     <!-- Cột trái: Form Thêm / Sửa danh mục -->
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title h6 fw-bold mb-0">
+        <div class="surface-card overflow-hidden">
+            <div class="p-3 border-bottom" style="background: #EFECE6;">
+                <h5 class="h6 fw-bold mb-0 text-coffee">
                     <?php if ($isEditing): ?>
                         <i class="bi bi-pencil-square text-warning me-2"></i>Cập nhật danh mục #<?= (int) $editCategory['id'] ?>
                     <?php else: ?>
-                        <i class="bi bi-plus-circle text-coffee me-2"></i>Thêm danh mục mới
+                        <i class="bi bi-plus-circle me-2"></i>Thêm danh mục mới
                     <?php endif; ?>
                 </h5>
             </div>
-            <div class="card-body p-4">
+            <div class="p-4">
                 <form action="<?= $isEditing ? base_url('admin/category/update/' . (int) $editCategory['id']) : base_url('admin/category/store') ?>" method="POST">
                     <?= csrf_field() ?>
 
@@ -43,11 +43,11 @@ $isEditing = !empty($editCategory);
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-coffee flex-grow-1">
+                        <button type="submit" class="btn btn-coffee rounded-pill flex-grow-1">
                             <i class="bi bi-check2-circle me-1"></i><?= $isEditing ? 'Lưu thay đổi' : 'Thêm danh mục' ?>
                         </button>
                         <?php if ($isEditing): ?>
-                            <a href="<?= base_url('admin/category') ?>" class="btn btn-outline-secondary">Hủy</a>
+                            <a href="<?= base_url('admin/category') ?>" class="btn btn-outline-secondary rounded-pill px-3">Hủy</a>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -57,17 +57,17 @@ $isEditing = !empty($editCategory);
 
     <!-- Cột phải: Bảng danh sách danh mục -->
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <span class="fw-bold small">Danh sách danh mục hiện có (<?= count($categories) ?>)</span>
+        <div class="surface-card overflow-hidden">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <span class="fw-bold small text-coffee">Danh sách danh mục hiện có (<?= count($categories) ?>)</span>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light small">
+                <table class="table admin-table table-hover align-middle mb-0">
+                    <thead>
                         <tr>
                             <th width="70" class="ps-3">ID</th>
-                            <th>Tên danh mục loại hình</th>
-                            <th class="text-center">Số lượng quán</th>
+                            <th>Danh mục</th>
+                            <th class="text-center">Số quán</th>
                             <th width="160" class="text-end pe-3">Thao tác</th>
                         </tr>
                     </thead>
@@ -80,22 +80,24 @@ $isEditing = !empty($editCategory);
                             <?php foreach ($categories as $cat): ?>
                                 <tr>
                                     <td class="ps-3 fw-semibold text-muted">#<?= (int) $cat['id'] ?></td>
-                                    <td class="fw-semibold"><?= e($cat['name']) ?></td>
+                                    <td class="fw-semibold text-dark"><?= e($cat['name']) ?></td>
                                     <td class="text-center">
-                                        <span class="badge bg-secondary-subtle text-dark rounded-pill px-3">
+                                        <span class="pill-amenity px-3">
                                             <?= (int) $cat['place_count'] ?> quán
                                         </span>
                                     </td>
                                     <td class="text-end pe-3">
-                                        <a href="<?= base_url('admin/category?edit_id=' . (int) $cat['id']) ?>" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                        <div class="d-inline-flex gap-1">
+                                        <a href="<?= base_url('admin/category?edit_id=' . (int) $cat['id']) ?>" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Sửa tên danh mục">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form action="<?= base_url('admin/category/delete/' . (int) $cat['id']) ?>" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa" <?= ((int) $cat['place_count'] > 0) ? 'disabled' : '' ?>>
+                                            <button type="submit" class="btn btn-sm <?= ((int) $cat['place_count'] > 0) ? 'btn-outline-secondary' : 'btn-outline-danger' ?>" data-bs-toggle="tooltip" title="<?= ((int) $cat['place_count'] > 0) ? 'Đang có quán thuộc danh mục này' : 'Xóa danh mục' ?>" <?= ((int) $cat['place_count'] > 0) ? 'disabled' : '' ?>>
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -103,8 +105,8 @@ $isEditing = !empty($editCategory);
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-light small text-muted py-2 px-3">
-                <i class="bi bi-info-circle me-1"></i>Lưu ý: Các danh mục đang có quán trực thuộc sẽ được khóa nút xóa để bảo toàn dữ liệu.
+            <div class="p-2 px-3 border-top small text-muted" style="background: #F9FAFB;">
+                <i class="bi bi-info-circle text-coffee me-1"></i>Lưu ý: Các danh mục đang có quán trực thuộc sẽ được khóa nút xóa để bảo toàn dữ liệu.
             </div>
         </div>
     </div>

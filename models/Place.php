@@ -1,16 +1,54 @@
 <?php
 /**
  * Model Place: Quản lý toàn bộ truy vấn CSDL của bảng places
- * Bao gồm: CRUD Admin, Lọc đa tiêu chí phía người dùng, Tìm kiếm, Phân trang và Tính lại điểm trung bình
+ * Bao gồm: CRUD Admin, Lọc đa tiêu chí phía người dùng, Tìm kiếm, Phân trang,
+ * Gợi ý quán tương tự cùng khu vực Long Xuyên và Tính lại điểm trung bình
  */
 class Place extends Model
 {
     /**
+     * Gắn tiện ích (từ bảng amenities) vào từng quán trong danh sách
+     */
+    private function attachAmenities(array $places): array
+    {
+        if (empty($places)) {
+            return $places;
+        }
+        $ids = array_values(array_unique(array_map(fn($pl) => (int) ($pl['id'] ?? 0), $places)));
+        $map = (new Amenity())->getForPlaces($ids);
+        foreach ($places as &$pl) {
+            $pid = (int) ($pl['id'] ?? 0);
+            $pl['amenities'] = $map[$pid] ?? [];
+            $pl['amenity_ids'] = array_map(fn($a) => (int) $a['id'], $pl['amenities']);
+            $pl['amenity_slugs'] = array_map(fn($a) => $a['slug'], $pl['amenities']);
+        }
+        unset($pl);
+        return $places;
+    }
+
+    /**
+     * Suy ra mức giá (1-4) từ giá tự do min/max để bộ lọc cũ vẫn chạy; 0 = chưa có giá
+     */
+    private function derivePriceRange($min, $max): int
+    {
+        $min = ($min === '' || $min === null) ? null : max(0, (int) $min);
+        $max = ($max === '' || $max === null) ? null : max(0, (int) $max);
+        if ($max !== null) {
+            return $max <= 25000 ? 1 : ($max <= 45000 ? 2 : ($max <= 65000 ? 3 : 4));
+        }
+        if ($min !== null) {
+            return $min < 25000 ? 1 : ($min < 45000 ? 2 : ($min < 65000 ? 3 : 4));
+        }
+        return 0;
+    }
+
+    /**
      * Lấy danh sách quán nổi bật (điểm cao nhất) cho Trang chủ
      */
-    public function getFeaturedPlaces(int $limit = 6): array
+    public function getFeaturedPlaces(int $limit = 6, int $offset = 0): array
     {
         $limit = max(1, $limit);
+        $offset = max(0, $offset);
         $sql = "SELECT p.*, c.name AS category_name,
                        (SELECT pi.image_path FROM place_images pi
                         WHERE pi.place_id = p.id
@@ -19,8 +57,37 @@ class Place extends Model
                 INNER JOIN categories c ON c.id = p.category_id
                 WHERE p.status = 'active'
                 ORDER BY p.avg_rating DESC, p.total_reviews DESC, p.id DESC
-                LIMIT {$limit}";
-        return $this->fetchAll($sql);
+                LIMIT {$limit} OFFSET {$offset}";
+        return $this->attachAmenities($this->fetchAll($sql));
+    }
+
+    /**
+     * Quán lên bìa hero trang chủ: điểm cao + nhiều lượt lưu nhất, tự cập nhật mỗi lần tải trang.
+     * Điều kiện: đang hoạt động, có ảnh bìa, điểm TB >= 4.5, ít nhất 3 đánh giá đã duyệt.
+     * Xếp hạng: điểm TB cao nhất -> nhiều lượt lưu nhất -> nhiều đánh giá nhất.
+     * Trả về null khi không có quán nào đạt ngưỡng (controller sẽ fallback về quán nổi bật đầu tiên).
+     */
+    public function getHeroPlace(): ?array
+    {
+        $sql = "SELECT p.*, c.name AS category_name,
+                       (SELECT pi.image_path FROM place_images pi
+                        WHERE pi.place_id = p.id
+                        ORDER BY pi.is_cover DESC, pi.id ASC LIMIT 1) AS cover_image,
+                       (SELECT COUNT(DISTINCT f.user_id) FROM favorites f WHERE f.place_id = p.id) AS favorite_count
+                FROM places p
+                INNER JOIN categories c ON c.id = p.category_id
+                WHERE p.status = 'active'
+                  AND p.avg_rating >= 4.5
+                  AND p.total_reviews >= 3
+                  AND EXISTS (SELECT 1 FROM place_images pi WHERE pi.place_id = p.id)
+                ORDER BY p.avg_rating DESC, favorite_count DESC, p.total_reviews DESC, p.id DESC
+                LIMIT 1";
+        $row = $this->fetchOne($sql);
+        if (!$row) {
+            return null;
+        }
+        $rows = $this->attachAmenities([$row]);
+        return $rows[0] ?? null;
     }
 
     /**
@@ -38,11 +105,42 @@ class Place extends Model
                 WHERE p.status = 'active'
                 ORDER BY p.created_at DESC, p.id DESC
                 LIMIT {$limit}";
-        return $this->fetchAll($sql);
+        return $this->attachAmenities($this->fetchAll($sql));
     }
 
     /**
-     * Lấy danh sách các Quận / Khu vực hiện có trong CSDL để hiển thị bộ lọc
+     * Lấy 3-4 quán tương tự cùng danh mục (category_id) hoặc cùng Phường (district) tại TP. Long Xuyên
+     * (loại trừ quán đang xem)
+     */
+    public function getRelatedPlaces(int $excludePlaceId, int $categoryId, string $district, int $limit = 4): array
+    {
+        $limit = max(1, $limit);
+        $sql = "SELECT p.*, c.name AS category_name,
+                       (SELECT pi.image_path FROM place_images pi
+                        WHERE pi.place_id = p.id
+                        ORDER BY pi.is_cover DESC, pi.id ASC LIMIT 1) AS cover_image
+                FROM places p
+                INNER JOIN categories c ON c.id = p.category_id
+                WHERE p.status = 'active'
+                  AND p.id != :exclude_id
+                  AND (p.category_id = :cat_id OR p.district = :district)
+                ORDER BY (p.district = :district_prio) DESC,
+                         (p.category_id = :cat_prio) DESC,
+                         p.avg_rating DESC,
+                         p.total_reviews DESC
+                LIMIT {$limit}";
+
+        return $this->fetchAll($sql, [
+            ':exclude_id'    => $excludePlaceId,
+            ':cat_id'        => $categoryId,
+            ':district'      => $district,
+            ':district_prio' => $district,
+            ':cat_prio'      => $categoryId,
+        ]);
+    }
+
+    /**
+     * Lấy danh sách các Phường / Khu vực thực tế đang active trong CSDL để hiển thị bộ lọc
      */
     public function getDistinctDistricts(): array
     {
@@ -59,7 +157,7 @@ class Place extends Model
         $conditions = ["p.status = 'active'"];
         $params = [];
 
-        // 1. Tìm kiếm theo tên quán hoặc địa chỉ
+        // 1. Tìm kiếm theo tên quán, địa chỉ hoặc phường tại Long Xuyên
         if (!empty($filters['q'])) {
             $kw = '%' . trim($filters['q']) . '%';
             $conditions[] = '(p.name LIKE :kw1 OR p.address LIKE :kw2 OR p.district LIKE :kw3)';
@@ -74,32 +172,31 @@ class Place extends Model
             $params[':category_id'] = (int) $filters['category_id'];
         }
 
-        // 3. Lọc theo quận / khu vực
+        // 3. Lọc theo Phường / Khu vực
         if (!empty($filters['district'])) {
             $conditions[] = 'p.district = :district';
             $params[':district'] = trim($filters['district']);
         }
 
-        // 4. Lọc theo mức giá (<= price_range để hỗ trợ tag "Dưới 50k" khi price_range=2)
+        // 4. Lọc theo mức giá (mức 1-4 suy ra từ giá tự do; mức 0 = chưa có giá, không khớp bộ lọc)
         if (!empty($filters['price_range'])) {
             $price = (int) $filters['price_range'];
-            if ($price === 2 && !empty($filters['under_50k'])) {
-                $conditions[] = 'p.price_range <= 2';
-            } else {
-                $conditions[] = 'p.price_range <= :price_range';
-                $params[':price_range'] = $price;
-            }
+            $conditions[] = '(p.price_range >= 1 AND p.price_range <= :price_range)';
+            $params[':price_range'] = $price;
         }
 
-        // 5. Lọc tiện ích: Wifi, Ổ cắm, Máy lạnh
-        if (!empty($filters['has_wifi'])) {
-            $conditions[] = 'p.has_wifi = 1';
+        // 5. Lọc tiện ích từ bảng amenities (AND: quán phải có đủ các tiện ích đã chọn)
+        $amenitySlugs = $filters['amenity'] ?? [];
+        if (!is_array($amenitySlugs)) {
+            $amenitySlugs = [$amenitySlugs];
         }
-        if (!empty($filters['has_outlet'])) {
-            $conditions[] = 'p.has_outlet = 1';
-        }
-        if (!empty($filters['has_ac'])) {
-            $conditions[] = 'p.has_ac = 1';
+        $amenitySlugs = array_values(array_unique(array_filter(array_map('trim', $amenitySlugs))));
+        foreach ($amenitySlugs as $idx => $slug) {
+            $key = ':amenity_' . $idx;
+            $conditions[] = "EXISTS (SELECT 1 FROM place_amenities pa
+                                INNER JOIN amenities a ON a.id = pa.amenity_id
+                                WHERE pa.place_id = p.id AND a.slug = {$key} AND a.is_active = 1)";
+            $params[$key] = $slug;
         }
 
         // 6. Lọc độ ồn
@@ -137,7 +234,7 @@ class Place extends Model
                 LIMIT {$perPage} OFFSET {$offset}";
 
         return [
-            'items'       => $this->fetchAll($sql, $params),
+            'items'       => $this->attachAmenities($this->fetchAll($sql, $params)),
             'total'       => $total,
             'currentPage' => $page,
             'totalPages'  => $totalPages,
@@ -189,7 +286,7 @@ class Place extends Model
                 LIMIT {$perPage} OFFSET {$offset}";
 
         return [
-            'items'       => $this->fetchAll($sql, $params),
+            'items'       => $this->attachAmenities($this->fetchAll($sql, $params)),
             'total'       => $total,
             'currentPage' => $page,
             'totalPages'  => $totalPages,
@@ -208,7 +305,11 @@ class Place extends Model
                 LEFT JOIN users u ON u.id = p.created_by
                 WHERE p.id = :id {$statusCond}
                 LIMIT 1";
-        return $this->fetchOne($sql, [':id' => $id]);
+        $place = $this->fetchOne($sql, [':id' => $id]);
+        if ($place === false) {
+            return false;
+        }
+        return $this->attachAmenities([$place])[0];
     }
 
     /**
@@ -255,11 +356,11 @@ class Place extends Model
 
         $sql = 'INSERT INTO places (
                     category_id, name, slug, address, district, description,
-                    price_range, has_wifi, has_outlet, has_ac, noise_level,
+                    price_range, price_min, price_max, noise_level,
                     open_time, close_time, google_map_url, status, created_by, created_at
                 ) VALUES (
                     :category_id, :name, :slug, :address, :district, :description,
-                    :price_range, :has_wifi, :has_outlet, :has_ac, :noise_level,
+                    :price_range, :price_min, :price_max, :noise_level,
                     :open_time, :close_time, :google_map_url, :status, :created_by, NOW()
                 )';
 
@@ -270,10 +371,9 @@ class Place extends Model
             ':address'        => trim($data['address']),
             ':district'       => trim($data['district']),
             ':description'    => trim($data['description']),
-            ':price_range'    => (int) $data['price_range'],
-            ':has_wifi'       => !empty($data['has_wifi']) ? 1 : 0,
-            ':has_outlet'     => !empty($data['has_outlet']) ? 1 : 0,
-            ':has_ac'         => !empty($data['has_ac']) ? 1 : 0,
+            ':price_range'    => $this->derivePriceRange($data['price_min'] ?? null, $data['price_max'] ?? null),
+            ':price_min'      => ($data['price_min'] ?? null) === '' || ($data['price_min'] ?? null) === null ? null : max(0, (int) $data['price_min']),
+            ':price_max'      => ($data['price_max'] ?? null) === '' || ($data['price_max'] ?? null) === null ? null : max(0, (int) $data['price_max']),
             ':noise_level'    => $data['noise_level'],
             ':open_time'      => $data['open_time'],
             ':close_time'     => $data['close_time'],
@@ -282,7 +382,9 @@ class Place extends Model
             ':created_by'     => $data['created_by'] ?? null,
         ]);
 
-        return (int) $this->lastInsertId();
+        $placeId = (int) $this->lastInsertId();
+        (new Amenity())->syncForPlace($placeId, $data['amenity_ids'] ?? []);
+        return $placeId;
     }
 
     /**
@@ -300,9 +402,8 @@ class Place extends Model
                     district = :district,
                     description = :description,
                     price_range = :price_range,
-                    has_wifi = :has_wifi,
-                    has_outlet = :has_outlet,
-                    has_ac = :has_ac,
+                    price_min = :price_min,
+                    price_max = :price_max,
                     noise_level = :noise_level,
                     open_time = :open_time,
                     close_time = :close_time,
@@ -310,24 +411,25 @@ class Place extends Model
                     status = :status
                 WHERE id = :id';
 
-        return $this->execute($sql, [
+        $this->execute($sql, [
             ':category_id'    => (int) $data['category_id'],
             ':name'           => trim($data['name']),
             ':slug'           => $slug,
             ':address'        => trim($data['address']),
             ':district'       => trim($data['district']),
             ':description'    => trim($data['description']),
-            ':price_range'    => (int) $data['price_range'],
-            ':has_wifi'       => !empty($data['has_wifi']) ? 1 : 0,
-            ':has_outlet'     => !empty($data['has_outlet']) ? 1 : 0,
-            ':has_ac'         => !empty($data['has_ac']) ? 1 : 0,
+            ':price_range'    => $this->derivePriceRange($data['price_min'] ?? null, $data['price_max'] ?? null),
+            ':price_min'      => ($data['price_min'] ?? null) === '' || ($data['price_min'] ?? null) === null ? null : max(0, (int) $data['price_min']),
+            ':price_max'      => ($data['price_max'] ?? null) === '' || ($data['price_max'] ?? null) === null ? null : max(0, (int) $data['price_max']),
             ':noise_level'    => $data['noise_level'],
             ':open_time'      => $data['open_time'],
             ':close_time'     => $data['close_time'],
             ':google_map_url' => !empty($data['google_map_url']) ? trim($data['google_map_url']) : null,
             ':status'         => $data['status'] ?? 'active',
             ':id'             => $id,
-        ]) >= 0;
+        ]);
+        (new Amenity())->syncForPlace($id, $data['amenity_ids'] ?? []);
+        return true;
     }
 
     /**
@@ -385,6 +487,14 @@ class Place extends Model
     public function countAll(): int
     {
         return (int) $this->fetchColumn('SELECT COUNT(*) FROM places');
+    }
+
+    /**
+     * Đếm tổng số quán đang hoạt động (active)
+     */
+    public function countActive(): int
+    {
+        return (int) $this->fetchColumn("SELECT COUNT(*) FROM places WHERE status = 'active'");
     }
 
     /**

@@ -1,13 +1,52 @@
 /* =========================================================================
-   StudySpot - Stylesheet chính (Tông màu Cà phê & Học tập sinh viên)
-   Responsive Mobile-First | Bootstrap 5.3 Custom Theme
+   StudySpot - Stylesheet chính | Phong cách "Warm Study Cafe"
+   Khu vực thực tế: TP. Long Xuyên, An Giang (Trường Đại học An Giang - AGU)
+   Ghi đè hoàn toàn màu xanh #0d6efd mặc định của Bootstrap 5.3
    ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 :root {
-    --coffee-primary: #6f4e37;
-    --coffee-dark: #4b3424;
-    --coffee-light: #f8f3ee;
-    --coffee-accent: #d4a373;
-    --warm-bg: #faf7f4;
+    /* Bảng màu chủ đạo Warm Study Cafe */
+    --primary: #5C3D2E;
+    --primary-hover: #462D21;
+    --primary-soft: #6F4E37;
+    --accent: #D97706;
+    --accent-warm: #E09F3E;
+    --bg-body: #FAF7F2;
+    --bg-card: #FFFFFF;
+    --bg-pill: #F3EDE2;
+    --text-main: #2C221E;
+    --text-muted: #6E5D53;
+    --border-soft: #EBE3D5;
+
+    /* Màu trạng thái tự nhiên */
+    --status-open: #2D6A4F;
+    --status-open-bg: #E7F3ED;
+    --status-closed: #BC4749;
+    --status-closed-bg: #FBE9E9;
+
+    /* Tương thích ngược các biến cũ */
+    --coffee-primary: #5C3D2E;
+    --coffee-dark: #3E2723;
+    --coffee-light: #F3EDE2;
+    --coffee-accent: #D97706;
+    --warm-bg: #FAF7F2;
+
+    /* Ghi đè biến gốc Bootstrap 5 để triệt tiêu màu xanh công nghiệp #0d6efd */
+    --bs-primary: #5C3D2E;
+    --bs-primary-rgb: 92, 61, 46;
+    --bs-success: #2D6A4F;
+    --bs-success-rgb: 45, 106, 79;
+    --bs-danger: #BC4749;
+    --bs-danger-rgb: 188, 71, 73;
+    --bs-warning: #D97706;
+    --bs-warning-rgb: 217, 119, 6;
+    --bs-body-bg: #FAF7F2;
+    --bs-body-color: #2C221E;
+    --bs-link-color: #5C3D2E;
+    --bs-link-hover-color: #D97706;
+    --bs-border-color: #EBE3D5;
 }
 
 html {
@@ -15,125 +54,726 @@ html {
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #2b2b2b;
+    font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    line-height: 1.6;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+    letter-spacing: -0.015em;
+    color: var(--text-main);
+}
+
+/* =========================================================================
+   1. GHI ĐÈ CÁC LỚP MẶC ĐỊNH CỦA BOOTSTRAP (KHỬ MÙI BOOTSTRAP MẶC ĐỊNH)
+   ========================================================================= */
 .bg-light-warm {
-    background-color: var(--warm-bg);
+    background-color: var(--bg-body) !important;
 }
 
-.text-coffee {
-    color: var(--coffee-primary) !important;
+.text-coffee,
+.text-primary {
+    color: var(--primary) !important;
 }
 
-.bg-coffee {
-    background-color: var(--coffee-primary) !important;
-    color: #ffffff !important;
+.bg-coffee,
+.bg-primary {
+    background-color: var(--primary) !important;
+    color: #FFFFFF !important;
 }
 
-/* Nút bấm thương hiệu StudySpot */
-.btn-coffee {
-    background-color: var(--coffee-primary);
-    border-color: var(--coffee-primary);
-    color: #ffffff;
-    transition: all 0.2s ease;
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.bg-matcha {
+    background-color: var(--status-open) !important;
+    color: #FFFFFF !important;
+}
+
+.bg-crimson {
+    background-color: var(--status-closed) !important;
+    color: #FFFFFF !important;
+}
+
+/* Nút bấm thương hiệu */
+.btn-coffee,
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.22s ease;
 }
 
 .btn-coffee:hover,
 .btn-coffee:focus,
-.btn-coffee:active {
-    background-color: var(--coffee-dark) !important;
-    border-color: var(--coffee-dark) !important;
-    color: #ffffff !important;
+.btn-coffee:active,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(92, 61, 46, 0.2);
 }
 
-.btn-outline-coffee {
-    color: var(--coffee-primary);
-    border-color: var(--coffee-primary);
-    transition: all 0.2s ease;
+.btn-outline-coffee,
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.22s ease;
 }
 
 .btn-outline-coffee:hover,
 .btn-outline-coffee:focus,
-.btn-outline-coffee:active {
-    background-color: var(--coffee-primary) !important;
-    border-color: var(--coffee-primary) !important;
-    color: #ffffff !important;
+.btn-outline-coffee:active,
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #FFFFFF !important;
 }
 
-/* Logo Badge */
+.btn-accent {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.22s ease;
+}
+
+.btn-accent:hover {
+    background-color: #B45309;
+    border-color: #B45309;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* Ô nhập liệu (Form Controls) */
+.form-control,
+.form-select {
+    border-color: #E2D9C8;
+    border-radius: 10px;
+    color: var(--text-main);
+    padding: 0.55rem 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.22rem rgba(92, 61, 46, 0.14);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(92, 61, 46, 0.18);
+}
+
+/* =========================================================================
+   2. HEADER & NAVBAR ẤM ÁP HIỆN ĐẠI
+   ========================================================================= */
+.navbar-warm {
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft);
+}
+
 .brand-badge {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--coffee-primary), var(--coffee-dark));
-    box-shadow: 0 3px 8px rgba(111, 78, 55, 0.25);
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--primary) 0%, #3E2723 100%);
+    box-shadow: 0 4px 12px rgba(92, 61, 46, 0.25);
 }
 
-/* Banner Trang chủ */
+/* Kiểu chữ Logo thương hiệu chuẩn, không bị đè đuôi chữ y vào dòng phụ */
+.brand-title-group {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.brand-title {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.32rem;
+    color: var(--primary);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+}
+
+.brand-subtitle {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #8C5A3C;
+    margin-top: 3px;
+    line-height: 1;
+}
+
+.admin-badge-pill {
+    background-color: rgba(217, 119, 6, 0.14);
+    color: #B45309;
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.55rem;
+}
+
+.navbar-warm .nav-link {
+    color: #4A3B32;
+    font-weight: 500;
+    padding: 0.5rem 0.9rem !important;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+}
+
+.navbar-warm .nav-link:hover {
+    color: var(--primary);
+    background-color: var(--bg-pill);
+}
+
+.navbar-warm .nav-link.active {
+    color: var(--primary) !important;
+    background-color: var(--bg-pill);
+    font-weight: 700;
+}
+
+.navbar-search-group {
+    background-color: var(--bg-body);
+    border: 1px solid #E2D9C8;
+    border-radius: 999px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    max-width: 220px;
+    flex-shrink: 1;
+}
+
+.navbar-search-group:focus-within {
+    background-color: #FFFFFF;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(92, 61, 46, 0.12);
+    max-width: 260px;
+}
+
+/* =========================================================================
+   3. HERO BANNER TRANG CHỦ (LONG XUYÊN - ĐH AN GIANG)
+   ========================================================================= */
 .hero-banner {
-    background: linear-gradient(135deg, #3e2723 0%, #6f4e37 60%, #8d6e63 100%);
-    color: #ffffff;
-    border-radius: 1.25rem;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(224, 159, 62, 0.22) 0%, transparent 45%),
+        linear-gradient(135deg, #2C221E 0%, #5C3D2E 58%, #7F5539 100%);
+    color: #FFFFFF;
+    border-radius: 24px;
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(44, 34, 30, 0.16);
+}
+
+.hero-banner h1 {
+    color: #FFFFFF;
+}
+
+.hero-quick-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.95rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: #FFF8F0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    transition: all 0.2s ease;
+}
+
+.hero-quick-tag:hover {
+    background: var(--accent-warm);
+    border-color: var(--accent-warm);
+    color: #2C221E;
+    transform: translateY(-2px);
+}
+
+.hero-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0.85rem;
+    height: 100%;
+}
+
+.stat-glass-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    min-height: 124px;
+    padding: 0.95rem 0.65rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(44, 34, 30, 0.16);
+    transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+    box-sizing: border-box;
     overflow: hidden;
 }
 
-/* Thẻ địa điểm (Place Card) */
-.place-card {
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+.stat-glass-card:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(224, 159, 62, 0.65);
+}
+
+.stat-glass-card .stat-number {
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #FBBF24;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+    font-family: var(--font-heading);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stat-glass-card .stat-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.25;
+    margin-bottom: 0.15rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.stat-glass-card .stat-sub {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* =========================================================================
+   4. THẺ ĐỊA ĐIỂM (PLACE CARD) KIỂU AIRBNB / HIGHLANDS HIỆN ĐẠI
+   ========================================================================= */
+.place-card,
+.surface-card {
+    background-color: var(--bg-card);
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 24px rgba(92, 61, 46, 0.06) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
 }
 
 .place-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 14px 28px rgba(75, 52, 36, 0.12) !important;
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px rgba(92, 61, 46, 0.13) !important;
+}
+
+/* Khung bọc ảnh cố định tỉ lệ 16:10 + hiệu ứng zoom mượt khi hover */
+.place-card-img-wrap {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background-color: #EFE6D8;
 }
 
 .place-card-img {
-    height: 205px;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16 / 10;
     object-fit: cover;
-    background-color: #f3e9df;
+    background-color: #EFE6D8;
+    transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Nút Yêu thích nổi trên ảnh */
-.btn-favorite-toggle {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+.place-card:hover .place-card-img {
+    transform: scale(1.04);
 }
 
-.btn-favorite-toggle:hover {
-    transform: scale(1.08);
+/* Badge trạng thái Mở cửa / Đóng cửa góc trên bên trái ảnh */
+.badge-status-open {
+    background-color: rgba(45, 106, 79, 0.92) !important;
+    color: #FFFFFF !important;
+    backdrop-filter: blur(6px);
+    font-weight: 600;
+    font-size: 0.76rem;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Thanh phân trang tông màu cà phê */
+.badge-status-closed {
+    background-color: rgba(188, 71, 73, 0.92) !important;
+    color: #FFFFFF !important;
+    backdrop-filter: blur(6px);
+    font-weight: 600;
+    font-size: 0.76rem;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Nút Trái tim Yêu thích góc trên bên phải ảnh (kính mờ blur 6px) */
+.btn-favorite-toggle.btn-fav-glass {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(44, 34, 30, 0.14);
+    transition: all 0.2s ease;
+}
+
+.btn-favorite-toggle.btn-fav-glass:hover {
+    background: #FFFFFF;
+    transform: scale(1.1);
+}
+
+.btn-favorite-toggle .bi-heart-fill,
+.text-crimson {
+    color: var(--status-closed) !important;
+}
+
+/* Pill / Tag tiện ích nền kem #F3EDE2, chữ nâu đậm */
+.pill-amenity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    background-color: var(--bg-pill) !important;
+    color: var(--primary) !important;
+    border: 1px solid #E5DBC9;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.28rem 0.68rem;
+    border-radius: 999px;
+    line-height: 1.2;
+}
+
+.pill-amenity.pill-quiet {
+    background-color: var(--status-open-bg) !important;
+    color: var(--status-open) !important;
+    border-color: #C7E3D4;
+}
+
+.pill-amenity.pill-moderate {
+    background-color: #FEF3C7 !important;
+    color: #92400E !important;
+    border-color: #FDE68A;
+}
+
+.pill-amenity.pill-lively {
+    background-color: var(--status-closed-bg) !important;
+    color: var(--status-closed) !important;
+    border-color: #F5C2C3;
+}
+
+.pill-late-night {
+    background-color: #FFF4E5 !important;
+    color: #B45309 !important;
+    border: 1px solid #FCD34D;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.26rem 0.65rem;
+    border-radius: 999px;
+}
+
+/* Hiển thị sao đánh giá & Footer thẻ quán */
+.star-display {
+    color: #F59E0B;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.star-display i {
+    color: #F59E0B;
+    margin-right: 1px;
+}
+
+.review-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.place-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(92, 61, 46, 0.08);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.place-price-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--coffee-dark);
+    background-color: var(--bg-cream);
+    border: 1px solid var(--border-color);
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+}
+
+/* =========================================================================
+   5. WIDGET CHỌN SAO ĐÁNH GIÁ (INTERACTIVE STAR RATING WIDGET)
+   ========================================================================= */
+.star-rating-interactive {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: var(--bg-body);
+    padding: 0.45rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid #E5DBC9;
+}
+
+.star-rating-interactive .star-btn {
+    background: none;
+    border: none;
+    padding: 0 2px;
+    font-size: 1.35rem;
+    line-height: 1;
+    color: #D6CBB9;
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.star-rating-interactive .star-btn.is-active,
+.star-rating-interactive .star-btn.is-hovered {
+    color: #F59E0B;
+}
+
+.star-rating-interactive .star-btn:hover {
+    transform: scale(1.18);
+}
+
+.star-rating-interactive .star-score-badge {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-left: 0.4rem;
+    min-width: 48px;
+}
+
+/* =========================================================================
+   6. XEM TRƯỚC ẢNH UPLOAD (LIVE IMAGE PREVIEW)
+   ========================================================================= */
+.live-upload-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+}
+
+.live-upload-preview-item {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--primary);
+    box-shadow: 0 4px 10px rgba(92, 61, 46, 0.12);
+    background-color: #FFFFFF;
+}
+
+.live-upload-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* =========================================================================
+   7. FLASH MESSAGE & FLOATING TOAST MỀM MẠI
+   ========================================================================= */
+.flash-toast-banner {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(44, 34, 30, 0.12);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* =========================================================================
+   8. KHU VỰC QUẢN TRỊ ADMIN (ĐỒNG BỘ NHẬN DIỆN WARM STUDY CAFE)
+   ========================================================================= */
+.admin-topbar {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft) !important;
+}
+
+.admin-sidebar {
+    background-color: #FAF6F0 !important;
+    border-right: 1px solid var(--border-soft);
+    color: #4A3B32;
+    min-height: calc(100vh - 60px);
+}
+
+.admin-sidebar .sidebar-heading {
+    color: #8C5A3C;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.admin-sidebar .nav-link {
+    color: #4A3B32 !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.admin-sidebar .nav-link:hover {
+    background-color: #F0E6D8;
+    color: var(--primary) !important;
+}
+
+.admin-sidebar .nav-link.active {
+    background: linear-gradient(135deg, var(--primary) 0%, #3E2723 100%) !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(92, 61, 46, 0.2);
+}
+
+.admin-sidebar .nav-link.active i {
+    color: #FFE8C2 !important;
+}
+
+.badge-pending-count {
+    background-color: #D97706;
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.admin-table th {
+    background-color: #F6F1E9 !important;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom-width: 1px;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+}
+
+.admin-table td {
+    vertical-align: middle;
+}
+
+.admin-thumb {
+    width: 64px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+}
+
+/* =========================================================================
+   9. PHÂN TRANG, FOOTER & NÚT CUỘN LÊN ĐẦU TRANG
+   ========================================================================= */
 .pagination .page-link {
-    color: var(--coffee-primary);
-    border-radius: 0.5rem;
-    margin: 0 2px;
+    color: var(--primary);
+    border-color: var(--border-soft);
+    border-radius: 10px;
+    margin: 0 3px;
+    font-weight: 600;
+    padding: 0.45rem 0.85rem;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--bg-pill);
+    color: var(--primary);
 }
 
 .pagination .page-item.active .page-link {
-    background-color: var(--coffee-primary);
-    border-color: var(--coffee-primary);
-    color: #ffffff;
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
 }
 
-/* Tabs trong Trang cá nhân */
 .nav-pills .nav-link.active {
-    background-color: var(--coffee-primary);
+    background-color: var(--primary);
 }
 
 .nav-pills .nav-link {
-    color: #495057;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-radius: 10px;
 }
 
-/* Footer link hover */
+.footer-warm {
+    background-color: #261C18;
+    color: #E6DDD3;
+}
+
 .hover-white {
     transition: color 0.15s ease;
 }
 
 .hover-white:hover {
-    color: #ffffff !important;
+    color: var(--accent-warm) !important;
+}
+
+/* Thanh tiến trình tiêu chí đánh giá (Wifi / Không gian / Giá) */
+.progress-warm {
+    height: 9px;
+    background-color: #E5E7EB;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-warm .progress-bar {
+    background: #111827;
+    border-radius: 999px;
 }
 
 /* Nút cuộn lên đầu trang (Back to top) */
@@ -141,27 +781,559 @@ body {
     position: fixed;
     bottom: 24px;
     left: 24px;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1040;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 18px rgba(44, 34, 30, 0.25);
 }
 
-/* Tối ưu hiển thị trên thiết bị di động (Mobile First Adjustments) */
+@media (max-width: 991.98px) {
+    .hero-stats-grid {
+        margin-top: 0.5rem;
+    }
+}
+
 @media (max-width: 767.98px) {
     .hero-banner {
-        border-radius: 1rem;
+        border-radius: 20px;
+        padding: 1.5rem !important;
     }
 
     .hero-banner h1 {
-        font-size: 1.65rem;
+        font-size: 1.65rem !important;
+        line-height: 1.3;
     }
 
-    .place-card-img {
-        height: 185px;
+    .place-card-footer {
+        gap: 0.35rem;
+    }
+
+    .place-price-badge {
+        font-size: 0.74rem;
+        padding: 0.18rem 0.5rem;
     }
 }
+
+@media (max-width: 575.98px) {
+    .hero-banner {
+        border-radius: 16px;
+        padding: 1.25rem 1rem !important;
+    }
+
+    .hero-banner h1 {
+        font-size: 1.45rem !important;
+        line-height: 1.25;
+    }
+
+    .hero-stats-grid {
+        gap: 0.55rem;
+    }
+
+    .stat-glass-card {
+        min-height: 104px;
+        padding: 0.75rem 0.45rem;
+        border-radius: 13px;
+    }
+
+    .stat-glass-card .stat-number {
+        font-size: 1.75rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .stat-glass-card .stat-label {
+        font-size: 0.74rem;
+    }
+
+    .stat-glass-card .stat-sub {
+        font-size: 0.64rem;
+    }
+
+    .place-card-footer {
+        gap: 0.25rem;
+    }
+
+    .place-price-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.45rem;
+    }
+
+    .star-display {
+        font-size: 0.76rem;
+    }
+
+    .review-count {
+        font-size: 0.7rem;
+    }
+}
+
+/* =========================================================================
+   Navbar trên Mobile: menu gọn full-width, dropdown tài khoản mở tại chỗ
+   (không trôi ra giữa màn hình phủ lên hero)
+   ========================================================================= */
+@media (max-width: 991.98px) {
+    #mainNavbar .navbar-nav {
+        gap: 0;
+        margin-bottom: 0 !important;
+    }
+    #mainNavbar .nav-link {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--border-soft);
+        border-radius: 0.75rem;
+    }
+    #mainNavbar .nav-item:last-child .nav-link {
+        border-bottom: 0;
+    }
+    #mainNavbar form {
+        margin: 0.75rem 0 !important;
+        width: 100%;
+    }
+    #mainNavbar form .navbar-search-group {
+        width: 100%;
+    }
+    #mainNavbar .d-flex.align-items-center.gap-2.mt-2 {
+        margin-top: 0 !important;
+        width: 100%;
+        flex-wrap: wrap !important;
+    }
+    #mainNavbar .dropdown {
+        width: 100%;
+    }
+    #mainNavbar .dropdown-menu {
+        position: static !important;
+        float: none;
+        width: 100%;
+        margin-top: 0.5rem;
+        box-shadow: none;
+        border: 1px solid var(--border-soft);
+        transform: none !important;
+    }
+}
+
+/* Admin shell (2026-11-03): sidebar 260px cố định, topbar gọn 60px */
+@media (min-width: 992px) {
+    .admin-sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        min-height: 100vh;
+    }
+    .admin-sidebar .offcanvas-body {
+        height: 100%;
+    }
+}
+.admin-topbar {
+    min-height: 60px;
+}
+
+/* =========================================================================
+   Hệ kích thước chung (2026-11-03): một khung, một nhịp cho mọi trang
+   - Container người dùng (header, footer, nội dung) chốt ở 1200px, không
+     nhảy từ 1140 lên 1320 khi màn hình vượt 1400px như mặc định Bootstrap.
+   - Trang nội dung: py-4 (24px) trên/dưới, trang admin: p-4 (24px) — cùng nhịp.
+   - Thẻ quán: footer được phép xuống dòng thay vì cắt mất giá tiền khi
+     thẻ hẹp (danh sách có cột lọc bên trái).
+   ========================================================================= */
+@media (min-width: 1400px) {
+    .container,
+    .container-xxl {
+        max-width: 1200px;
+    }
+}
+.place-card-footer {
+    white-space: normal;
+    overflow: visible;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+.place-card-footer .place-price-badge {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* =========================================================================
+   Thiết kế chuyên nghiệp (2026-11-03) — theo nguyên tắc Linear / Stripe:
+   nền đơn sắc + một màu nhấn, chữ sắc nét, lưới 8px, bo góc tối đa 12px
+   cho thẻ và 8px cho nút / ô nhập, không gradient, không bóng nặng.
+   Lớp này đứng cuối file nên ghi đè hệ Warm Cafe cũ.
+   ========================================================================= */
+:root {
+    --primary: #111827;
+    --primary-hover: #000000;
+    --primary-soft: #374151;
+    --accent: #D97706;
+    --bg-body: #F9FAFB;
+    --bg-card: #FFFFFF;
+    --bg-pill: #F3F4F6;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border-soft: #E5E7EB;
+    --coffee-primary: #111827;
+    --coffee-dark: #111827;
+    --coffee-light: #F3F4F6;
+    --warm-bg: #F9FAFB;
+    --bs-primary: #111827;
+    --bs-primary-rgb: 17, 24, 39;
+    --bs-body-bg: #F9FAFB;
+    --bs-body-color: #111827;
+    --bs-link-color: #111827;
+    --bs-link-hover-color: #000000;
+    --bs-border-color: #E5E7EB;
+}
+body {
+    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #F9FAFB;
+    color: #111827;
+}
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    letter-spacing: -0.02em;
+    color: #111827;
+}
+.display-6 {
+    font-size: 2.5rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+.bg-light-warm {
+    background-color: #F9FAFB !important;
+}
+/* Nút: chính = mực đen, phụ = trắng viền xám, bo 8px, không pill */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+}
+.btn.rounded-pill {
+    border-radius: 8px !important;
+}
+.btn-coffee,
+.btn-primary {
+    background-color: #111827 !important;
+    border-color: #111827 !important;
+    color: #FFFFFF !important;
+}
+.btn-coffee:hover, .btn-coffee:focus, .btn-coffee:active,
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+}
+.btn-outline-coffee {
+    background-color: #FFFFFF !important;
+    border-color: #D1D5DB !important;
+    color: #111827 !important;
+}
+.btn-outline-coffee:hover {
+    background-color: #F9FAFB !important;
+    border-color: #111827 !important;
+    color: #111827 !important;
+}
+/* Ô nhập: viền xám, bo 8px, focus viền mực + vòng mờ */
+.form-control, .form-select {
+    border-color: #D1D5DB;
+    border-radius: 8px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
+}
+/* Header: trắng, viền dưới mảnh, nav chữ thường, active nền mực */
+.navbar-warm {
+    background-color: #FFFFFF !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid #E5E7EB;
+}
+.navbar-warm .nav-link {
+    color: #374151 !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem !important;
+}
+.navbar-warm .nav-link:hover {
+    color: #111827 !important;
+    background-color: #F3F4F6 !important;
+}
+.navbar-warm .nav-link.active {
+    color: #FFFFFF !important;
+    background-color: #111827 !important;
+    font-weight: 600;
+}
+.navbar-search-group {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 8px !important;
+}
+.navbar-search-group:focus-within {
+    border-color: #111827 !important;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10) !important;
+}
+.brand-badge {
+    background: #111827 !important;
+    box-shadow: none !important;
+}
+.brand-title {
+    color: #111827 !important;
+}
+.brand-subtitle {
+    color: #6B7280 !important;
+}
+/* Hero: nền trắng, viền mảnh, không gradient, không bóng nặng */
+.hero-banner {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+.hero-banner h1 {
+    color: #111827 !important;
+}
+.hero-quick-tag {
+    background: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    color: #374151 !important;
+    border-radius: 8px !important;
+    backdrop-filter: none;
+}
+.hero-quick-tag:hover {
+    background: #F3F4F6 !important;
+    border-color: #D1D5DB !important;
+    color: #111827 !important;
+    transform: none !important;
+}
+/* Thẻ: trắng, viền mảnh, bo 12px, hover nhẹ — không bóng nâu nặng */
+.place-card, .surface-card {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+.place-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+    border-color: #D1D5DB !important;
+}
+.place-card-img-wrap, .place-card-img {
+    background-color: #F3F4F6 !important;
+}
+.pill-amenity {
+    background-color: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+    color: #374151 !important;
+    border-radius: 8px !important;
+}
+/* Admin: sidebar trắng, active mực đen, topbar trắng */
+.admin-sidebar {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #E5E7EB;
+}
+.admin-sidebar .nav-link {
+    color: #374151 !important;
+    border-radius: 8px !important;
+}
+.admin-sidebar .nav-link:hover {
+    background-color: #F3F4F6 !important;
+    color: #111827 !important;
+}
+.admin-sidebar .nav-link.active {
+    background: #111827 !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
+}
+.admin-sidebar .nav-link.active i {
+    color: #FFFFFF !important;
+}
+.admin-sidebar .sidebar-heading {
+    color: #6B7280 !important;
+}
+.admin-topbar {
+    background-color: #FFFFFF !important;
+    backdrop-filter: none;
+    border-bottom: 1px solid #E5E7EB !important;
+}
+.admin-table th {
+    background-color: #F9FAFB !important;
+    color: #111827 !important;
+}
+/* Footer: trắng, viền trên mảnh */
+.footer-warm {
+    background-color: #FFFFFF !important;
+    border-top: 1px solid #E5E7EB;
+    color: #374151 !important;
+}
+.dropdown-menu {
+    border: 1px solid #E5E7EB !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* =========================================================================
+   Bố cục mới đồng bộ (2026-11-03) — Layout 2, áp cho mọi trang:
+   cùng container 1200, cùng page-head, cùng place-row, cùng filter-bar,
+   cùng form-card. Không còn: hero ở giữa, filter cột trái, card grid 3 cột,
+   profile cột trái 4, admin sidebar.
+   ========================================================================= */
+.page-head { margin-bottom: 24px; }
+.page-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 4px; }
+.page-sub { font-size: 0.875rem; color: #6B7280; margin-bottom: 0; }
+.section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
+.section-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 2px; }
+.section-sub { font-size: 0.875rem; color: #6B7280; margin-bottom: 0; }
+/* Hero chia đôi: trái chữ + tìm kiếm, phải ảnh */
+.hero-split { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 24px; align-items: center; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+.hero-split-img { width: 100%; height: 340px; object-fit: cover; border-radius: 12px; }
+@media (max-width: 991px) { .hero-split { grid-template-columns: 1fr; padding: 24px; } .hero-split-img { height: 220px; } }
+/* Danh mục dạng dải ngang: icon trái, tên trái, số lượng phải */
+.cat-strip { display: flex; flex-wrap: wrap; gap: 16px; }
+.cat-strip-item { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; flex: 1 1 180px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; text-decoration: none; color: #111827; }
+.cat-strip-item:hover { border-color: #D1D5DB; background: #F9FAFB; }
+.cat-strip-item .cat-name { flex: 1; min-width: 0; font-weight: 600; font-size: 0.9rem; }
+.cat-strip-item .cat-count { margin-left: 0; flex-shrink: 0; font-size: 0.8rem; color: #6B7280; white-space: nowrap; }
+/* Hàng quán dùng chung: ảnh trái, thông tin giữa, giá + nút phải */
+.place-row { display: flex; gap: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 24px; }
+.place-row:hover { border-color: #D1D5DB; }
+.place-row-img { width: 200px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.place-row-body { flex: 1; min-width: 0; }
+.place-row-side { width: 170px; flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+@media (max-width: 767px) { .place-row { flex-direction: column; } .place-row-img { width: 100%; height: 180px; } .place-row-side { width: 100%; text-align: left; align-items: flex-start; flex-direction: column; gap: 8px; } .place-row-side .d-flex.gap-2 { width: 100%; } .place-row-side .d-flex.gap-2 .btn-coffee { flex: 1; text-align: center; white-space: nowrap; } }
+/* Thanh lọc ở trên, không còn cột trái */
+.filter-bar { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+/* Gallery chi tiết: ảnh lớn trái, ảnh nhỏ phải */
+.gallery-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+.gallery-main { width: 100%; height: 420px; object-fit: cover; border-radius: 12px; }
+.gallery-side { display: grid; gap: 16px; }
+.gallery-side img { width: 100%; height: 204px; object-fit: cover; border-radius: 12px; }
+@media (max-width: 767px) { .gallery-grid { grid-template-columns: 1fr; } .gallery-main { height: 260px; } .gallery-side { grid-template-columns: 1fr 1fr; } .gallery-side img { height: 120px; } }
+/* Thẻ thông tin sticky bên phải trang chi tiết */
+.sticky-card { position: sticky; top: 84px; }
+/* Dải hồ sơ: avatar + tên + số liệu, không còn cột trái */
+.profile-band { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; padding: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
+.profile-stat { min-width: 90px; }
+.profile-stat .stat-num { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+.profile-stat .stat-label { font-size: 0.8rem; color: #6B7280; }
+/* Auth chia đôi: trái panel mực, phải form */
+.auth-split { display: grid; grid-template-columns: 1fr 1.15fr; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; }
+.auth-panel { background: #111827; color: #FFFFFF; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+.auth-panel h2 { color: #FFFFFF; font-size: 1.5rem; letter-spacing: -0.02em; }
+.auth-panel p, .auth-panel li { color: #D1D5DB; }
+.auth-form { padding: 24px; }
+@media (max-width: 991px) { .auth-split { grid-template-columns: 1fr; } .auth-panel { padding: 24px; } .auth-form { padding: 24px; } }
+/* Admin top-nav: không còn sidebar, cùng container 1200 với trang người dùng */
+.admin-topnav { background: #FFFFFF; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 1020; }
+.admin-nav-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 0.9rem; border-radius: 8px; color: #374151; font-weight: 500; text-decoration: none; white-space: nowrap; }
+.admin-nav-link:hover { background: #F3F4F6; color: #111827; }
+.admin-nav-link.active { background: #111827; color: #FFFFFF; }
+
+/* Beauty pass 2026-11-03: admin tables one-line headers, neutral progress */
+.admin-table th { white-space: nowrap; font-size: 0.82rem; }
+.progress-bar { background-color: #111827; }
+
+/* Header padding đều 4 phía (2026-11-03, cập nhật padding toàn diện): thanh header 24px trên/dưới = container 24px trái/phải; mọi mục header cao 40px */
+.navbar-warm .navbar { padding-top: 24px !important; padding-bottom: 24px !important; }
+.navbar-warm .nav-link { padding-top: 8px !important; padding-bottom: 8px !important; padding-left: 8px !important; padding-right: 8px !important; }
+.navbar-warm .header-switch-btn { width: 170px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 8px 8px !important; font-size: 1rem !important; line-height: 1.5 !important; }
+.navbar-warm .header-account-btn { padding: 5px 8px !important; }
+.navbar-warm .navbar-search-group { height: 40px; }
+.navbar-warm .navbar-search-group .form-control { height: 100%; }
+
+/* Padding toàn diện 2026-11-03: khung ngoài 24px, khối lớn 24px, khối nhỏ 16px, khoảng cách 24/16/8 */
+.container { padding-left: 24px !important; padding-right: 24px !important; }
+.table th, .table td { padding: 12px !important; }
+.page-title, .section-title { margin-bottom: 8px !important; }
+.form-label { margin-bottom: 8px !important; }
+
+/* Sidebar mobile 2026-11-03: trượt từ phải vào, thay cho menu sổ từ trên xuống */
+.mobile-sidebar { width: 320px !important; max-width: 85vw !important; }
+.sidebar-link { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 12px; color: #111827; font-weight: 600; text-decoration: none; }
+.sidebar-link:hover { background: #F3F4F6; color: #111827; }
+.sidebar-link.active { background: #111827; color: #FFFFFF; }
+
+/* Hồ sơ mobile 2026-11-03: stats lưới 3 cột đều, tabs 2 cột đều, nút đều, không tràn */
+.profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; }
+.profile-stat { min-width: 0; }
+.profile-stat .stat-num { white-space: nowrap; }
+#profileTab { flex-wrap: nowrap; }
+#profileTab .nav-item { flex: 1; min-width: 0; }
+#profileTab .nav-link { width: 100%; text-align: center; white-space: nowrap; }
+.review-actions .btn, .review-actions form { flex: 1; min-width: 0; }
+.review-actions .btn { width: 100%; text-align: center; white-space: nowrap; }
+@media (max-width: 767px) {
+    .profile-band { flex-direction: column; align-items: flex-start; }
+    .profile-band .flex-grow-1 { min-width: 0 !important; width: 100%; }
+    .profile-band > a.btn { width: 100%; text-align: center; }
+    .profile-stat .stat-num { font-size: 0.95rem !important; }
+    .profile-stat .stat-label { font-size: 0.75rem; line-height: 1.3; }
+    #profileTab .nav-link { font-size: 0.85rem; padding: 10px 4px !important; }
+}
+
+/* Tabs hồ sơ segmented 2026-11-03: 2 tab đều nhau, tab chưa chọn cũng là 1 ô rõ ràng, không còn chữ trần */
+#profileTab { background: #F3F4F6; padding: 4px; border-radius: 12px; gap: 4px; }
+#profileTab .nav-link { background: transparent; color: #374151; border-radius: 8px; }
+#profileTab .nav-link:not(.active):hover { background: #E5E7EB; color: #111827; }
+#profileTab .nav-link.active { background: #111827; color: #FFFFFF; }
+@media (max-width: 767px) {
+    #profileTab .nav-link { font-size: 0.75rem; padding: 10px 2px !important; }
+}
+
+/* Gợi ý tìm kiếm trực tiếp 2026-11-03: dropdown dưới ô tìm kiếm header/hero/sidebar */
+.hero-split .input-group { position: relative; }
+.search-suggest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.12); z-index: 1050; overflow: hidden; max-height: 320px; overflow-y: auto; }
+.search-suggest-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 10px 12px; text-decoration: none; color: #111827; border-bottom: 1px solid #F3F4F6; }
+.search-suggest-item:hover, .search-suggest-item.active { background: #F9FAFB; color: #111827; }
+.search-suggest-item strong { display: block; font-size: 0.9rem; }
+.search-suggest-item small { color: #6B7280; font-size: 0.8rem; }
+.search-suggest-rating { white-space: nowrap; color: #D97706; font-weight: 700; font-size: 0.85rem; }
+.search-suggest-all { display: block; padding: 10px 12px; font-weight: 600; font-size: 0.9rem; color: #111827; text-decoration: none; background: #F9FAFB; }
+.search-suggest-all:hover { background: #F3F4F6; color: #111827; }
+.search-suggest-empty { padding: 12px; color: #6B7280; font-size: 0.9rem; }
+
+/* 2026-11-03: dau hieu dropdown sidebar mobile + sua tran trang sua ho so */
+.sidebar-link .sidebar-chevron { transition: transform .2s ease; font-size: .85rem; }
+.sidebar-link[aria-expanded="true"] .sidebar-chevron { transform: rotate(180deg); }
+@media (max-width: 767px) {
+    .profile-edit-head { flex-direction: column; align-items: stretch !important; gap: 12px; }
+    .profile-edit-head .btn { width: 100%; text-align: center; }
+    .avatar-upload { flex-direction: column; align-items: flex-start !important; }
+    .avatar-upload > .flex-grow-1 { width: 100%; min-width: 0; }
+}
+
+/* 2026-11-03: thang chu dong nhat - hang header (nav, sidebar, nut chuyen trang, tai khoan) */
+.navbar-warm .nav-link, .navbar-warm .btn, .sidebar-link { font-size: .95rem; font-weight: 600; text-transform: none; }
+.header-account-btn .small { font-size: .95rem; }
+
+/* 2026-11-03: o phan trang cung chieu rong (font so khong deu nhau nen khong de padding tu quyet dinh) */
+.pagination .page-link { min-width: 40px; text-align: center; }
+
+/* Filter bar: select đủ chỗ cho nhãn dài (VD "Cà phê Mở khuya", "Phường Bình Khánh")
+   tránh chữ bị che bởi mũi tên dropdown ở màn hình vừa (768-1200px). */
+.filter-bar .form-select {
+    min-width: 0;
+    font-size: 0.95rem;
+    padding-right: 3rem;
+    background-position: right 1rem center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Login panel image: hinh phu kin thay cho khoi chu, chi giu logo nho. */
+.auth-panel-image { display: block; padding: 0; position: relative; overflow: hidden; }
+.auth-panel-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.auth-panel-image::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(17,24,39,.55), rgba(17,24,39,0) 55%); }
+.auth-panel-image .auth-panel-brand { position: absolute; left: 24px; bottom: 24px; z-index: 1; display: flex; align-items: center; gap: 8px; color: #FFFFFF; font-weight: 700; }
+.auth-panel-image .auth-panel-brand .brand-badge { width: 36px; height: 36px; font-size: 1.1rem; }
+@media (max-width: 991px) { .auth-panel-image { min-height: 220px; } }
+
+/* Auth: hai trang dang nhap/dang ky cao bang nhau (min-height chung, form can giua doc). */
+.auth-split { min-height: 640px; }
+.auth-form { display: flex; flex-direction: column; justify-content: center; }
+
+/* Chong nhay layout khi chuyen trang: luon giu cho cho thanh cuon doc. */
+html { scrollbar-gutter: stable; }

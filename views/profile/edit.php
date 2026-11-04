@@ -1,45 +1,51 @@
 <?php
 /**
  * Giao diện Chỉnh sửa Hồ sơ Cá nhân, Đổi Avatar & Đổi Mật khẩu (views/profile/edit.php)
+ * Tích hợp sẵn Live Image Preview từ assets/js/main.js
  */
 ?>
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 profile-edit-head">
         <div>
-            <h1 class="h4 fw-bold text-coffee mb-1"><i class="bi bi-person-gear me-2"></i>Cài đặt Hồ sơ Cá nhân</h1>
-            <p class="text-muted small mb-0">Cập nhật thông tin liên hệ, ảnh đại diện hoặc thay đổi mật khẩu bảo mật</p>
+            <h1 class="page-title"><i class="bi bi-person-gear me-2"></i>Cài đặt hồ sơ cá nhân</h1>
+            <p class="text-muted small mb-0">Cập nhật thông tin, ảnh đại diện hoặc mật khẩu.</p>
         </div>
-        <a href="<?= base_url('profile') ?>" class="btn btn-sm btn-outline-secondary">
+        <a href="<?= base_url('profile') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3">
             <i class="bi bi-arrow-left me-1"></i>Quay lại Trang cá nhân
         </a>
     </div>
 
     <div class="row g-4">
         <!-- Cột trái: Cập nhật thông tin & Đổi Avatar -->
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h2 class="h6 fw-bold text-uppercase text-coffee mb-3">
-                    <i class="bi bi-person-badge me-2"></i>Thông tin cá nhân &amp; Ảnh đại diện
+        <div class="col-lg-8">
+            <div class="card surface-card p-4">
+                <h2 class="h6 fw-bold text-coffee mb-3">
+                    <i class="bi bi-person-badge-fill me-2"></i>Thông tin cá nhân
                 </h2>
 
                 <form action="<?= base_url('profile/edit') ?>" method="POST" enctype="multipart/form-data" novalidate>
                     <?= csrf_field() ?>
                     <input type="hidden" name="form_type" value="update_info">
 
-                    <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-4 bg-light-warm border">
+                    <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-4 avatar-upload" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
                         <img
                             src="<?= get_image_url($user['avatar'] ?? null, 'avatar') ?>"
                             id="avatarPreviewImg"
-                            alt="Avatar"
-                            class="rounded-circle object-fit-cover border border-2 border-warning"
-                            width="76"
-                            height="76"
+                            alt="<?= e($user['name']) ?>"
+                            class="rounded-circle object-fit-cover shadow-sm"
+                            style="border: 2px solid #E5E7EB;"
+                            width="80"
+                            height="80"
                         >
                         <div class="flex-grow-1">
-                            <label for="avatarInput" class="form-label fw-semibold small mb-1">Đổi ảnh đại diện mới</label>
+                            <label for="avatarInput" class="form-label fw-semibold small mb-1">Đổi ảnh đại diện</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="avatarInput" class="btn btn-sm btn-outline-coffee rounded-pill px-3 mb-0 flex-shrink-0">Chọn ảnh</label>
+                                <span id="avatarFileName" class="text-muted small text-truncate">Chưa chọn ảnh mới</span>
+                            </div>
                             <input
                                 type="file"
-                                class="form-control form-control-sm <?= isset($errors['avatar']) ? 'is-invalid' : '' ?>"
+                                class="visually-hidden <?= isset($errors['avatar']) ? 'is-invalid' : '' ?>"
                                 id="avatarInput"
                                 name="avatar"
                                 accept=".jpg,.jpeg,.png,.webp"
@@ -53,7 +59,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Địa chỉ Email (Không thể thay đổi)</label>
+                        <label class="form-label fw-semibold small">Địa chỉ Email đăng nhập</label>
                         <input type="email" class="form-control bg-light" value="<?= e($user['email']) ?>" disabled>
                     </div>
 
@@ -79,7 +85,7 @@
                             class="form-control <?= isset($errors['phone']) ? 'is-invalid' : '' ?>"
                             id="phone"
                             name="phone"
-                            placeholder="0901234567"
+                            placeholder="Nhập số điện thoại 10 chữ số"
                             value="<?= e($_POST['phone'] ?? $user['phone']) ?>"
                         >
                         <?php if (isset($errors['phone'])): ?>
@@ -87,7 +93,7 @@
                         <?php endif; ?>
                     </div>
 
-                    <button type="submit" class="btn btn-coffee px-4">
+                    <button type="submit" class="btn btn-coffee rounded-pill px-4 py-2">
                         <i class="bi bi-check2-circle me-1"></i>Lưu thông tin cá nhân
                     </button>
                 </form>
@@ -95,10 +101,10 @@
         </div>
 
         <!-- Cột phải: Đổi mật khẩu -->
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <h2 class="h6 fw-bold text-uppercase text-coffee mb-3">
-                    <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu bảo mật
+        <div class="col-lg-4">
+            <div class="card surface-card p-4">
+                <h2 class="h6 fw-bold text-coffee mb-3">
+                    <i class="bi bi-shield-lock-fill me-2"></i>Đổi mật khẩu
                 </h2>
 
                 <form action="<?= base_url('profile/edit') ?>" method="POST" novalidate>
@@ -149,7 +155,7 @@
                         <?php endif; ?>
                     </div>
 
-                    <button type="submit" class="btn btn-outline-coffee w-100">
+                    <button type="submit" class="btn btn-outline-coffee rounded-pill w-100 py-2">
                         <i class="bi bi-key-fill me-1"></i>Cập nhật mật khẩu mới
                     </button>
                 </form>
@@ -157,16 +163,3 @@
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('avatarInput')?.addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (ev) {
-            document.getElementById('avatarPreviewImg').src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-});
-</script>

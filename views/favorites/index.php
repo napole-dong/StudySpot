@@ -1,10 +1,11 @@
 <?php
 /**
  * Giao diện Danh sách Quán yêu thích đã lưu của thành viên (views/favorites/index.php)
+ * Thiết kế đồng nhất theo phong cách Warm Study Cafe
  */
 ?>
 <div class="container py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div class="page-head d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
@@ -12,8 +13,8 @@
                     <li class="breadcrumb-item active" aria-current="page">Quán đã lưu</li>
                 </ol>
             </nav>
-            <h1 class="h3 fw-bold text-coffee mb-0">
-                <i class="bi bi-heart-fill text-danger me-2"></i>Quán học bài Yêu thích của tôi
+            <h1 class="page-title">
+                <i class="bi bi-heart-fill text-crimson me-2"></i>Quán học bài yêu thích tại Long Xuyên (<?= count($places) ?>)
             </h1>
         </div>
         <a href="<?= base_url('place') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3">
@@ -22,96 +23,41 @@
     </div>
 
     <?php if (empty($places)): ?>
-        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
-            <div class="display-4 text-danger opacity-50 mb-3"><i class="bi bi-heart"></i></div>
+        <div class="card surface-card p-5 text-center">
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 72px; height: 72px; background-color: #FBE9E9; color: #BC4749; font-size: 2rem;">
+                <i class="bi bi-heart"></i>
+            </div>
             <h2 class="h5 fw-bold mb-2">Bạn chưa lưu quán học bài nào</h2>
-            <p class="text-muted small mb-4">
-                Hãy bấm vào biểu tượng trái tim <i class="bi bi-heart text-danger"></i> trên các quán cà phê để lưu lại danh sách góc học tập yêu thích của riêng bạn.
+            <p class="text-muted small mb-4 mx-auto" style="max-width: 450px;">
+                Hãy bấm vào biểu tượng trái tim <i class="bi bi-heart-fill text-crimson"></i> ở góc phải trên ảnh các quán cà phê tại Long Xuyên để lưu lại danh sách góc học tập quen thuộc của riêng bạn.
             </p>
             <div>
-                <a href="<?= base_url('place') ?>" class="btn btn-coffee px-4">
+                <a href="<?= base_url('place') ?>" class="btn btn-coffee rounded-pill px-4 py-2">
                     <i class="bi bi-search me-1"></i>Tìm quán học bài ngay
                 </a>
             </div>
         </div>
     <?php else: ?>
-        <div class="row g-4" id="favoritePlacesGrid">
+        <div class="d-flex flex-column gap-4" id="favoritePlacesGrid">
             <?php foreach ($places as $place): ?>
                 <?php
-                $noiseInfo = format_noise_level($place['noise_level']);
                 $isOpen = is_place_open($place['open_time'], $place['close_time']);
+                $cardAmenities = get_card_amenities($place);
                 ?>
-                <div class="col-md-6 col-lg-4 favorite-item-col" data-place-id="<?= (int) $place['id'] ?>">
-                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden place-card bg-white">
-                        <div class="position-relative">
-                            <a href="<?= base_url('place/show/' . (int) $place['id']) ?>">
-                                <img src="<?= get_image_url($place['cover_image'] ?? null, 'place') ?>" class="card-img-top place-card-img" alt="<?= e($place['name']) ?>">
-                            </a>
-                            <span class="position-absolute top-0 start-0 m-3 badge <?= $isOpen ? 'bg-success' : 'bg-secondary' ?> shadow-sm">
-                                <i class="bi <?= $isOpen ? 'bi-door-open-fill' : 'bi-door-closed-fill' ?> me-1"></i><?= $isOpen ? 'Đang mở cửa' : 'Đã đóng cửa' ?>
-                            </span>
-
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-3 btn-favorite-toggle"
-                                data-place-id="<?= (int) $place['id'] ?>"
-                                data-remove-card="1"
-                                title="Bỏ lưu khỏi danh sách yêu thích"
-                            >
-                                <i class="bi bi-heart-fill text-danger"></i>
-                            </button>
-
-                            <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75">
-                                <?= e($place['category_name']) ?>
-                            </span>
-                        </div>
-
-                        <div class="card-body d-flex flex-column p-3">
-                            <div class="d-flex flex-wrap gap-1 mb-2">
-                                <?php if (is_deadline_friendly($place)): ?>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                        <i class="bi bi-lightning-charge-fill me-1"></i>Phù hợp chạy deadline
-                                    </span>
-                                <?php endif; ?>
-                                <?php if (is_student_price($place)): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                        <i class="bi bi-piggy-bank-fill me-1"></i>Giá sinh viên
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-
-                            <h2 class="h6 fw-bold mb-1">
-                                <a href="<?= base_url('place/show/' . (int) $place['id']) ?>" class="text-dark text-decoration-none">
-                                    <?= e($place['name']) ?>
-                                </a>
-                            </h2>
-
-                            <p class="small text-muted mb-2 text-truncate">
-                                <i class="bi bi-geo-alt-fill text-coffee me-1"></i><?= e($place['address']) ?>, <strong><?= e($place['district']) ?></strong>
-                            </p>
-
-                            <div class="d-flex flex-wrap gap-1 mb-3">
-                                <?php if (!empty($place['has_wifi'])): ?>
-                                    <span class="badge bg-light text-dark border"><i class="bi bi-wifi text-info me-1"></i>Wifi</span>
-                                <?php endif; ?>
-                                <?php if (!empty($place['has_outlet'])): ?>
-                                    <span class="badge bg-light text-dark border"><i class="bi bi-plug text-warning me-1"></i>Ổ cắm</span>
-                                <?php endif; ?>
-                                <span class="badge border <?= e($noiseInfo['class']) ?>">
-                                    <i class="bi <?= e($noiseInfo['icon']) ?> me-1"></i><?= e($noiseInfo['label']) ?>
-                                </span>
-                            </div>
-
-                            <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
-                                <div>
-                                    <?= render_stars((float) $place['avg_rating']) ?>
-                                    <span class="text-muted small ms-1">(<?= (int) $place['total_reviews'] ?>)</span>
-                                </div>
-                                <span class="small fw-semibold text-coffee"><?= e(format_price_range((int) $place['price_range'])) ?></span>
-                            </div>
-                        </div>
+                <article class="place-row favorite-item-col" data-place-id="<?= (int) $place['id'] ?>">
+                    <a href="<?= base_url('place/show/' . (int) $place['id']) ?>"><img src="<?= get_image_url($place['cover_image'] ?? null, 'place', (int) $place['id']) ?>" class="place-row-img" alt="<?= e($place['name']) ?>"></a>
+                    <div class="place-row-body">
+                        <div class="d-flex flex-wrap gap-2 mb-1"><span class="pill-amenity"><?= e($place['category_name']) ?></span><span class="<?= $isOpen ? 'badge-status-open' : 'badge-status-closed' ?>"><?= $isOpen ? 'Đang mở cửa' : 'Đã đóng cửa' ?></span></div>
+                        <h2 class="h6 fw-bold mb-1"><a href="<?= base_url('place/show/' . (int) $place['id']) ?>" class="text-dark text-decoration-none"><?= e($place['name']) ?></a></h2>
+                        <p class="small text-muted mb-2 text-truncate"><i class="bi bi-geo-alt-fill me-1"></i><?= e($place['address']) ?></p>
+                        <div class="d-flex flex-wrap gap-1"><?php foreach ($cardAmenities as $amenity): ?><span class="<?= e($amenity['class']) ?>"><?= e($amenity['label']) ?></span><?php endforeach; ?></div>
                     </div>
-                </div>
+                    <div class="place-row-side">
+                        <div><?= render_stars((float) $place['avg_rating']) ?> <span class="small text-muted">(<?= (int) $place['total_reviews'] ?>)</span></div>
+                        <div class="place-price-badge"><?= e(format_price_range_from_min_max($place['price_min'] ?? null, $place['price_max'] ?? null)) ?></div>
+                        <div class="d-flex gap-2"><button type="button" class="btn btn-sm btn-outline-coffee btn-favorite-toggle" data-place-id="<?= (int) $place['id'] ?>" data-remove-card="1" title="Bỏ lưu khỏi danh sách yêu thích"><i class="bi bi-heart-fill text-danger"></i></button><a href="<?= base_url('place/show/' . (int) $place['id']) ?>" class="btn btn-sm btn-coffee">Xem chi tiết</a></div>
+                    </div>
+                </article>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

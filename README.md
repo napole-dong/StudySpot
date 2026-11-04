@@ -1,8 +1,13 @@
 # StudySpot – Website Review Quán Ăn & Cà Phê Học Bài Dành Cho Sinh Viên
 
-**Đồ án Học phần:** Công nghệ Web – PHP (Mã học phần: **SEE518**)  
-**Kiến trúc:** Mini-MVC OOP thuần (PHP 8.x) + PDO MySQL + Bootstrap 5.3 + Chart.js  
-**Môi trường chạy:** XAMPP (Apache + MySQL/MariaDB + PHP 8.x)
+## Thông Tin Đồ Án & Học Phần
+- **Cơ sở đào tạo:** Trường Đại học An Giang (AGU) – Đại học Quốc gia TP. Hồ Chí Minh
+- **Khoa:** Khoa Công nghệ Thông tin
+- **Học phần:** Công nghệ Web – PHP (Mã học phần: **SEE518**)
+- **Đề tài:** StudySpot – Nền tảng Review Quán Ăn & Cà Phê Học Bài Sinh Viên
+- **Địa bàn triển khai thực tế:** Thành phố Long Xuyên, Tỉnh An Giang (Khu vực quanh Trường Đại học An Giang - AGU)
+- **Kiến trúc & Công nghệ:** PHP 8 MVC OOP thuần + PDO MySQL + Bootstrap 5.3 + Chart.js
+- **Môi trường chạy:** XAMPP (Apache 2.4 + MySQL/MariaDB + PHP 8.2+)
 
 ---
 
@@ -15,7 +20,7 @@
   - Trang chủ với Banner tìm kiếm nhanh, 4 Tag gợi ý nhanh (*Wifi mạnh, Nhiều ổ cắm, Yên tĩnh, Dưới 50k*), Danh mục không gian, Quán nổi bật điểm cao và Quán mới.
   - Khám phá & Lọc đa tiêu chí: Tìm theo tên/địa chỉ, lọc theo loại hình, quận/khu vực, mức giá, độ ồn, Wifi, ổ cắm, máy lạnh; sắp xếp theo điểm cao nhất/mới nhất/giá; phân trang giữ trạng thái lọc.
   - Trang chi tiết quán: Slider nhiều ảnh (Bootstrap Carousel), tự động so sánh giờ hiện tại để hiển thị badge **"Đang mở cửa"** hoặc **"Đã đóng cửa"**, bản đồ Google Maps nhúng `iframe`, điểm trung bình tổng + 3 thanh điểm thành phần (*Wifi, Không gian, Giá cả*), danh sách review đã duyệt có phân trang.
-  - Nhãn tự động thông minh: **"Phù hợp chạy deadline"** (mở sau 22:00 + có Wifi + có Ổ cắm) và **"Giá sinh viên"** (`price_range <= 2`).
+  - Nhãn tự động thông minh: **"Phù hợp học khuya"** (mở sau 22:00 + có Wifi + có Ổ cắm) và **"Giá sinh viên"** (`price_range <= 2`).
 - **Thành viên (Đã đăng nhập):**
   - Đăng ký, Đăng nhập, Đăng xuất an toàn (`password_hash` / `password_verify`, `session_regenerate_id`, chặn tài khoản bị khóa).
   - Viết đánh giá (Review) kèm ảnh chụp thực tế: mỗi thành viên đánh giá 1 lần/quán, tự sửa/xóa đánh giá của chính mình. Review mới ở trạng thái `pending` chờ Admin duyệt.

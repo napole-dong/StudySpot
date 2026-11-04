@@ -3,8 +3,8 @@
     RewriteEngine On
     RewriteBase /studyspot/
 
-    # Chặn truy cập trực tiếp vào các thư mục nhạy cảm (ngoại trừ file database/seed_users.php chạy 1 lần)
-    RewriteCond %{REQUEST_URI} !/database/seed_users\.php$
+    # Chặn truy cập trực tiếp vào các thư mục nhạy cảm (ngoại trừ các file database/seed_*.php chạy nạp dữ liệu)
+    RewriteCond %{REQUEST_URI} !/database/seed_.*\.php$
     RewriteRule ^(config|core|models|controllers|views|helpers|database)/ - [F,L]
 
     # Nếu đường dẫn không phải là file thật hoặc thư mục thật thì điều hướng về index.php

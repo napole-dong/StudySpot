@@ -1,108 +1,132 @@
 <?php
 /**
  * Thành phần Header & Navbar dùng chung cho giao diện người dùng StudySpot
+ * Khu vực thực tế: TP. Long Xuyên, An Giang (Trường Đại học An Giang - AGU)
  */
 $currentUser = Session::user();
 $currentUrl = $_GET['url'] ?? '';
 ?>
-<header class="sticky-top bg-white shadow-sm">
-    <nav class="navbar navbar-expand-lg navbar-light py-2">
+<header class="sticky-top navbar-warm">
+    <nav class="navbar navbar-expand-lg py-2">
         <div class="container">
-            <!-- Logo thương hiệu StudySpot -->
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-coffee fs-4" href="<?= base_url() ?>">
+            <!-- Logo thương hiệu StudySpot (Khoảng cách chuẩn, không đè đuôi chữ y) -->
+            <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none me-2" href="<?= base_url() ?>">
                 <span class="brand-badge d-inline-flex align-items-center justify-content-center rounded-3 text-white">
                     <i class="bi bi-cup-hot-fill"></i>
                 </span>
-                <span>StudySpot</span>
+                <div class="d-flex flex-column brand-title-group">
+                    <span class="brand-title">StudySpot</span>
+                    <small class="brand-subtitle">LONG XUYÊN • AGU</small>
+                </div>
             </a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Mở menu">
+            <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Mở menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <!-- Menu điều hướng chính -->
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+            <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNavbar">
+                <!-- Menu điều hướng chính: Gọn gàng, không gãy dòng -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 flex-lg-nowrap">
                     <li class="nav-item">
-                        <a class="nav-link <?= ($currentUrl === '' || $currentUrl === 'home') ? 'active fw-semibold' : '' ?>" href="<?= base_url() ?>">
+                        <a class="nav-link text-nowrap <?= ($currentUrl === '' || $currentUrl === 'home') ? 'active' : '' ?>" href="<?= base_url() ?>">
                             <i class="bi bi-house-door me-1"></i>Trang chủ
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= str_starts_with($currentUrl, 'place') ? 'active fw-semibold' : '' ?>" href="<?= base_url('place') ?>">
+                        <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'place') ? 'active' : '' ?>" href="<?= base_url('place') ?>">
                             <i class="bi bi-compass me-1"></i>Khám phá quán
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url('place?has_wifi=1&has_outlet=1') ?>">
-                            <i class="bi bi-lightning-charge me-1 text-warning"></i>Chạy Deadline
                         </a>
                     </li>
                     <?php if (Session::isLoggedIn()): ?>
                         <li class="nav-item">
-                            <a class="nav-link <?= str_starts_with($currentUrl, 'favorite') ? 'active fw-semibold' : '' ?>" href="<?= base_url('favorite') ?>">
-                                <i class="bi bi-heart me-1 text-danger"></i>Yêu thích
+                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'favorite') ? 'active' : '' ?>" href="<?= base_url('favorite') ?>">
+                                <i class="bi bi-heart-fill me-1 text-crimson"></i>Đã lưu
                             </a>
                         </li>
                     <?php endif; ?>
                 </ul>
 
-                <!-- Ô tìm kiếm nhanh trên thanh điều hướng -->
-                <form class="d-flex me-lg-3 my-2 my-lg-0" action="<?= base_url('place') ?>" method="GET">
-                    <div class="input-group input-group-sm">
-                        <input type="text" name="q" class="form-control border-end-0" placeholder="Tìm tên quán, đường, quận..." value="<?= e($_GET['q'] ?? '') ?>">
-                        <button class="btn btn-outline-secondary border-start-0 bg-white" type="submit" title="Tìm kiếm">
-                            <i class="bi bi-search text-coffee"></i>
-                        </button>
-                    </div>
-                </form>
 
-                <!-- Khu vực tài khoản người dùng -->
-                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
-                    <?php if (Session::isLoggedIn()): ?>
+                <!-- Khu vực tài khoản người dùng (Desktop): Nút Trang quản lí pill 1 dòng không bao giờ vỡ -->
+                <div class="d-none d-lg-flex align-items-center gap-2 mt-2 mt-lg-0 flex-nowrap flex-shrink-0">
+                    <?php if (Session::isLoggedIn() && !empty($currentUser)): ?>
                         <?php if (Session::isAdmin()): ?>
-                            <a href="<?= base_url('admin/dashboard') ?>" class="btn btn-sm btn-outline-dark">
-                                <i class="bi bi-speedometer2 me-1"></i>Quản trị
+                            <a href="<?= base_url('admin/dashboard') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3 text-nowrap flex-shrink-0 header-switch-btn" title="Vào trang quản lí">
+                                <i class="bi bi-speedometer2 me-1"></i>Trang quản lí
                             </a>
                         <?php endif; ?>
 
-                        <div class="dropdown">
-                            <a class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-2 py-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="<?= get_image_url($currentUser['avatar'] ?? null, 'avatar') ?>" alt="Avatar" class="rounded-circle object-fit-cover" width="28" height="28">
-                                <span class="small fw-semibold text-truncate" style="max-width: 130px;"><?= e($currentUser['name'] ?? 'Thành viên') ?></span>
+                        <div class="dropdown flex-shrink-0">
+                            <a class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-white shadow-xs text-nowrap header-account-btn" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="<?= get_image_url($currentUser['avatar'] ?? null, 'avatar') ?>" alt="<?= e($currentUser['name']) ?>" class="rounded-circle object-fit-cover border" width="28" height="28">
+                                <span class="small fw-semibold text-truncate d-inline-block" style="max-width: 90px;"><?= e($currentUser['name']) ?></span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
+                                <li class="px-3 py-2 border-bottom mb-1">
+                                    <div class="fw-bold small text-dark text-truncate"><?= e($currentUser['name']) ?></div>
+                                    <div class="text-muted" style="font-size: 0.75rem;"><?= e($currentUser['email'] ?? '') ?></div>
+                                </li>
                                 <li>
-                                    <a class="dropdown-item py-2" href="<?= base_url('profile') ?>">
-                                        <i class="bi bi-person-circle me-2 text-coffee"></i>Trang cá nhân
+                                    <a class="dropdown-item rounded-3 py-2 small fw-medium" href="<?= base_url('profile') ?>">
+                                        <i class="bi bi-person-circle me-2 text-coffee"></i>Hồ sơ cá nhân
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item py-2" href="<?= base_url('favorite') ?>">
-                                        <i class="bi bi-heart-fill me-2 text-danger"></i>Quán đã lưu
+                                    <a class="dropdown-item rounded-3 py-2 small fw-medium" href="<?= base_url('favorite') ?>">
+                                        <i class="bi bi-heart-fill me-2 text-crimson"></i>Quán yêu thích đã lưu
                                     </a>
                                 </li>
-                                <?php if (Session::isAdmin()): ?>
-                                    <li>
-                                        <a class="dropdown-item py-2" href="<?= base_url('admin/dashboard') ?>">
-                                            <i class="bi bi-shield-lock me-2 text-primary"></i>Trang Quản trị (Admin)
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
-                                <li><hr class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider my-1"></li>
                                 <li>
-                                    <a class="dropdown-item py-2 text-danger" href="<?= base_url('auth/logout') ?>">
+                                    <a class="dropdown-item rounded-3 py-2 small fw-semibold text-danger" href="<?= base_url('auth/logout') ?>">
                                         <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     <?php else: ?>
-                        <a href="<?= base_url('auth/login') ?>" class="btn btn-sm btn-outline-coffee px-3">Đăng nhập</a>
-                        <a href="<?= base_url('auth/register') ?>" class="btn btn-sm btn-coffee px-3">Đăng ký</a>
+                        <a href="<?= base_url('auth/login') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3 text-nowrap">Đăng nhập</a>
+                        <a href="<?= base_url('auth/register') ?>" class="btn btn-sm btn-coffee rounded-pill px-3 text-nowrap">Đăng ký</a>
                     <?php endif; ?>
                 </div>
+
             </div>
         </div>
     </nav>
+        <div class="offcanvas offcanvas-end mobile-sidebar" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title fw-bold" id="mobileSidebarLabel">StudySpot <span class="fs-6 fw-normal text-muted">Long Xuyên</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column gap-3">                <nav class="d-flex flex-column gap-1">
+                    <a class="sidebar-link <?= ($currentUrl === '' || $currentUrl === 'home') ? 'active' : '' ?>" href="<?= base_url() ?>"><i class="bi bi-house-door"></i>Trang chủ</a>
+                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'place') ? 'active' : '' ?>" href="<?= base_url('place') ?>"><i class="bi bi-compass"></i>Khám phá quán</a>
+                    <?php if (Session::isLoggedIn()): ?>
+                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'favorite') ? 'active' : '' ?>" href="<?= base_url('favorite') ?>"><i class="bi bi-heart-fill text-crimson"></i>Đã lưu</a>
+                    <?php endif; ?>
+                </nav>
+                <?php if (Session::isLoggedIn() && !empty($currentUser)): ?>
+                <div class="p-3 rounded-4 border bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="<?= get_image_url($currentUser['avatar'] ?? null, 'avatar') ?>" alt="<?= e($currentUser['name']) ?>" class="rounded-circle object-fit-cover border" width="40" height="40">
+                        <div class="min-w-0">
+                            <div class="fw-bold small text-dark text-truncate"><?= e($currentUser['name']) ?></div>
+                            <div class="text-muted text-truncate" style="font-size: 0.75rem;"><?= e($currentUser['email'] ?? '') ?></div>
+                        </div>
+                    </div>
+                    <?php if (Session::isAdmin()): ?>
+                    <a href="<?= base_url('admin/dashboard') ?>" class="btn btn-coffee btn-sm w-100 py-2 fw-semibold mb-2"><i class="bi bi-speedometer2 me-1"></i>Trang quản lí</a>
+                    <?php endif; ?>
+                    <a href="<?= base_url('profile') ?>" class="d-block py-2 small fw-medium text-dark text-decoration-none border-top"><i class="bi bi-person-circle me-2 text-coffee"></i>Hồ sơ cá nhân</a>
+                    <a href="<?= base_url('favorite') ?>" class="d-block py-2 small fw-medium text-dark text-decoration-none border-top"><i class="bi bi-heart-fill me-2 text-crimson"></i>Quán yêu thích đã lưu</a>
+                    <a href="<?= base_url('auth/logout') ?>" class="d-block py-2 small fw-semibold text-danger text-decoration-none border-top"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a>
+                </div>
+                <?php else: ?>
+                <div class="d-flex gap-2">
+                    <a href="<?= base_url('auth/login') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3 py-2 fw-semibold flex-fill text-center">Đăng nhập</a>
+                    <a href="<?= base_url('auth/register') ?>" class="btn btn-sm btn-coffee rounded-pill px-3 py-2 fw-semibold flex-fill text-center">Đăng ký</a>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
 </header>

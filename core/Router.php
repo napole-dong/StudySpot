@@ -65,7 +65,7 @@ class Router
 
         // Kiểm tra tồn tại class Controller
         if (!class_exists($controllerClass)) {
-            (new Controller())->abort404("Không tìm thấy bộ điều khiển yêu cầu.");
+            (new Controller())->abort404("Đường dẫn bạn truy cập không tồn tại, đã thay đổi hoặc tạm thời bị ẩn.");
             return;
         }
 

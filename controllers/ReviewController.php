@@ -56,9 +56,12 @@ class ReviewController extends Controller
             $imagePath = $uploadResult['path'];
         }
 
+        $isAdmin = Session::isAdmin();
+
         $this->reviewModel->create([
             'place_id'       => $placeId,
             'user_id'        => $userId,
+            'status'         => $isAdmin ? 'approved' : 'pending',
             'rating_overall' => $data['rating_overall'],
             'rating_wifi'    => $data['rating_wifi'],
             'rating_space'   => $data['rating_space'],
@@ -69,7 +72,9 @@ class ReviewController extends Controller
 
         Session::flash(
             'alert',
-            'Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đang ở trạng thái Chờ duyệt (pending) và sẽ hiển thị sau khi Quản trị viên kiểm duyệt.',
+            $isAdmin
+                ? 'Đánh giá của bạn đã được đăng ngay vì bạn là quản trị viên.'
+                : 'Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đang ở trạng thái Chờ duyệt (pending) và sẽ hiển thị sau khi Quản trị viên kiểm duyệt.',
             'success'
         );
         $this->redirect('place/show/' . $placeId . '#review-form-section');
@@ -118,6 +123,8 @@ class ReviewController extends Controller
             $imagePath = $uploadResult['path'];
         }
 
+        $wasAdmin = Session::isAdmin();
+
         $this->reviewModel->updateByUser($reviewId, [
             'place_id'       => $placeId,
             'rating_overall' => $data['rating_overall'],
@@ -128,9 +135,15 @@ class ReviewController extends Controller
             'image_path'     => $imagePath,
         ]);
 
+        if ($wasAdmin) {
+            $this->reviewModel->updateStatus($reviewId, 'approved');
+        }
+
         Session::flash(
             'alert',
-            'Đã cập nhật đánh giá của bạn thành công! Đánh giá đã được chuyển sang chờ duyệt lại.',
+            $wasAdmin
+                ? 'Đã cập nhật đánh giá của bạn thành công! Vì bạn là quản trị viên nên đánh giá hiển thị ngay, không cần chờ duyệt lại.'
+                : 'Đã cập nhật đánh giá của bạn thành công! Đánh giá đã được chuyển sang chờ duyệt lại.',
             'info'
         );
         $this->redirect('place/show/' . $placeId . '#review-form-section');

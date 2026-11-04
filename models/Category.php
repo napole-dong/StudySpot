@@ -5,15 +5,17 @@
 class Category extends Model
 {
     /**
-     * Lấy toàn bộ danh mục kèm số lượng quán thuộc từng danh mục
+     * Lấy toàn bộ danh mục kèm số lượng quán thực tế thuộc từng danh mục (dùng LEFT JOIN + COUNT)
      */
     public function getAllWithPlaceCount(): array
     {
-        $sql = 'SELECT c.*,
-                       (SELECT COUNT(*) FROM places p WHERE p.category_id = c.id) AS place_count,
-                       (SELECT COUNT(*) FROM places p WHERE p.category_id = c.id AND p.status = "active") AS active_place_count
+        $sql = "SELECT c.id, c.name,
+                       COUNT(p.id) AS place_count,
+                       SUM(CASE WHEN p.status = 'active' THEN 1 ELSE 0 END) AS active_place_count
                 FROM categories c
-                ORDER BY c.id ASC';
+                LEFT JOIN places p ON p.category_id = c.id
+                GROUP BY c.id, c.name
+                ORDER BY c.id ASC";
         return $this->fetchAll($sql);
     }
 
@@ -47,7 +49,7 @@ class Category extends Model
         }
 
         $sql = 'SELECT COUNT(*) FROM categories WHERE LOWER(name) = LOWER(:name)';
-        return (int) $this->fetchColumn($sql, [':name' => trim($name)]) > 0;
+        return (int) $this->fetchColumn($sql, [':name' => trim($name)]);
     }
 
     /**

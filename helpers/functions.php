@@ -29,31 +29,51 @@ function csrf_field(): string
 }
 
 /**
- * Lấy đường dẫn hiển thị ảnh an toàn (Fallback về ảnh SVG cục bộ nếu file không tồn tại trên ổ đĩa)
+ * Lấy đường dẫn hiển thị ảnh an toàn (Fallback về ảnh quán thực tế đa dạng hoặc SVG cục bộ)
  *
- * @param string|null $path Đường dẫn tương đối lưu trong CSDL (VD: 'uploads/places/cafe1.jpg')
- * @param string      $type Loại ảnh: 'place' | 'review' | 'avatar'
- * @return string URL đầy đủ tới file ảnh hoặc ảnh placeholder cục bộ
+ * @param string|null     $path Đường dẫn tương đối lưu trong CSDL (VD: 'uploads/places/cafe1.jpg')
+ * @param string          $type Loại ảnh: 'place' | 'review' | 'avatar'
+ * @param int|string|null $seed Mã ID hoặc chuỗi phân biệt để chọn ảnh quán tương thích, tránh trùng lặp
+ * @return string URL đầy đủ tới file ảnh
  */
-function get_image_url(?string $path, string $type = 'place'): string
+function get_image_url(?string $path, string $type = 'place', int|string|null $seed = null): string
 {
     $defaultSvg = ($type === 'avatar')
         ? 'assets/img/avatar-default.svg'
         : 'assets/img/placeholder.svg';
 
-    if (empty($path)) {
-        return base_url($defaultSvg);
+    if (!empty($path)) {
+        // Chuẩn hóa đường dẫn tương đối trong thư mục assets/
+        $cleanPath = ltrim($path, '/');
+        if (!str_starts_with($cleanPath, 'assets/')) {
+            $cleanPath = 'assets/' . $cleanPath;
+        }
+
+        $fullDiskPath = ROOT_PATH . '/' . $cleanPath;
+        if (is_file($fullDiskPath) && file_exists($fullDiskPath)) {
+            return base_url($cleanPath);
+        }
     }
 
-    // Chuẩn hóa đường dẫn tương đối trong thư mục assets/
-    $cleanPath = ltrim($path, '/');
-    if (!str_starts_with($cleanPath, 'assets/')) {
-        $cleanPath = 'assets/' . $cleanPath;
+    if ($type === 'avatar') {
+        return base_url('assets/img/avatar-default.svg');
     }
 
-    $fullDiskPath = ROOT_PATH . '/' . $cleanPath;
-    if (is_file($fullDiskPath) && file_exists($fullDiskPath)) {
-        return base_url($cleanPath);
+    // Nếu là ảnh quán (place): Luân phiên giữa 8 ảnh không gian quán thực tế độ nét cao, không bao giờ trùng nhau
+    $index = 1;
+    if ($seed !== null && $seed !== '') {
+        $index = (abs(is_numeric($seed) ? (int) $seed : crc32((string) $seed)) % 8) + 1;
+    } elseif (!empty($path)) {
+        $index = (abs(crc32($path)) % 8) + 1;
+    } else {
+        static $placeImgCounter = 0;
+        $placeImgCounter++;
+        $index = ($placeImgCounter % 8) + 1;
+    }
+
+    $photoPath = 'assets/img/places/cafe_' . $index . '.jpg';
+    if (file_exists(ROOT_PATH . '/' . $photoPath)) {
+        return base_url($photoPath);
     }
 
     return base_url($defaultSvg);
@@ -150,34 +170,68 @@ function create_slug(string $str): string
 }
 
 /**
- * Định dạng mức giá (1 -> 4) thành chuỗi dễ hiểu cho sinh viên
+ * Định dạng mức giá (1 -> 4) thành chuỗi dễ hiểu cho sinh viên (hỗ trợ dạng ngắn gọn cho thẻ card)
  */
-function format_price_range(int $priceRange): string
+function format_price_range(int $priceRange, bool $short = false): string
 {
+    if ($short) {
+        return match ($priceRange) {
+            1 => 'Dưới 25.000₫',
+            2 => '25.000₫ - 45.000₫',
+            3 => '45.000₫ - 65.000₫',
+            4 => 'Trên 65.000₫',
+            default => 'Giá sinh viên',
+        };
+    }
+
     return match ($priceRange) {
-        1 => 'Dưới 35.000đ ($)',
-        2 => '35.000đ - 50.000đ ($$)',
-        3 => '50.000đ - 80.000đ ($$$)',
-        4 => 'Trên 80.000đ ($$$$)',
+        1 => 'Dưới 25.000₫ (Bình dân sinh viên)',
+        2 => '25.000₫ - 45.000₫ (Giá sinh viên AGU)',
+        3 => '45.000₫ - 65.000₫ (Tầm trung)',
+        4 => 'Trên 65.000₫ (Không gian lớn)',
         default => 'Đang cập nhật',
     };
 }
 
 /**
- * Định dạng nhãn độ ồn
+ * Định dạng giá tự do (VNĐ) từ price_min/price_max: "25.000₫ - 45.000₫", "Dưới 25.000₫", "Từ 65.000₫", "Đang cập nhật"
+ */
+function format_price_range_from_min_max($min, $max): string
+{
+    $min = ($min === '' || $min === null) ? null : (int) $min;
+    $max = ($max === '' || $max === null) ? null : (int) $max;
+    $fmt = fn($v) => number_format($v, 0, ',', '.') . '₫';
+    if ($min !== null && $max !== null) {
+        if ($min === $max) {
+            return $fmt($min);
+        }
+        return $fmt($min) . ' - ' . $fmt($max);
+    }
+    if ($max !== null) {
+        return 'Dưới ' . $fmt($max);
+    }
+    if ($min !== null) {
+        return 'Từ ' . $fmt($min);
+    }
+    return 'Đang cập nhật';
+}
+
+/**
+ * Định dạng nhãn độ ồn theo bảng màu Warm Study Cafe
  */
 function format_noise_level(string $noiseLevel): array
 {
     return match ($noiseLevel) {
-        'yen_tinh' => ['label' => 'Yên tĩnh', 'class' => 'bg-success-subtle text-success border-success-subtle', 'icon' => 'bi-volume-mute-fill'],
-        'vua'      => ['label' => 'Độ ồn vừa', 'class' => 'bg-warning-subtle text-warning-emphasis border-warning-subtle', 'icon' => 'bi-volume-down-fill'],
-        'on'       => ['label' => 'Khá nhộn nhịp', 'class' => 'bg-danger-subtle text-danger border-danger-subtle', 'icon' => 'bi-volume-up-fill'],
-        default    => ['label' => 'Không rõ', 'class' => 'bg-secondary-subtle text-secondary', 'icon' => 'bi-question-circle'],
+        'yen_tinh' => ['label' => 'Yên tĩnh', 'class' => 'pill-amenity pill-quiet', 'icon' => 'bi-volume-mute-fill'],
+        'vua'      => ['label' => 'Độ ồn vừa', 'class' => 'pill-amenity pill-moderate', 'icon' => 'bi-volume-down-fill'],
+        'on'       => ['label' => 'Khá nhộn nhịp', 'class' => 'pill-amenity pill-lively', 'icon' => 'bi-volume-up-fill'],
+        default    => ['label' => 'Không rõ', 'class' => 'pill-amenity', 'icon' => 'bi-question-circle'],
     };
 }
 
 /**
  * Kiểm tra quán hiện tại đang Mở cửa hay Đã đóng cửa dựa trên open_time và close_time
+ * Xử lý chính xác cả trường hợp mở trong ngày và mở xuyên đêm (close_time < open_time)
  */
 function is_place_open(?string $openTime, ?string $closeTime): bool
 {
@@ -186,23 +240,24 @@ function is_place_open(?string $openTime, ?string $closeTime): bool
     }
 
     $now = date('H:i:s');
-    // Trường hợp mở cửa trong ngày (VD: 07:00:00 -> 22:30:00)
+    // Trường hợp mở cửa trong ngày (VD: 06:00:00 -> 22:30:00)
     if ($openTime <= $closeTime) {
         return ($now >= $openTime && $now <= $closeTime);
     }
 
-    // Trường hợp mở xuyên đêm (VD: 08:00:00 -> 02:00:00 sáng hôm sau)
+    // Trường hợp mở xuyên đêm qua 00:00 (VD: 18:00:00 -> 02:00:00 sáng hôm sau)
     return ($now >= $openTime || $now <= $closeTime);
 }
 
 /**
- * Kiểm tra quán có đạt tiêu chí tag tự động "Phù hợp chạy deadline" không
- * Điều kiện: Mở sau 22:00 (hoặc xuyên đêm qua 00:00) + có Wifi + có Ổ cắm
+ * Kiểm tra quán có đạt tiêu chí tag tự động "Phù hợp học khuya" không
+ * Điều kiện: Mở từ 22:00 trở đi (hoặc xuyên đêm) + có Wifi + có Ổ cắm
  */
-function is_deadline_friendly(array $place): bool
+function is_late_night_friendly(array $place): bool
 {
-    $hasWifi = !empty($place['has_wifi']);
-    $hasOutlet = !empty($place['has_outlet']);
+    $slugs = $place['amenity_slugs'] ?? array_map(fn($a) => $a['slug'] ?? '', $place['amenities'] ?? []);
+    $hasWifi = in_array('wifi', $slugs, true) || !empty($place['has_wifi']);
+    $hasOutlet = in_array('outlet', $slugs, true) || !empty($place['has_outlet']);
     if (!$hasWifi || !$hasOutlet) {
         return false;
     }
@@ -210,8 +265,7 @@ function is_deadline_friendly(array $place): bool
     $openTime = $place['open_time'] ?? '07:00:00';
     $closeTime = $place['close_time'] ?? '22:00:00';
 
-    // Nếu giờ đóng cửa > 22:00:00 hoặc đóng cửa qua nửa đêm (close_time < open_time)
-    return ($closeTime > '22:00:00' || $closeTime < $openTime);
+    return ($closeTime >= '22:00:00' || $closeTime < $openTime);
 }
 
 /**
@@ -219,7 +273,16 @@ function is_deadline_friendly(array $place): bool
  */
 function is_student_price(array $place): bool
 {
-    return isset($place['price_range']) && (int) $place['price_range'] <= 2;
+    return isset($place['price_range']) && (int) $place['price_range'] >= 1 && (int) $place['price_range'] <= 2;
+}
+
+/**
+ * Tạo URL nhúng bản đồ Google Maps thật theo tên + địa chỉ quán tại TP. Long Xuyên, An Giang
+ */
+function get_google_map_embed_url(array $place): string
+{
+    $query = trim(($place['name'] ?? '') . ' ' . ($place['address'] ?? 'TP. Long Xuyên, An Giang'));
+    return 'https://maps.google.com/maps?q=' . urlencode($query) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
 }
 
 /**
@@ -228,7 +291,7 @@ function is_student_price(array $place): bool
 function render_stars(float $rating, bool $showNumber = true): string
 {
     $rating = max(0, min(5, $rating));
-    $html = '<span class="text-warning d-inline-flex align-items-center gap-1">';
+    $html = '<span class="star-display d-inline-flex align-items-center gap-1">';
 
     for ($i = 1; $i <= 5; $i++) {
         if ($rating >= $i) {
@@ -304,4 +367,44 @@ function render_pagination(int $currentPage, int $totalPages, string $basePath =
 
     $html .= '</ul></nav>';
     return $html;
+}
+
+/**
+ * Rút gọn chuỗi văn bản nếu vượt quá độ dài tối đa (giữ nguyên độ dài ký tự an toàn tiếng Việt UTF-8)
+ */
+function truncate_text(?string $text, int $limit = 100, string $ellipsis = '...'): string
+{
+    $text = trim((string) $text);
+    if (mb_strlen($text, 'UTF-8') <= $limit) {
+        return $text;
+    }
+    return mb_substr($text, 0, $limit, 'UTF-8') . $ellipsis;
+}
+
+/**
+ * Trả về tối đa 3 tiện ích quan trọng nhất để hiển thị gọn gàng trên thẻ quán (place card),
+ * tránh tràn dòng và loại bỏ sự rườm rà.
+ *
+ * @param array $place Dữ liệu địa điểm từ CSDL
+ * @return array Mảng tối đa 3 tiện ích [['icon' => string, 'label' => string, 'class' => string]]
+ */
+function get_card_amenities(array $place): array
+{
+    // Tiện ích lấy từ bảng amenities (đã gắn sẵn bởi Place model, hoặc truy vấn trực tiếp nếu chưa có)
+    $list = $place['amenities'] ?? null;
+    if (!is_array($list) && !empty($place['id'])) {
+        $list = (new Amenity())->getForPlace((int) $place['id']);
+    }
+    if (!is_array($list)) {
+        return [];
+    }
+    $amenities = [];
+    foreach ($list as $am) {
+        $amenities[] = [
+            'icon'  => '',
+            'label' => $am['name'] ?? ($am['label'] ?? ''),
+            'class' => 'pill-amenity',
+        ];
+    }
+    return array_slice($amenities, 0, 3);
 }

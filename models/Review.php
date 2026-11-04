@@ -82,7 +82,7 @@ class Review extends Model
     }
 
     /**
-     * Thêm review mới (mặc định ở trạng thái 'pending' chờ Admin duyệt)
+     * Thêm review mới (mặc định 'pending' chờ Admin duyệt; quản trị viên tạo thì 'approved' ngay)
      */
     public function create(array $data): int
     {
@@ -91,7 +91,7 @@ class Review extends Model
                     content, image_path, status, created_at
                 ) VALUES (
                     :place_id, :user_id, :rating_overall, :rating_wifi, :rating_space, :rating_price,
-                    :content, :image_path, 'pending', NOW()
+                    :content, :image_path, :status, NOW()
                 )";
 
         $this->execute($sql, [
@@ -103,9 +103,16 @@ class Review extends Model
             ':rating_price'   => (int) $data['rating_price'],
             ':content'        => trim($data['content']),
             ':image_path'     => $data['image_path'] ?? null,
+            ':status'         => $data['status'] ?? 'pending',
         ]);
 
-        return (int) $this->lastInsertId();
+        $newId = (int) $this->lastInsertId();
+
+        if (($data['status'] ?? 'pending') === 'approved') {
+            (new Place())->recalculateRating((int) $data['place_id']);
+        }
+
+        return $newId;
     }
 
     /**
