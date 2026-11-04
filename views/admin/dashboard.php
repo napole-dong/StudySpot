@@ -29,70 +29,70 @@
 <!-- 1. BỐN THẺ KPI THỐNG KÊ TỔNG QUAN (100% COUNT(*) TỪ MYSQL) -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="surface-card p-4 h-100">
+        <div class="surface-card p-4 h-100 d-flex flex-column">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <div class="text-muted small fw-semibold">Tổng quán</div>
-                    <div class="h2 fw-bold mb-1 text-coffee"><?= number_format((int) $totalPlaces) ?></div>
-                    <a href="<?= base_url('admin/place') ?>" class="small text-decoration-none text-secondary">
-                        Đang hiển thị: <strong><?= number_format((int) ($activePlaces ?? $totalPlaces)) ?></strong> quán <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="h2 fw-bold mb-0 text-coffee"><?= number_format((int) $totalPlaces) ?></div>
                 </div>
                 <div class="rounded-4 p-3 fs-3" style="background: #F3F4F6; color: #111827;">
                     <i class="bi bi-shop"></i>
                 </div>
             </div>
+            <a href="<?= base_url('admin/place') ?>" class="small text-decoration-none text-secondary mt-auto pt-2">
+                Đang hiển thị: <strong><?= number_format((int) ($activePlaces ?? $totalPlaces)) ?></strong> quán <i class="bi bi-arrow-right ms-1"></i>
+            </a>
         </div>
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="surface-card p-4 h-100">
+        <div class="surface-card p-4 h-100 d-flex flex-column">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <div class="text-muted small fw-semibold">Đánh giá</div>
-                    <div class="h2 fw-bold mb-1" style="color: #111827;"><?= number_format((int) $totalReviews) ?></div>
-                    <a href="<?= base_url('admin/review') ?>" class="small text-decoration-none text-secondary">
-                        Quản lý toàn bộ review <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="h2 fw-bold mb-0" style="color: #111827;"><?= number_format((int) $totalReviews) ?></div>
                 </div>
                 <div class="rounded-4 p-3 fs-3" style="background: #F3F4F6; color: #111827;">
                     <i class="bi bi-chat-square-quote-fill"></i>
                 </div>
             </div>
+            <a href="<?= base_url('admin/review') ?>" class="small text-decoration-none text-secondary mt-auto pt-2">
+                Quản lý toàn bộ review <i class="bi bi-arrow-right ms-1"></i>
+            </a>
         </div>
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="surface-card p-4 h-100">
+        <div class="surface-card p-4 h-100 d-flex flex-column">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <div class="text-muted small fw-semibold">Chờ duyệt</div>
-                    <div class="h2 fw-bold mb-1" style="color: #D97706;"><?= number_format((int) $pendingReviews) ?></div>
-                    <a href="<?= base_url('admin/review?status=pending') ?>" class="small text-decoration-none fw-semibold" style="color: #D97706;">
-                        Kiểm duyệt ngay <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="h2 fw-bold mb-0" style="color: #D97706;"><?= number_format((int) $pendingReviews) ?></div>
                 </div>
                 <div class="rounded-4 p-3 fs-3" style="background: rgba(217, 119, 6, 0.12); color: #D97706;">
                     <i class="bi bi-hourglass-split"></i>
                 </div>
             </div>
+            <a href="<?= base_url('admin/review?status=pending') ?>" class="small text-decoration-none fw-semibold mt-auto pt-2" style="color: #D97706;">
+                Kiểm duyệt ngay <i class="bi bi-arrow-right ms-1"></i>
+            </a>
         </div>
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="surface-card p-4 h-100">
+        <div class="surface-card p-4 h-100 d-flex flex-column">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <div class="text-muted small fw-semibold">Thành viên</div>
-                    <div class="h2 fw-bold mb-1" style="color: #111827;"><?= number_format((int) $totalUsers) ?></div>
-                    <a href="<?= base_url('admin/user') ?>" class="small text-decoration-none text-secondary">
-                        Quản lý tài khoản <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="h2 fw-bold mb-0" style="color: #111827;"><?= number_format((int) $totalUsers) ?></div>
                 </div>
                 <div class="rounded-4 p-3 fs-3" style="background: #F3F4F6; color: #111827;">
                     <i class="bi bi-people-fill"></i>
                 </div>
             </div>
+            <a href="<?= base_url('admin/user') ?>" class="small text-decoration-none text-secondary mt-auto pt-2">
+                Quản lý tài khoản <i class="bi bi-arrow-right ms-1"></i>
+            </a>
         </div>
     </div>
 </div>
