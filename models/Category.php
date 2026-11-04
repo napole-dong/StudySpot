@@ -1,12 +1,9 @@
 <?php
-/**
- * Model Category: Quản lý truy vấn bảng categories (Danh mục loại hình quán)
- */
+// Model Category: quản lý danh mục loại hình quán, bảng categories, một danh mục có nhiều quán.
+// Model này được controller quản trị và controller phía người dùng gọi để vẽ ô lọc và tên danh mục.
 class Category extends Model
 {
-    /**
-     * Lấy toàn bộ danh mục kèm số lượng quán thực tế thuộc từng danh mục (dùng LEFT JOIN + COUNT)
-     */
+    // Lấy danh mục kèm số quán, LEFT JOIN places, place_count đếm cả quán ẩn, active_place_count chỉ đếm status = 'active'.
     public function getAllWithPlaceCount(): array
     {
         $sql = "SELECT c.id, c.name,
@@ -19,25 +16,19 @@ class Category extends Model
         return $this->fetchAll($sql);
     }
 
-    /**
-     * Lấy danh sách tất cả danh mục đơn giản (dùng cho thẻ select/dropdown)
-     */
+    // Lấy tất cả danh mục từ categories, ORDER BY id ASC, dùng cho dropdown.
     public function getAll(): array
     {
         return $this->fetchAll('SELECT * FROM categories ORDER BY id ASC');
     }
 
-    /**
-     * Tìm danh mục theo ID
-     */
+    // Tìm một danh mục theo id, SELECT * FROM categories WHERE id = :id LIMIT 1.
     public function findById(int $id): array|false
     {
         return $this->fetchOne('SELECT * FROM categories WHERE id = :id LIMIT 1', [':id' => $id]);
     }
 
-    /**
-     * Kiểm tra tên danh mục đã tồn tại chưa
-     */
+    // Kiểm tra tên danh mục đã tồn tại chưa, so sánh LOWER(name), excludeId loại chính nó ra.
     public function nameExists(string $name, ?int $excludeId = null): bool
     {
         if ($excludeId !== null) {
@@ -52,9 +43,7 @@ class Category extends Model
         return (int) $this->fetchColumn($sql, [':name' => trim($name)]);
     }
 
-    /**
-     * Thêm danh mục mới
-     */
+    // Thêm danh mục mới, INSERT INTO categories (name).
     public function create(string $name): int
     {
         $sql = 'INSERT INTO categories (name) VALUES (:name)';
@@ -62,9 +51,7 @@ class Category extends Model
         return (int) $this->lastInsertId();
     }
 
-    /**
-     * Cập nhật tên danh mục
-     */
+    // Đổi tên danh mục, UPDATE categories SET name WHERE id = :id.
     public function update(int $id, string $name): bool
     {
         $sql = 'UPDATE categories SET name = :name WHERE id = :id';
@@ -74,18 +61,14 @@ class Category extends Model
         ]) >= 0;
     }
 
-    /**
-     * Đếm số quán đang thuộc danh mục này (để kiểm tra trước khi xóa)
-     */
+    // Đếm số quán thuộc danh mục, SELECT COUNT(*) FROM places WHERE category_id = :category_id, kiểm tra trước khi xóa.
     public function countPlaces(int $categoryId): int
     {
         $sql = 'SELECT COUNT(*) FROM places WHERE category_id = :category_id';
         return (int) $this->fetchColumn($sql, [':category_id' => $categoryId]);
     }
 
-    /**
-     * Xóa danh mục theo ID
-     */
+    // Xóa danh mục, DELETE FROM categories WHERE id = :id, không tự xóa hay chuyển quán thuộc nó.
     public function delete(int $id): bool
     {
         return $this->execute('DELETE FROM categories WHERE id = :id', [':id' => $id]) > 0;

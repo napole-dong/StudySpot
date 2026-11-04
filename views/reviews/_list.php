@@ -1,8 +1,8 @@
 <?php
-/**
- * Partial View: Danh sách các đánh giá đã được duyệt của quán (views/reviews/_list.php)
- */
+// Partial danh sách review đã duyệt, nhúng dưới form review ở trang chi tiết.
+// Partial _list.php: $reviews, $reviewTotal, $reviewPage, $reviewPages, $place; chỉ review đã duyệt.
 ?>
+<!-- Thẻ danh sách: tiêu đề kèm tổng số $reviewTotal và nhãn 'Đã kiểm duyệt'. -->
 <div class="card surface-card p-4">
     <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
         <h3 class="h6 fw-bold text-coffee mb-0">
@@ -11,6 +11,7 @@
         <span class="pill-amenity">Đã kiểm duyệt</span>
     </div>
 
+    <!-- Trạng thái trống: chưa có review đã duyệt thì mời làm người đầu tiên chia sẻ. -->
     <?php if (empty($reviews)): ?>
         <div class="text-center py-5 text-muted">
             <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px; background-color: #F3F4F6; color: #111827; font-size: 1.5rem;">
@@ -21,7 +22,9 @@
         </div>
     <?php else: ?>
         <div class="d-flex flex-column gap-3">
+            <!-- Vòng lặp $reviews: mỗi review 1 thẻ (avatar, tên, ngày, sao, 3 pill điểm, nội dung, ảnh). -->
             <?php foreach ($reviews as $rv): ?>
+                <!-- Mỗi review: avatar qua get_image_url() (chưa có thì ảnh mặc định), tên qua e() chống XSS. -->
                 <div class="rounded-4 p-3" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                         <div class="d-flex align-items-center gap-2">
@@ -38,7 +41,7 @@
                         </div>
                     </div>
 
-                    <!-- Điểm thành phần từng tiêu chí dạng Pill kem -->
+                    <!-- 3 pill điểm thành phần: wifi, không gian, giá, dạng số/5. -->
                     <div class="d-flex flex-wrap gap-2 mb-2">
                         <span class="pill-amenity">
                             <i class="bi bi-wifi"></i>Wifi: <strong><?= (int) $rv['rating_wifi'] ?>/5</strong>
@@ -51,8 +54,10 @@
                         </span>
                     </div>
 
+                    <!-- Nội dung review: e() chống XSS, nl2br() giữ xuống dòng. -->
                     <p class="mb-2 text-dark small" style="line-height: 1.65;"><?= nl2br(e($rv['content'])) ?></p>
 
+                    <!-- Ảnh review: chỉ hiện khi có image_path, cao tối đa 190px. -->
                     <?php if (!empty($rv['image_path'])): ?>
                         <div class="mt-2">
                             <img src="<?= get_image_url($rv['image_path'], 'review') ?>" alt="Ảnh thực tế từ sinh viên" class="rounded-3 border object-fit-cover" style="max-height: 190px; max-width: 100%;">
@@ -62,6 +67,7 @@
             <?php endforeach; ?>
         </div>
 
+        <!-- Phân trang review: render_pagination() với route place/show/{id quán}, vẫn ở trang chi tiết. -->
         <?= render_pagination($reviewPage, $reviewPages, 'place/show/' . (int) $place['id']) ?>
     <?php endif; ?>
 </div>

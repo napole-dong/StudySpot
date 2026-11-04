@@ -1,10 +1,8 @@
 <?php
-/**
- * Giao diện Quản lý tiện ích (views/admin/amenities/index.php)
- * Thêm tiện ích mới ở đây là tự xuất hiện ở form quán, bộ lọc trang Khám phá và thẻ quán.
- */
+// Biến $isEditing: đúng khi $editAmenity không rỗng (đang sửa), sai khi thêm mới.
 $isEditing = !empty($editAmenity);
 ?>
+<!-- Tiêu đề trang quản lý tiện ích: trên cùng -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="page-title">Quản lý tiện ích</h1>
@@ -13,7 +11,7 @@ $isEditing = !empty($editAmenity);
 </div>
 
 <div class="row g-4">
-    <!-- Cột trái: Form Thêm / Sửa tiện ích -->
+        <!-- Cột trái: Form thêm/sửa tiện ích (tiêu đề và nút đổi theo $isEditing) -->
     <div class="col-lg-4">
         <div class="surface-card overflow-hidden">
             <div class="p-3 border-bottom" style="background: #EFECE6;">
@@ -26,10 +24,12 @@ $isEditing = !empty($editAmenity);
                 </h5>
             </div>
             <div class="p-4">
+                                <!-- Form tiện ích: đang sửa thì POST tới admin/amenity/update/{id}, đang thêm thì POST tới admin/amenity/store -->
                 <form action="<?= $isEditing ? base_url('admin/amenity/update/' . (int) $editAmenity['id']) : base_url('admin/amenity/store') ?>" method="POST">
                     <?= csrf_field() ?>
 
                     <div class="mb-3">
+                                                <!-- Trường tên tiện ích name: bắt buộc, tối đa 100 ký tự, chỉ có một trường nhập là tên (không có slug hay icon) -->
                         <label for="name" class="form-label fw-semibold small">Tên tiện ích <span class="text-danger">*</span></label>
                         <input
                             type="text"
@@ -56,7 +56,7 @@ $isEditing = !empty($editAmenity);
         </div>
     </div>
 
-    <!-- Cột phải: Bảng danh sách tiện ích -->
+        <!-- Cột phải: Bảng danh sách tiện ích (ID, tên, slug chỉ để hiển thị, số quán đang dùng, thao tác) -->
     <div class="col-lg-8">
         <div class="surface-card overflow-hidden">
             <div class="table-responsive">
@@ -71,11 +71,13 @@ $isEditing = !empty($editAmenity);
                         </tr>
                     </thead>
                     <tbody>
+                                                <!-- Nếu $amenities rỗng thì hiện một dòng gộp 5 cột -->
                         <?php if (empty($amenities)): ?>
                             <tr>
                                 <td colspan="5" class="text-center text-muted py-4">Chưa có tiện ích nào.</td>
                             </tr>
                         <?php else: ?>
+                                                        <!-- Vòng lặp tiện ích: $am là một tiện ích trong $amenities -->
                             <?php foreach ($amenities as $am): ?>
                                 <tr>
                                     <td class="ps-3"><?= (int) $am['id'] ?></td>
@@ -84,9 +86,11 @@ $isEditing = !empty($editAmenity);
                                     <td class="text-center"><?= (int) $am['place_count'] ?> quán</td>
                                     <td class="text-end pe-3">
                                         <div class="d-inline-flex gap-1">
+                                                                                <!-- Nút Sửa: tải lại chính trang này với ?edit_id={id} để form cột trái chuyển sang chế độ sửa -->
                                         <a href="<?= base_url('admin/amenity?edit_id=' . (int) $am['id']) ?>" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Sửa tên tiện ích">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                                                                <!-- Cơ chế khóa xóa khác với Danh mục: place_count > 0 thì chỉ vẽ nút thùng rác disabled, không vẽ form xóa; bằng 0 mới có form xóa thật -->
                                         <?php if ((int) $am['place_count'] > 0): ?>
                                             <button type="button" class="btn btn-sm btn-outline-secondary" disabled data-bs-toggle="tooltip" title="Đang có quán sử dụng, không thể xóa">
                                                 <i class="bi bi-trash"></i>

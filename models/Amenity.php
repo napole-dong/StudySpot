@@ -1,23 +1,16 @@
 <?php
-/**
- * Model Amenity: Quản lý bảng tiện ích riêng (amenities) và bảng nối (place_amenities).
- * Một quán có nhiều tiện ích, một tiện ích thuộc nhiều quán (many-to-many).
- * Thêm tiện ích mới không cần sửa code: chỉ thêm dòng trong bảng amenities.
- */
+// Model Amenity: quản lý tiện ích của quán, bảng amenities + bảng nối place_amenities nhiều-nhiều.
+// Model này được controller quản trị và model Place gọi khi tạo/sửa/hiển thị quán.
 class Amenity extends Model
 {
-    /**
-     * Lấy tất cả tiện ích, sắp theo thứ tự hiển thị rồi id
-     */
+    // Lấy tất cả tiện ích từ amenities, chỉ lấy is_active = 1 nếu onlyActive.
     public function getAll(bool $onlyActive = true): array
     {
         $where = $onlyActive ? 'WHERE is_active = 1' : '';
         return $this->fetchAll("SELECT * FROM amenities {$where} ORDER BY sort_order ASC, id ASC");
     }
 
-    /**
-     * Lấy tất cả tiện ích kèm số quán đang dùng (cho trang Quản trị)
-     */
+    // Lấy tiện ích kèm số quán đang dùng, LEFT JOIN place_amenities để tiện ích chưa ai dùng vẫn hiện (place_count = 0).
     public function getAllWithPlaceCount(): array
     {
         $sql = "SELECT a.id, a.name, a.slug, a.sort_order, a.is_active,
@@ -29,16 +22,19 @@ class Amenity extends Model
         return $this->fetchAll($sql);
     }
 
+    // Tìm một tiện ích theo id, SELECT * FROM amenities WHERE id = :id LIMIT 1.
     public function findById(int $id): array|false
     {
         return $this->fetchOne('SELECT * FROM amenities WHERE id = :id LIMIT 1', [':id' => $id]);
     }
 
+    // Tìm một tiện ích theo slug, SELECT * FROM amenities WHERE slug = :slug LIMIT 1.
     public function findBySlug(string $slug): array|false
     {
         return $this->fetchOne('SELECT * FROM amenities WHERE slug = :slug LIMIT 1', [':slug' => trim($slug)]);
     }
 
+    // Kiểm tra tên đã tồn tại chưa, so sánh LOWER(name) không phân biệt hoa/thường, excludeId loại chính nó ra.
     public function nameExists(string $name, ?int $excludeId = null): bool
     {
         if ($excludeId !== null) {
@@ -49,6 +45,7 @@ class Amenity extends Model
         return (int) $this->fetchColumn($sql, [':name' => trim($name)]) > 0;
     }
 
+    // Kiểm tra slug đã tồn tại chưa, slug duy nhất, excludeId loại chính nó ra.
     public function slugExists(string $slug, ?int $excludeId = null): bool
     {
         if ($excludeId !== null) {
@@ -59,9 +56,7 @@ class Amenity extends Model
         return (int) $this->fetchColumn($sql, [':slug' => trim($slug)]) > 0;
     }
 
-    /**
-     * Thêm tiện ích mới, tự sinh slug duy nhất từ tên
-     */
+    // Thêm tiện ích mới, tự sinh slug duy nhất từ tên (trùng thì thêm -2, -3...), sort_order = MAX + 1.
     public function create(string $name): int
     {
         $name = trim($name);
@@ -81,9 +76,7 @@ class Amenity extends Model
         return (int) $this->lastInsertId();
     }
 
-    /**
-     * Đổi tên tiện ích, slug sinh lại từ tên mới (giữ duy nhất)
-     */
+    // Đổi tên tiện ích, sinh lại slug duy nhất từ tên mới, UPDATE amenities WHERE id = :id.
     public function update(int $id, string $name): bool
     {
         $name = trim($name);
@@ -101,20 +94,20 @@ class Amenity extends Model
         return $this->execute($sql, [':name' => $name, ':slug' => $slug, ':id' => $id]) >= 0;
     }
 
+    // Đếm số quán đang dùng một tiện ích, SELECT COUNT(*) FROM place_amenities WHERE amenity_id = :id.
     public function countPlaces(int $amenityId): int
     {
         $sql = 'SELECT COUNT(*) FROM place_amenities WHERE amenity_id = :id';
         return (int) $this->fetchColumn($sql, [':id' => $amenityId]);
     }
 
+    // Xóa một tiện ích, DELETE FROM amenities WHERE id = :id (không tự xóa dòng nối place_amenities).
     public function delete(int $id): bool
     {
         return $this->execute('DELETE FROM amenities WHERE id = :id', [':id' => $id]) > 0;
     }
 
-    /**
-     * Tiện ích của 1 quán, sắp theo thứ tự hiển thị
-     */
+    // Lấy tiện ích của một quán, INNER JOIN place_amenities, chỉ lấy is_active = 1, xếp theo sort_order.
     public function getForPlace(int $placeId): array
     {
         $sql = "SELECT a.* FROM amenities a
@@ -124,9 +117,7 @@ class Amenity extends Model
         return $this->fetchAll($sql, [':id' => $placeId]);
     }
 
-    /**
-     * Tiện ích của nhiều quán trong 1 truy vấn, trả về map place_id => danh sách tiện ích
-     */
+    // Lấy tiện ích của nhiều quán trong 1 truy vấn, trả về map place_id => danh sách tiện ích.
     public function getForPlaces(array $placeIds): array
     {
         $placeIds = array_values(array_unique(array_map('intval', $placeIds)));
@@ -147,15 +138,14 @@ class Amenity extends Model
         return $map;
     }
 
+    // Lấy chỉ danh sách id tiện ích của một quán, để đánh dấu checkbox trên form sửa quán.
     public function getIdsForPlace(int $placeId): array
     {
         $rows = $this->getForPlace($placeId);
         return array_map(fn($row) => (int) $row['id'], $rows);
     }
 
-    /**
-     * Đồng bộ tiện ích của 1 quán: xóa hết rồi chèn lại chỉ các id hợp lệ đang có trong bảng amenities
-     */
+    // Đồng bộ tiện ích của quán: xóa hết dòng nối cũ rồi chèn lại, chỉ chèn id có thật trong amenities.
     public function syncForPlace(int $placeId, array $amenityIds): void
     {
         $this->execute('DELETE FROM place_amenities WHERE place_id = :id', [':id' => $placeId]);

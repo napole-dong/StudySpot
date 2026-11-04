@@ -1,17 +1,16 @@
 <?php
-/**
- * Giao diện Trang cá nhân của thành viên (views/profile/index.php)
- * Hiển thị 100% dữ liệu thật: Thông tin tài khoản từ MySQL, Danh sách quán yêu thích đã lưu & Lịch sử các review đã viết
- */
+// Trang cá nhân, do ProfileController (index) render.
+// Trang cá nhân: $user, $favoritePlaces, $myReviews.
 ?>
 <div class="container py-4">
-    <!-- Dải hồ sơ ở trên, toàn chiều rộng — không còn cột trái -->
+    <!-- Dải hồ sơ trên, toàn chiều rộng: avatar 96px, tên, email, phone (nếu có), badge vai trò, thống kê, nút sửa. -->
     <section class="profile-band">
         <img src="<?= get_image_url($user['avatar'] ?? null, 'avatar') ?>" alt="<?= e($user['name']) ?>" class="rounded-circle object-fit-cover" style="border: 3px solid #E5E7EB;" width="96" height="96">
         <div class="flex-grow-1" style="min-width: 220px;">
             <h1 class="page-title"><?= e($user['name']) ?></h1>
             <p class="text-muted small mb-2"><?= e($user['email']) ?><?php if (!empty($user['phone'])): ?> • <?= e($user['phone']) ?><?php endif; ?></p>
             <div>
+                <!-- Badge vai trò: admin thì 'Quản trị viên StudySpot', còn lại 'Sinh viên / Thành viên'. -->
                 <?php if ($user['role'] === 'admin'): ?>
                     <span class="badge rounded-pill px-3 py-1" style="background-color: #D97706;"><i class="bi bi-shield-lock-fill me-1"></i>Quản trị viên StudySpot</span>
                 <?php else: ?>
@@ -19,24 +18,29 @@
                 <?php endif; ?>
             </div>
         </div>
+        <!-- 3 thống kê: count $favoritePlaces, count $myReviews, ngày tham gia d/m/Y. -->
         <div class="profile-stats">
             <div class="profile-stat"><div class="stat-num"><?= count($favoritePlaces) ?></div><div class="stat-label">Quán đã lưu</div></div>
             <div class="profile-stat"><div class="stat-num"><?= count($myReviews) ?></div><div class="stat-label">Đánh giá đã gửi</div></div>
             <div class="profile-stat"><div class="stat-num"><?= date('d/m/Y', strtotime($user['created_at'])) ?></div><div class="stat-label">Ngày tham gia</div></div>
         </div>
+        <!-- Nút Chỉnh sửa hồ sơ: sang profile/edit để đổi thông tin, avatar, mật khẩu. -->
         <a href="<?= base_url('profile/edit') ?>" class="btn btn-coffee px-4 py-2"><i class="bi bi-pencil-square me-1"></i>Chỉnh sửa hồ sơ</a>
     </section>
 
     <div class="row g-4">
         <div class="col-12">
             <div class="card surface-card p-4">
+                <!-- 2 tab dưới: Lịch sử Đánh giá (mở sẵn) và Quán Yêu thích; số trong ngoặc là count tương ứng. -->
                 <ul class="nav nav-pills mb-4 gap-2" id="profileTab" role="tablist">
                     <li class="nav-item" role="presentation">
+                        <!-- Tab lịch sử: liệt kê mọi review đã gửi, kể cả chờ duyệt và đang ẩn, khác danh sách công khai ở trang chi tiết. -->
                         <button class="nav-link active rounded-pill px-4" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews-pane" type="button" role="tab">
                             <i class="bi bi-chat-square-quote me-1"></i>Lịch sử Đánh giá (<?= count($myReviews) ?>)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <!-- Tab quán yêu thích: chỉ tóm tắt số lượng và 2 nút sang trang Quán yêu thích và khám phá, không liệt kê lại. -->
                         <button class="nav-link rounded-pill px-4" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites-pane" type="button" role="tab">
                             <i class="bi bi-heart-fill text-crimson me-1"></i>Quán Yêu thích (<?= count($favoritePlaces) ?>)
                         </button>
@@ -46,6 +50,7 @@
                 <div class="tab-content" id="profileTabContent">
                     <!-- TAB 1: LỊCH SỬ REVIEW THỰC TẾ -->
                     <div class="tab-pane fade show active" id="reviews-pane" role="tabpanel">
+                        <!-- Trạng thái trống: chưa gửi review nào thì hiện nút sang trang khám phá. -->
                         <?php if (empty($myReviews)): ?>
                             <div class="text-center py-5 text-muted">
                                 <i class="bi bi-journal-text fs-1 d-block mb-2 text-coffee opacity-50"></i>
@@ -55,6 +60,7 @@
                             </div>
                         <?php else: ?>
                             <div class="d-flex flex-column gap-3">
+                                <!-- Vòng lặp $myReviews: mỗi review 1 thẻ (tên quán link chi tiết, phường, ngày, badge, sao, 3 điểm, nội dung, ảnh). -->
                                 <?php foreach ($myReviews as $rv): ?>
                                     <div class="rounded-4 p-3" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
                                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
@@ -93,10 +99,12 @@
                                             </div>
                                         <?php endif; ?>
 
+                                        <!-- Hàng nút dưới review: 'Sửa tại trang quán' tới place/show/{id}#review-form-section; nút Xóa là form riêng. -->
                                         <div class="d-flex gap-2 mt-2 review-actions">
                                             <a href="<?= base_url('place/show/' . (int) $rv['place_id'] . '#review-form-section') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3">
                                                 <i class="bi bi-pencil me-1"></i>Sửa tại trang quán
                                             </a>
+                                            <!-- Form xóa review từ hồ sơ: POST review/delete/{id}, redirect_to=profile, onsubmit hỏi xác nhận. -->
                                             <form action="<?= base_url('review/delete/' . (int) $rv['id']) ?>" method="POST" onsubmit="return confirm('Xóa đánh giá này của bạn?');">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="redirect_to" value="profile">
@@ -111,7 +119,7 @@
                         <?php endif; ?>
                     </div>
 
-                    <!-- TAB 2: TÓM TẮT QUÁN YÊU THÍCH (DẪN SANG TRANG YÊU THÍCH THAY VÌ LIỆT KÊ TRÙNG) -->
+                    <!-- Tab 2: tóm tắt quán yêu thích, dẫn sang trang riêng thay vì liệt kê trùng. -->
                     <div class="tab-pane fade" id="favorites-pane" role="tabpanel">
                         <div class="p-4 rounded-4 text-center" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 68px; height: 68px; background-color: #FBE9E9; color: #BC4749; font-size: 1.8rem;">

@@ -1,11 +1,11 @@
 <?php
-/**
- * Giao diện Đăng ký tài khoản thành viên mới (views/auth/register.php)
- * Thiết kế theo phong cách Warm Study Cafe
- */
+// Trang Đăng ký, do AuthController (register) render.
+// Trang Đăng ký: $errors, $old (tên, email, số điện thoại giữ lại khi nhập sai).
 ?>
 <div class="container py-4">
+    <!-- Bố cục chia đôi giống login: panel ảnh trái, form phải; 2 trang cao bằng nhau. -->
     <div class="auth-split">
+            <!-- Panel ảnh trái: cùng ảnh cafe_4.jpg với login để 2 trang đồng bộ. -->
             <div class="auth-panel auth-panel-image">
                 <img src="<?= base_url('assets/img/places/cafe_4.jpg') ?>" alt="Không gian quán cà phê học bài">
                 <div class="auth-panel-brand">
@@ -23,10 +23,12 @@
                     <p class="text-muted small mb-0">Tham gia cộng đồng review góc học tập dành cho sinh viên tại TP. Long Xuyên</p>
                 </div>
 
+                <!-- Form đăng ký: POST tới auth/register, novalidate, csrf_field() chống CSRF. -->
                 <form action="<?= base_url('auth/register') ?>" method="POST" novalidate>
                     <?= csrf_field() ?>
 
                     <div class="mb-3">
+                        <!-- Trường họ tên: bắt buộc, 2-100 ký tự, giữ $old['name'], e() chống XSS. -->
                         <label for="name" class="form-label fw-semibold small">Họ và tên hiển thị <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-coffee"></i></span>
@@ -49,6 +51,7 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-7">
+                            <!-- Trường email: bắt buộc, type email; đây là tài khoản đăng nhập sau này. -->
                             <label for="email" class="form-label fw-semibold small">Địa chỉ Email <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-coffee"></i></span>
@@ -68,6 +71,7 @@
                         </div>
 
                         <div class="col-md-5">
+                            <!-- Trường số điện thoại: tùy chọn, gợi ý 10 chữ số; để trống vẫn đăng ký được. -->
                             <label for="phone" class="form-label fw-semibold small">Số điện thoại <span class="text-muted fw-normal">(Tùy chọn)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone text-coffee"></i></span>
@@ -88,6 +92,7 @@
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
+                            <!-- Trường mật khẩu: bắt buộc, tối thiểu 6 ký tự, type password. -->
                             <label for="password" class="form-label fw-semibold small">Mật khẩu <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-coffee"></i></span>
@@ -107,6 +112,7 @@
                         </div>
 
                         <div class="col-md-6">
+                            <!-- Trường nhập lại mật khẩu: bắt buộc, tối thiểu 6 ký tự; server đối chiếu để bắt lỗi gõ sai. -->
                             <label for="password_confirm" class="form-label fw-semibold small">Nhập lại mật khẩu <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-check2-square text-coffee"></i></span>
@@ -127,12 +133,14 @@
                     </div>
 
                     <button type="submit" class="btn btn-coffee rounded-pill w-100 py-2 fw-semibold mb-3">
+                        <!-- Nút gửi form: gửi toàn bộ thông tin để tạo tài khoản; có lỗi thì quay lại kèm lỗi từng trường. -->
                         <i class="bi bi-person-check-fill me-1"></i>Hoàn tất Đăng ký
                     </button>
                 </form>
 
                 <div class="text-center small text-muted">
                     Đã có tài khoản thành viên?
+                    <!-- Link dưới form: đã có tài khoản thì sang trang đăng nhập. -->
                     <a href="<?= base_url('auth/login') ?>" class="text-coffee fw-bold text-decoration-none">Đăng nhập tại đây</a>
                 </div>
             </div>

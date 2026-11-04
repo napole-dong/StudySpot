@@ -1,19 +1,16 @@
 <?php
-/**
- * AuthController: Xử lý Đăng nhập, Đăng ký, Đăng xuất và bảo mật phiên làm việc
- */
+// Xác thực: đăng nhập, đăng ký, đăng xuất.
 class AuthController extends Controller
 {
     private User $userModel;
 
+    // Tạo sẵn model User cho đăng nhập và đăng ký.
     public function __construct()
     {
         $this->userModel = new User();
     }
 
-    /**
-     * Hiển thị và xử lý form Đăng nhập (/auth/login)
-     */
+    // Hiển thị và xử lý form Đăng nhập (/auth/login)
     public function login(): void
     {
         // Nếu đã đăng nhập thì chuyển về trang chủ
@@ -25,6 +22,7 @@ class AuthController extends Controller
         $oldEmail = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Kiểm tra CSRF trước khi xử lý form.
             $this->verifyCsrfToken();
 
             $email = trim($_POST['email'] ?? '');
@@ -44,12 +42,14 @@ class AuthController extends Controller
             if (empty($errors)) {
                 $user = $this->userModel->findByEmail($email);
 
+            // Sai email hay sai mật khẩu đều báo chung một câu, không lộ email nào tồn tại.
                 if (!$user || !password_verify($password, $user['password'])) {
                     $errors['general'] = 'Email hoặc mật khẩu không chính xác.';
+            // Tài khoản bị khóa thì không cho vào dù mật khẩu đúng.
                 } elseif ($user['status'] === 'locked') {
                     $errors['general'] = 'Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ Quản trị viên.';
                 } else {
-                    // Làm mới Session ID sau khi đăng nhập thành công (chống Session Fixation)
+                    // Đổi Session ID sau khi đăng nhập (chống Session Fixation).
                     Session::regenerate();
 
                     // Lưu thông tin cần thiết vào Session (không lưu password hash)
@@ -65,6 +65,7 @@ class AuthController extends Controller
 
                     Session::flash('alert', 'Chào mừng ' . $user['name'] . ' đã quay trở lại StudySpot!', 'success');
 
+                    // Sau đăng nhập: admin về admin/dashboard, thành viên về trang chủ.
                     if ($user['role'] === 'admin') {
                         $this->redirect('admin/dashboard');
                     }
@@ -80,9 +81,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Hiển thị và xử lý form Đăng ký thành viên mới (/auth/register)
-     */
+    // Hiển thị và xử lý form Đăng ký thành viên mới (/auth/register)
     public function register(): void
     {
         if (Session::isLoggedIn()) {
@@ -97,6 +96,7 @@ class AuthController extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Kiểm tra CSRF trước khi xử lý form.
             $this->verifyCsrfToken();
 
             $name = trim($_POST['name'] ?? '');
@@ -152,6 +152,7 @@ class AuthController extends Controller
                     'email'    => $email,
                     'phone'    => $phone,
                     'password' => $password,
+                // Đăng ký luôn gán role là user, không tự tạo được admin.
                     'role'     => 'user',
                     'status'   => 'active',
                 ]);
@@ -182,9 +183,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Đăng xuất khỏi hệ thống (/auth/logout)
-     */
+    // Đăng xuất khỏi hệ thống (/auth/logout)
     public function logout(): void
     {
         Session::destroy();

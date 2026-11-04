@@ -1,12 +1,9 @@
-/**
- * StudySpot - JavaScript chính (assets/js/main.js)
- * Bao gồm:
- * 1. Tự động mờ dần & đóng thông báo Flash Message sau 4 giây (4000ms)
- * 2. Widget Chọn sao đánh giá trực quan (Interactive 5-Star Rating Widget)
- * 3. Xem trước ảnh trực tiếp khi chọn file từ máy tính (Live Image Preview)
- * 4. Thêm / Bỏ Yêu thích bằng AJAX (fetch API) kèm CSRF Token
- * 5. Khởi tạo Bootstrap Tooltip & Nút cuộn nhanh lên đầu trang (Back to Top)
- */
+// StudySpot: flash, chọn sao, xem ảnh, yêu thích AJAX, tooltip, lên đầu trang, gợi ý tìm kiếm.
+// Chạy khi DOMContentLoaded.
+
+
+// Khởi tạo khi DOMContentLoaded: 8 hàm dưới đây.
+
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Tự động mờ dần và đóng thông báo Flash sau 4 giây
     initAutoDismissFlashMessages();
@@ -29,18 +26,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // 7. Gợi ý tìm kiếm trực tiếp khi gõ vào ô tìm kiếm (header, hero, sidebar mobile)
     initSearchSuggestions();
 
-    // 8. O loc select: hover hien du ten khi chu dai bi cat (title = lua chon hien tai)
+    // 8. Ô lọc select: hover hiện đủ tên khi chữ dài bị cắt.
     initFilterSelectTitles();
 });
 
-/**
- * 1. Tự động đóng các thanh Flash Message / Alert sau 4 giây
- */
+// Flash: tự động mờ dần rồi đóng sau 4000ms, không phải 5000ms.
 function initAutoDismissFlashMessages() {
     const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(function (alertEl) {
         setTimeout(function () {
-            alertEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            alertEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease'; // Hiệu ứng mờ dần trong 0.4 giây trước khi đóng thanh flash.
             alertEl.style.opacity = '0';
             alertEl.style.transform = 'translateY(-6px)';
             setTimeout(function () {
@@ -57,10 +52,7 @@ function initAutoDismissFlashMessages() {
     });
 }
 
-/**
- * 2. Chuyển đổi các ô <select name="rating_*"> hoặc .js-star-rating thành dãy 5 ngôi sao tương tác
- * Giữ nguyên 100% thuộc tính name="..." của thẻ select/input để Backend PHP nhận dữ liệu bình thường
- */
+// Chọn sao: thay select bằng 5 sao, giữ nguyên name cho PHP.
 function initInteractiveStarRatings() {
     const ratingSelects = document.querySelectorAll('select[name^="rating_"], select.js-star-rating');
 
@@ -73,7 +65,7 @@ function initInteractiveStarRatings() {
     };
 
     ratingSelects.forEach(function (selectEl) {
-        if (selectEl.dataset.starUpgraded === '1') {
+        if (selectEl.dataset.starUpgraded === '1') { // Cơ chế chống lặp - select đã được nâng cấp thành widget sao thì bỏ qua.
             return;
         }
         selectEl.dataset.starUpgraded = '1';
@@ -146,9 +138,7 @@ function initInteractiveStarRatings() {
     });
 }
 
-/**
- * 3. Xem trước ảnh trực tiếp (Live Image Preview) khi người dùng hoặc Admin chọn file ảnh từ máy tính
- */
+// Xem ảnh: chọn file thì hiện ảnh xem trước, chưa tải lên server.
 function initLiveImagePreview() {
     const fileInputs = document.querySelectorAll('input[type="file"]');
 
@@ -210,12 +200,10 @@ function initLiveImagePreview() {
     });
 }
 
-/**
- * 4. Xử lý Thêm / Bỏ Yêu thích bằng AJAX (fetch API)
- */
+// Yêu thích AJAX: bấm tim gửi POST /favorite/toggle, đổi tim không tải lại trang.
 function initFavoriteToggleAjax() {
-    const baseUrl = document.body.getAttribute('data-base-url') || '';
-    const csrfToken = document.body.getAttribute('data-csrf') || '';
+    const baseUrl = document.body.getAttribute('data-base-url') || ''; // baseUrl do PHP in sẵn vào thuộc tính data-base-url trên thẻ body.
+    const csrfToken = document.body.getAttribute('data-csrf') || ''; // CSRF token do PHP in sẵn vào thuộc tính data-csrf trên thẻ body.
 
     document.addEventListener('click', async function (event) {
         const btn = event.target.closest('.btn-favorite-toggle');
@@ -240,7 +228,7 @@ function initFavoriteToggleAjax() {
             formData.append('place_id', placeId);
             formData.append('csrf_token', csrfToken);
 
-            const response = await fetch(baseUrl + '/favorite/toggle', {
+            const response = await fetch(baseUrl + '/favorite/toggle', { // POST /favorite/toggle, kèm CSRF token trong cả FormData và header X-CSRF-Token.
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': csrfToken,
@@ -255,7 +243,7 @@ function initFavoriteToggleAjax() {
                 showStudySpotToast(data.message || 'Vui lòng đăng nhập để lưu quán yêu thích.', 'warning');
                 setTimeout(function () {
                     window.location.href = data.login_url || (baseUrl + '/auth/login');
-                }, 900);
+                }, 900); // Đợi 900ms cho người dùng đọc toast rồi mới chuyển sang trang đăng nhập.
                 return;
             }
 
@@ -317,9 +305,8 @@ function initFavoriteToggleAjax() {
     });
 }
 
-/**
- * Hiển thị thông báo Toast nổi góc phải màn hình, tự động mờ dần sau 4 giây
- */
+// Toast: hiện hộp góc phải dưới, tự ẩn sau 4000ms.
+// Cảnh báo: message toast ghép thẳng vào HTML, chỉ truyền chữ từ server tin cậy.
 function showStudySpotToast(message, type = 'success') {
     let container = document.getElementById('studyspotToastContainer');
     if (!container) {
@@ -353,9 +340,7 @@ function showStudySpotToast(message, type = 'success') {
     });
 }
 
-/**
- * 5. Khởi tạo Bootstrap Tooltip cho các nút hành động có data-bs-toggle="tooltip"
- */
+// Tooltip: bật tooltip Bootstrap cho nút icon có data-bs-toggle.
 function initBootstrapTooltips() {
     if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
         return;
@@ -366,9 +351,7 @@ function initBootstrapTooltips() {
     });
 }
 
-/**
- * 6. Tạo nút cuộn nhanh lên đầu trang khi người dùng kéo trang xuống sâu
- */
+// Lên đầu trang: hiện khi cuộn quá 350px, bấm cuộn mượt lên đầu.
 function initBackToTopButton() {
     const btn = document.createElement('button');
     btn.id = 'btnBackToTop';
@@ -379,7 +362,7 @@ function initBackToTopButton() {
     document.body.appendChild(btn);
 
     window.addEventListener('scroll', function () {
-        if (window.scrollY > 350) {
+        if (window.scrollY > 350) { // Ngưỡng 350px - cuộn qua 350px mới hiện nút, cuộn lên trên thì ẩn nút.
             btn.style.display = 'inline-flex';
         } else {
             btn.style.display = 'none';
@@ -387,16 +370,13 @@ function initBackToTopButton() {
     });
 
     btn.addEventListener('click', function () {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn mượt (smooth) về đầu trang, không nhảy đột ngột.
     });
 }
 
-/**
- * 7. Gợi ý tìm kiếm trực tiếp: gõ từ 2 ký tự là hiện danh sách quán phù hợp ngay dưới ô tìm kiếm.
- * Chỉ áp dụng cho ô tìm kiếm ở header, hero trang chủ và sidebar mobile (không áp dụng cho thanh lọc trang Khám phá).
- */
+// Gợi ý tìm kiếm: gõ từ 2 ký tự, đợi 250ms rồi gọi GET /place/suggest, chỉ ô header/hero/sidebar mobile.
 function initSearchSuggestions() {
-    const baseUrl = document.body.getAttribute('data-base-url') || '';
+    const baseUrl = document.body.getAttribute('data-base-url') || ''; // baseUrl do PHP in sẵn vào thuộc tính data-base-url trên thẻ body.
     const inputs = document.querySelectorAll('header input[name="q"], .hero-split input[name="q"], .offcanvas input[name="q"]');
     inputs.forEach(function (input) {
         const group = input.closest('.input-group');
@@ -417,7 +397,7 @@ function initSearchSuggestions() {
             timer = setTimeout(async function () {
                 const myId = ++reqId;
                 try {
-                    const res = await fetch(baseUrl + '/place/suggest?q=' + encodeURIComponent(q));
+                    const res = await fetch(baseUrl + '/place/suggest?q=' + encodeURIComponent(q)); // GET /place/suggest, chỉ đọc gợi ý nên không cần CSRF token.
                     const data = await res.json();
                     if (myId !== reqId) return;
                     if (!data.items || data.items.length === 0) {
@@ -442,15 +422,12 @@ function initSearchSuggestions() {
             if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); activeIdx = (activeIdx - 1 + items.length) % items.length; items.forEach(function (el, i) { el.classList.toggle('active', i === activeIdx); }); }
             if (e.key === 'Enter' && activeIdx >= 0 && items[activeIdx]) { e.preventDefault(); window.location.href = items[activeIdx].href; }
         });
-        input.addEventListener('blur', function () { setTimeout(hide, 150); });
+        input.addEventListener('blur', function () { setTimeout(hide, 150); }); // Đợi 150ms sau khi rời khỏi ô tìm kiếm rồi mới đóng hộp gợi ý.
         document.addEventListener('click', function (e) { if (!group.contains(e.target)) hide(); });
     });
 }
 
-/**
- * 8. Gan title cho cac select trong thanh loc = ten lua chon hien tai,
- * de khi chu dai bi cat bang dau ... thi re chuot van xem duoc du chu.
- */
+// Tiêu đề lọc: gán title cho select lọc bằng lựa chọn hiện tại, để hover xem đủ chữ dài bị cắt.
 function initFilterSelectTitles() {
     document.querySelectorAll('.filter-bar .form-select').forEach(function (sel) {
         function sync() {

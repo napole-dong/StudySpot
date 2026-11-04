@@ -1,25 +1,23 @@
 <?php
-/**
- * ReviewController: Xử lý Thêm mới, Chỉnh sửa và Xóa đánh giá (Review) của thành viên
- * Đảm bảo mỗi user chỉ review 1 lần/quán, tự động tính lại avg_rating & total_reviews của quán
- */
+// Đánh giá của thành viên: gửi, sửa, xóa.
 class ReviewController extends Controller
 {
     private Review $reviewModel;
     private Place $placeModel;
 
+    // Yêu cầu đăng nhập (requireLogin) rồi tạo sẵn model Review, Place.
     public function __construct()
     {
+        // Bắt buộc đăng nhập: constructor chặn khách ngay từ đầu.
         $this->requireLogin();
         $this->reviewModel = new Review();
         $this->placeModel = new Place();
     }
 
-    /**
-     * Gửi đánh giá mới cho một quán (/review/store)
-     */
+    // Gửi đánh giá mới cho một quán (/review/store)
     public function store(): void
     {
+        // Chỉ nhận POST, không nhận GET.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('place');
         }
@@ -38,6 +36,7 @@ class ReviewController extends Controller
 
         // Kiểm tra ràng buộc: mỗi thành viên chỉ được đánh giá 1 lần cho 1 quán
         $existing = $this->reviewModel->findByPlaceAndUser($placeId, $userId);
+        // 1 người 1 review 1 quán: đã có review thì sửa review cũ.
         if ($existing) {
             Session::flash('alert', 'Bạn đã gửi đánh giá cho quán này trước đó. Bạn có thể chỉnh sửa đánh giá của mình.', 'warning');
             $this->redirect('place/show/' . $placeId . '#review-form-section');
@@ -61,6 +60,7 @@ class ReviewController extends Controller
         $this->reviewModel->create([
             'place_id'       => $placeId,
             'user_id'        => $userId,
+        // Admin đăng là hiện ngay (approved), thành viên chờ duyệt (pending).
             'status'         => $isAdmin ? 'approved' : 'pending',
             'rating_overall' => $data['rating_overall'],
             'rating_wifi'    => $data['rating_wifi'],
@@ -80,11 +80,10 @@ class ReviewController extends Controller
         $this->redirect('place/show/' . $placeId . '#review-form-section');
     }
 
-    /**
-     * Sửa đánh giá của chính mình (/review/update/12)
-     */
+    // Sửa đánh giá của chính mình (/review/update/12)
     public function update(int|string $id = 0): void
     {
+        // Chỉ nhận POST, không nhận GET.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('place');
         }
@@ -118,7 +117,7 @@ class ReviewController extends Controller
                 Session::flash('alert', 'Lỗi ảnh đính kèm: ' . $uploadResult['error'], 'danger');
                 $this->redirect('place/show/' . $placeId . '#review-form-section');
             }
-            // Xóa ảnh cũ trên ổ đĩa trước khi thay ảnh mới
+            // Xóa ảnh cũ trên ổ đĩa trước khi thay ảnh mới.
             delete_uploaded_file($review['image_path']);
             $imagePath = $uploadResult['path'];
         }
@@ -135,6 +134,7 @@ class ReviewController extends Controller
             'image_path'     => $imagePath,
         ]);
 
+        // Admin sửa thì review hiện ngay (approved), không chờ duyệt lại.
         if ($wasAdmin) {
             $this->reviewModel->updateStatus($reviewId, 'approved');
         }
@@ -149,11 +149,10 @@ class ReviewController extends Controller
         $this->redirect('place/show/' . $placeId . '#review-form-section');
     }
 
-    /**
-     * Xóa đánh giá của chính mình (/review/delete/12)
-     */
+    // Xóa đánh giá của chính mình (/review/delete/12)
     public function delete(int|string $id = 0): void
     {
+        // Chỉ nhận POST, không nhận GET.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('place');
         }
@@ -187,9 +186,7 @@ class ReviewController extends Controller
         $this->redirect($redirectTo);
     }
 
-    /**
-     * Thu thập và kiểm tra dữ liệu điểm số (1-5) + nội dung nhận xét
-     */
+    // Thu thập và kiểm tra dữ liệu điểm số (1-5) + nội dung nhận xét
     private function collectAndValidate(int $placeId): array
     {
         $ratingOverall = (int) ($_POST['rating_overall'] ?? 5);
@@ -198,6 +195,7 @@ class ReviewController extends Controller
         $ratingPrice = (int) ($_POST['rating_price'] ?? 5);
         $content = trim($_POST['content'] ?? '');
 
+        // Kẹp điểm sao về 1–5.
         $clampStar = static fn(int $val): int => max(1, min(5, $val));
 
         if ($content === '' || mb_strlen($content, 'UTF-8') < 10) {

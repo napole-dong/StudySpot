@@ -1,9 +1,8 @@
 <?php
-/**
- * Giao diện Quản lý Người dùng dành cho Admin (views/admin/users/index.php)
- */
+// Biến $currentAdminId: ID admin đang đăng nhập từ Session::user()['id'], mặc định là 0.
 $currentAdminId = (int) (Session::user()['id'] ?? 0);
 ?>
+<!-- Tiêu đề trang quản lý tài khoản: trên cùng, tổng số từ $total, tài khoản bị khóa sẽ không đăng nhập được -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <h1 class="page-title"><i class="bi bi-people me-2"></i>Quản lý tài khoản người dùng</h1>
@@ -11,7 +10,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
     </div>
 </div>
 
-<!-- Bộ lọc tìm kiếm người dùng -->
+<!-- Form tìm kiếm & lọc người dùng: GET tới admin/user, tìm theo tên, email hoặc số điện thoại -->
 <div class="surface-card p-4 mb-4">
     <form action="<?= base_url('admin/user') ?>" method="GET" class="row g-2 align-items-center">
         <div class="col-md-6">
@@ -36,7 +35,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
     </form>
 </div>
 
-<!-- Bảng danh sách người dùng (.admin-table align-middle + .admin-thumb bo góc 8px) -->
+<!-- Bảng danh sách người dùng: dưới form lọc, 8 cột (.admin-table, .admin-thumb) -->
 <div class="surface-card overflow-hidden">
     <div class="table-responsive">
         <table class="table admin-table table-hover align-middle mb-0">
@@ -53,6 +52,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                 </tr>
             </thead>
             <tbody>
+                                <!-- Nếu $users rỗng thì hiện một dòng gộp 8 cột -->
                 <?php if (empty($users)): ?>
                     <tr>
                         <td colspan="8" class="text-center text-muted py-5">
@@ -61,6 +61,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                         </td>
                     </tr>
                 <?php else: ?>
+                                        <!-- Vòng lặp danh sách người dùng: $u là một tài khoản trong $users; $isSelf là chính mình, $isAdminRole là vai trò admin -->
                     <?php foreach ($users as $u): ?>
                         <?php
                         $uid = (int) $u['id'];
@@ -71,6 +72,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                             <td class="ps-3 text-muted fw-semibold">#<?= $uid ?></td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
+                                                                        <!-- Ảnh đại diện: get_image_url() từ $u['avatar'], tài khoản là chính mình ($isSelf) thì có nhãn “Bạn” -->
                                     <img src="<?= get_image_url($u['avatar'] ?? null, 'avatar') ?>" alt="<?= e($u['name']) ?>" class="admin-thumb" width="42" height="42">
                                     <div>
                                         <div class="fw-bold text-dark">
@@ -85,6 +87,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                             </td>
                             <td class="small"><?= e($u['phone'] ?: '—') ?></td>
                             <td class="text-center">
+                                                                <!-- Huy hiệu vai trò: $isAdminRole đúng thì hiện “Admin”, còn lại là “Sinh viên” -->
                                 <?php if ($isAdminRole): ?>
                                     <span class="badge rounded-pill px-2 py-1" style="background: #111827; color: #fff;"><i class="bi bi-shield-lock me-1"></i>Admin</span>
                                 <?php else: ?>
@@ -97,6 +100,7 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                             <td class="text-center small text-muted">
                                 <?= date('d/m/Y', strtotime($u['created_at'])) ?>
                             </td>
+                                                        <!-- Huy hiệu trạng thái tài khoản: active là Hoạt động, còn lại là Đang khóa -->
                             <td class="text-center">
                                 <?php if ($u['status'] === 'active'): ?>
                                     <span class="badge badge-status-open rounded-pill px-2 py-1">
@@ -109,16 +113,19 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                                 <?php endif; ?>
                             </td>
                             <td class="text-end pe-3">
+                                                                <!-- Cột thao tác — Được bảo vệ: không hiện nút khóa cho chính mình ($isSelf) hoặc mọi tài khoản admin ($isAdminRole), chỉ hiện “Được bảo vệ” -->
                                 <?php if ($isSelf || $isAdminRole): ?>
                                     <span class="small text-muted fst-italic"><i class="bi bi-shield-check text-coffee me-1"></i>Được bảo vệ</span>
                                 <?php else: ?>
                                     <form
+                                                                                <!-- Form khóa/mở khóa: chỉ có với tài khoản sinh viên bình thường, POST tới admin/user/toggleStatus/{id} để đảo trạng thái -->
                                         action="<?= base_url('admin/user/toggleStatus/' . $uid) ?>"
                                         method="POST"
                                         class="d-inline"
                                         onsubmit="return confirm('<?= $u['status'] === 'active' ? 'Bạn có chắc muốn KHÓA tài khoản này?' : 'Mở khóa cho tài khoản này?' ?>');"
                                     >
                                         <?= csrf_field() ?>
+                                                                                <!-- Nút khóa/mở: đang hoạt động thì nút khóa viền đỏ, đang bị khóa thì nút mở khóa xanh lá -->
                                         <?php if ($u['status'] === 'active'): ?>
                                             <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Khóa tài khoản thành viên này">
                                                 <i class="bi bi-lock"></i>
@@ -139,4 +146,5 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
     </div>
 </div>
 
+<!-- Phân trang: render_pagination() từ $currentPage và $totalPages về admin/user -->
 <?= render_pagination($currentPage, $totalPages, 'admin/user') ?>

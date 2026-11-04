@@ -1,22 +1,17 @@
 <?php
-/**
- * AdminAmenityController: Quản lý Tiện ích (amenities) — thêm/sửa/xóa.
- * Thêm tiện ích mới ở đây là tự xuất hiện ở form quán, bộ lọc và thẻ quán, không cần sửa code.
- * Tên class có tiền tố Admin theo quy tắc: AdminAmenityController
- */
+// Quản trị tiện ích quán.
 class AdminAmenityController extends Controller
 {
     private Amenity $amenityModel;
 
+    // Kiểm tra quyền admin (requireAdmin) trước rồi tạo sẵn model Amenity.
     public function __construct()
     {
         $this->requireAdmin();
         $this->amenityModel = new Amenity();
     }
 
-    /**
-     * Hiển thị danh sách tiện ích và form thêm/sửa (/admin/amenity)
-     */
+    // Hiển thị danh sách tiện ích và form thêm/sửa (/admin/amenity)
     public function index(): void
     {
         $amenities = $this->amenityModel->getAllWithPlaceCount();
@@ -33,9 +28,7 @@ class AdminAmenityController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Xử lý thêm tiện ích mới (/admin/amenity/store)
-     */
+    // Xử lý thêm tiện ích mới (/admin/amenity/store)
     public function store(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -65,9 +58,7 @@ class AdminAmenityController extends Controller
         $this->redirect('admin/amenity');
     }
 
-    /**
-     * Xử lý cập nhật tên tiện ích (/admin/amenity/update/5)
-     */
+    // Xử lý cập nhật tên tiện ích (/admin/amenity/update/5)
     public function update(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -99,9 +90,7 @@ class AdminAmenityController extends Controller
         $this->redirect('admin/amenity');
     }
 
-    /**
-     * Xử lý xóa tiện ích (/admin/amenity/delete/5)
-     */
+    // Xử lý xóa tiện ích (/admin/amenity/delete/5)
     public function delete(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -117,7 +106,7 @@ class AdminAmenityController extends Controller
             $this->redirect('admin/amenity');
         }
 
-        // Kiểm tra ràng buộc: không cho xóa nếu đang có quán dùng tiện ích này
+        // Chặn xóa khi còn quán dùng tiện ích này.
         $placeCount = $this->amenityModel->countPlaces($amenityId);
         if ($placeCount > 0) {
             Session::flash('alert', 'Không thể xóa tiện ích "' . $amenity['name'] . '" vì đang có ' . $placeCount . ' quán sử dụng. Hãy bỏ tiện ích này khỏi các quán trước.', 'warning');

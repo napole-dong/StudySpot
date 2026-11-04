@@ -1,12 +1,8 @@
 <?php
-/**
- * Lớp Session: Quản lý phiên làm việc, đăng nhập, phân quyền, Flash Message và CSRF Token
- */
+// Session: gói $_SESSION thành hàm tĩnh — lưu/lấy, đăng nhập, flash message, CSRF.
 class Session
 {
-    /**
-     * Khởi tạo session an toàn
-     */
+        // start(): mở session nếu chưa chạy, tránh gọi session_start() 2 lần.
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -14,41 +10,31 @@ class Session
         }
     }
 
-    /**
-     * Lưu giá trị vào session
-     */
+        // set(): lưu 1 cặp key => value vào $_SESSION.
     public static function set(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;
     }
 
-    /**
-     * Lấy giá trị từ session
-     */
+        // get(): lấy giá trị theo key, chưa có thì trả $default.
     public static function get(string $key, mixed $default = null): mixed
     {
         return $_SESSION[$key] ?? $default;
     }
 
-    /**
-     * Kiểm tra sự tồn tại của key trong session
-     */
+        // has(): kiểm tra key tồn tại và khác null.
     public static function has(string $key): bool
     {
         return isset($_SESSION[$key]);
     }
 
-    /**
-     * Xóa một key khỏi session
-     */
+        // remove(): xóa 1 key khỏi $_SESSION.
     public static function remove(string $key): void
     {
         unset($_SESSION[$key]);
     }
 
-    /**
-     * Hủy toàn bộ session (dùng khi đăng xuất)
-     */
+        // destroy(): đăng xuất sạch — xóa $_SESSION, xóa cookie session id, hủy phiên.
     public static function destroy(): void
     {
         $_SESSION = [];
@@ -67,17 +53,13 @@ class Session
         session_destroy();
     }
 
-    /**
-     * Làm mới Session ID sau khi đăng nhập thành công (chống Session Fixation)
-     */
+        // regenerate(): đổi session id mới sau khi đăng nhập, chống Session Fixation.
     public static function regenerate(): void
     {
         session_regenerate_id(true);
     }
 
-    /**
-     * Thiết lập hoặc lấy thông báo Flash Message (chỉ hiển thị 1 lần)
-     */
+        // flash(): ghi thì lưu vào _flash, đọc thì lấy xong xóa ngay nên chỉ hiện 1 lần.
     public static function flash(string $key, ?string $message = null, string $type = 'success'): ?array
     {
         if ($message !== null) {
@@ -97,33 +79,25 @@ class Session
         return null;
     }
 
-    /**
-     * Kiểm tra người dùng đã đăng nhập chưa
-     */
+        // isLoggedIn(): đã đăng nhập khi session có user và id khác rỗng.
     public static function isLoggedIn(): bool
     {
         return isset($_SESSION['user']) && !empty($_SESSION['user']['id']);
     }
 
-    /**
-     * Lấy thông tin người dùng đang đăng nhập
-     */
+        // user(): trả mảng user trong session, hoặc null; đây là bản lúc đăng nhập, có thể đã cũ.
     public static function user(): ?array
     {
         return $_SESSION['user'] ?? null;
     }
 
-    /**
-     * Kiểm tra người dùng hiện tại có phải Admin không
-     */
+        // isAdmin(): đã đăng nhập và role trong session bằng 'admin'.
     public static function isAdmin(): bool
     {
         return self::isLoggedIn() && ($_SESSION['user']['role'] ?? '') === 'admin';
     }
 
-    /**
-     * Sinh hoặc lấy CSRF Token hiện tại
-     */
+        // csrfToken(): sinh token ngẫu nhiên 32 byte nếu chưa có, có rồi thì dùng lại.
     public static function csrfToken(): string
     {
         if (empty($_SESSION['_csrf_token'])) {
@@ -132,9 +106,7 @@ class Session
         return $_SESSION['_csrf_token'];
     }
 
-    /**
-     * Kiểm tra tính hợp lệ của CSRF Token gửi từ form POST
-     */
+        // verifyCsrf(): so token bằng hash_equals (thời gian không đổi) để chống đoán token qua thời gian.
     public static function verifyCsrf(?string $token): bool
     {
         if (empty($_SESSION['_csrf_token']) || empty($token)) {

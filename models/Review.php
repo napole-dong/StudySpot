@@ -1,14 +1,9 @@
 <?php
-/**
- * Model Review: Quản lý toàn bộ truy vấn CSDL của bảng reviews
- * Bao gồm: Lấy danh sách review đã duyệt theo quán (phân trang), điểm thành phần (Wifi/Không gian/Giá),
- * thêm/sửa/xóa review của sinh viên, kiểm duyệt review của Admin và thống kê biểu đồ theo tháng.
- */
+// Model Review: quản lý đánh giá, bảng reviews, status pending (chờ duyệt) / approved (hiện công khai, tính điểm) / hidden (ẩn).
+// Model này được trang chi tiết quán, controller gửi/sửa/xóa review và controller quản trị gọi; một người một quán chỉ một review.
 class Review extends Model
 {
-    /**
-     * Lấy danh sách review ĐÃ DUYỆT của một quán (có phân trang)
-     */
+    // Lấy review đã duyệt của quán có phân trang, WHERE place_id = :place_id AND status = 'approved', mới nhất trước.
     public function getApprovedByPlace(int $placeId, int $page = 1, int $perPage = REVIEWS_PER_PAGE): array
     {
         $countSql = "SELECT COUNT(*) FROM reviews WHERE place_id = :place_id AND status = 'approved'";
@@ -32,9 +27,7 @@ class Review extends Model
         ];
     }
 
-    /**
-     * Tính điểm trung bình chi tiết từng tiêu chí (Tổng thể, Wifi, Không gian, Giá cả) của 1 quán
-     */
+    // Tính điểm trung bình từng tiêu chí (overall, wifi, space, price), chỉ tính review đã duyệt, làm tròn 1 chữ số.
     public function getCriteriaAverages(int $placeId): array
     {
         $sql = "SELECT
@@ -56,9 +49,7 @@ class Review extends Model
         ];
     }
 
-    /**
-     * Tìm review của một user cụ thể tại một quán (mỗi user chỉ được review 1 lần / 1 quán)
-     */
+    // Tìm review của một người tại một quán, WHERE place_id + user_id LIMIT 1, để chặn gửi review thứ hai.
     public function findByPlaceAndUser(int $placeId, int $userId): array|false
     {
         $sql = 'SELECT * FROM reviews WHERE place_id = :place_id AND user_id = :user_id LIMIT 1';
@@ -68,9 +59,7 @@ class Review extends Model
         ]);
     }
 
-    /**
-     * Tìm review theo ID
-     */
+    // Tìm review theo id, JOIN places + users lấy place_name và user_name.
     public function findById(int $id): array|false
     {
         $sql = 'SELECT r.*, p.name AS place_name, u.name AS user_name
@@ -81,9 +70,7 @@ class Review extends Model
         return $this->fetchOne($sql, [':id' => $id]);
     }
 
-    /**
-     * Thêm review mới (mặc định 'pending' chờ Admin duyệt; quản trị viên tạo thì 'approved' ngay)
-     */
+    // Thêm review mới, mặc định status = 'pending', admin tạo thì 'approved' ngay; chỉ khi approved mới gọi recalculateRating.
     public function create(array $data): int
     {
         $sql = "INSERT INTO reviews (
@@ -115,9 +102,7 @@ class Review extends Model
         return $newId;
     }
 
-    /**
-     * Cập nhật nội dung review của chính người dùng (đặt lại status = 'pending' để Admin duyệt lại)
-     */
+    // Sửa review của chính người dùng, ghi cùng status = 'pending' để duyệt lại, xong gọi recalculateRating.
     public function updateByUser(int $reviewId, array $data): bool
     {
         $sql = "UPDATE reviews SET
@@ -147,9 +132,7 @@ class Review extends Model
         return $updated;
     }
 
-    /**
-     * Cập nhật trạng thái kiểm duyệt review ('approved', 'hidden', 'pending') và tự động tính lại điểm quán
-     */
+    // Đổi trạng thái kiểm duyệt review (pending/approved/hidden), xong tự động gọi recalculateRating của quán.
     public function updateStatus(int $reviewId, string $status): bool
     {
         if (!in_array($status, ['pending', 'approved', 'hidden'], true)) {
@@ -171,9 +154,7 @@ class Review extends Model
         return true;
     }
 
-    /**
-     * Xóa review và tự động cập nhật lại điểm trung bình của quán
-     */
+    // Xóa review cả file ảnh đính kèm, xong gọi recalculateRating nếu xóa thành công.
     public function delete(int $reviewId): bool
     {
         $review = $this->findById($reviewId);
@@ -193,9 +174,7 @@ class Review extends Model
         return $deleted;
     }
 
-    /**
-     * Lấy lịch sử review của một thành viên (dùng trong Trang cá nhân)
-     */
+    // Lấy lịch sử review của một thành viên, không lọc status để chủ review thấy cả review chờ duyệt và bị ẩn.
     public function getByUserId(int $userId): array
     {
         $sql = 'SELECT r.*, p.name AS place_name, p.district AS place_district,
@@ -209,9 +188,7 @@ class Review extends Model
         return $this->fetchAll($sql, [':user_id' => $userId]);
     }
 
-    /**
-     * Lấy danh sách review cho Admin (lọc theo trạng thái, từ khóa và phân trang)
-     */
+    // Lấy review cho admin, lọc status + từ khóa, xếp pending trước rồi approved rồi hidden, mới nhất trước trong cùng trạng thái.
     public function getAdminList(string $status = '', string $keyword = '', int $page = 1, int $perPage = ADMIN_ITEMS_PER_PAGE): array
     {
         $conditions = [];
@@ -257,9 +234,7 @@ class Review extends Model
         ];
     }
 
-    /**
-     * Đếm tổng số review hoặc theo trạng thái
-     */
+    // Đếm số review, có status thì đếm theo status, không có thì đếm tất cả.
     public function countByStatus(?string $status = null): int
     {
         if ($status !== null) {
@@ -268,7 +243,5 @@ class Review extends Model
         return (int) $this->fetchColumn('SELECT COUNT(*) FROM reviews');
     }
 
-    /**
-     * Thống kê số lượng review theo 6 tháng gần nhất để vẽ biểu đồ Chart.js trên Admin Dashboard
-     */
+    // Ghi chú: không có hàm thống kê review theo tháng trong file này, docblock cũ về biểu đồ Chart.js không kèm hàm nào.
 }

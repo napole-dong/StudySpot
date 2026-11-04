@@ -1,9 +1,6 @@
 <?php
-/**
- * Layout khu vực Quản trị — dùng ĐÚNG khung header người dùng (1 hàng, sticky),
- * chỉ đổi nhãn nav sang quản trị và nút chuyển thành "Trang người dùng".
- * Logo, nav, tài khoản, footer ở cùng vị trí với trang người dùng.
- */
+// Layout quản trị: dùng chung khung header người dùng, nút Trang người dùng mở cùng tab.
+// Layout quản trị: $adminUser, $currentUrl, $pendingReviewBadgeCount; lỗi đếm thì badge về 0.
 $adminUser = Session::user();
 $flash = Session::flash('alert');
 $currentUrl = $_GET['url'] ?? '';
@@ -22,6 +19,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tiêu đề tab quản trị: $pageTitle + Quản trị. -->
     <title><?= isset($pageTitle) ? e($pageTitle) . ' | Quản trị ' . e(SITE_NAME) : 'Quản trị | ' . e(SITE_NAME) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,9 +29,11 @@ try {
     <link href="<?= base_url('assets/css/style.css') . '?v=' . filemtime(ROOT_PATH . '/assets/css/style.css') ?>" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100 bg-light-warm" data-base-url="<?= e(BASE_URL) ?>" data-csrf="<?= e(Session::csrfToken()) ?>">
+    <!-- Header quản trị dính trên cùng, giống header người dùng. -->
     <header class="sticky-top navbar-warm">
         <nav class="navbar navbar-expand-lg py-2">
             <div class="container">
+                <!-- Logo quản trị: bấm về admin/dashboard. -->
                 <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none me-2" href="<?= base_url('admin/dashboard') ?>">
                     <span class="brand-badge d-inline-flex align-items-center justify-content-center rounded-3 text-white">
                         <i class="bi bi-cup-hot-fill"></i>
@@ -44,11 +44,13 @@ try {
                     </div>
                 </a>
 
+                <!-- Nút mobile: mở sidebar trượt (offcanvas). -->
                 <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Mở menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNavbar">
+                    <!-- Menu desktop: mục khớp $currentUrl thì active. -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 flex-lg-nowrap">
                         <li class="nav-item">
                             <a class="nav-link text-nowrap <?= ($currentUrl === 'admin' || str_starts_with($currentUrl, 'admin/dashboard')) ? 'active' : '' ?>" href="<?= base_url('admin/dashboard') ?>">
@@ -61,6 +63,7 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <!-- Mục Đánh giá: huy hiệu $pendingReviewBadgeCount chỉ hiện khi > 0. -->
                             <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">
                                 <i class="bi bi-chat-square-quote me-1"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?>
                             </a>
@@ -81,6 +84,7 @@ try {
                         </li>
                     </ul>
 
+                    <!-- Cụm phải header desktop: nút Trang người dùng và dropdown tài khoản. -->
                     <div class="d-none d-lg-flex align-items-center gap-2 mt-2 mt-lg-0 flex-nowrap flex-shrink-0 border-start ps-3">
                         <a href="<?= base_url() ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3 text-nowrap flex-shrink-0 header-switch-btn" title="Về trang người dùng">
                             <i class="bi bi-house-door me-1"></i>Trang người dùng
@@ -91,6 +95,7 @@ try {
                                     <img src="<?= get_image_url($adminUser['avatar'] ?? null, 'avatar') ?>" alt="<?= e($adminUser['name']) ?>" class="rounded-circle object-fit-cover border" width="28" height="28">
                                     <span class="small fw-semibold text-truncate d-inline-block" style="max-width: 90px;"><?= e($adminUser['name']) ?></span>
                                 </a>
+                                <!-- Dropdown tài khoản admin: tên, email, Trang người dùng, Hồ sơ, Đăng xuất. -->
                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
                                     <li class="px-3 py-2 border-bottom mb-1">
                                         <div class="fw-bold small text-dark text-truncate"><?= e($adminUser['name']) ?></div>
@@ -120,6 +125,7 @@ try {
                 </div>
             </div>
         </nav>
+            <!-- Menu mobile là sidebar trượt từ phải sang. -->
             <div class="offcanvas offcanvas-end mobile-sidebar" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title fw-bold" id="mobileSidebarLabel">StudySpot <span class="fs-6 fw-normal text-muted">Quản trị</span></h5>
@@ -132,6 +138,7 @@ try {
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>"><i class="bi bi-chat-square-quote"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>"><i class="bi bi-people"></i>Người dùng</a>
                     <?php $isTaxonomy = str_starts_with($currentUrl, 'admin/category') || str_starts_with($currentUrl, 'admin/amenity'); ?>
+                    <!-- Nhóm Phân loại mobile: Danh mục, Tiện ích; $isTaxonomy giữ mở sẵn. -->
                     <a class="sidebar-link <?= $isTaxonomy ? 'active' : '' ?>" data-bs-toggle="collapse" href="#sidebarTaxonomy" role="button" aria-expanded="<?= $isTaxonomy ? 'true' : 'false' ?>" aria-controls="sidebarTaxonomy"><i class="bi bi-tags"></i>Phân loại<i class="bi bi-chevron-down ms-auto sidebar-chevron"></i></a>
                     <div class="collapse <?= $isTaxonomy ? 'show' : '' ?>" id="sidebarTaxonomy">
                         <a class="sidebar-link ps-4 <?= str_starts_with($currentUrl, 'admin/category') ? 'active' : '' ?>" href="<?= base_url('admin/category') ?>">Danh mục</a>
@@ -139,6 +146,7 @@ try {
                     </div>
                 </nav>
                 <?php if (!empty($adminUser)): ?>
+                <!-- Thẻ tài khoản mobile: dạng phẳng, không dropdown. -->
                 <div class="p-3 rounded-4 border bg-white">
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <img src="<?= get_image_url($adminUser['avatar'] ?? null, 'avatar') ?>" alt="<?= e($adminUser['name']) ?>" class="rounded-circle object-fit-cover border" width="40" height="40">
@@ -156,6 +164,7 @@ try {
         </div>
 </header>
 
+    <!-- Nội dung chính quản trị: container, flash, rồi $content. -->
     <main class="flex-grow-1">
         <div class="container py-4">
             <?php if (!empty($flash)): ?>
@@ -169,6 +178,7 @@ try {
         </div>
     </main>
 
+    <!-- Cuối trang quản trị: dùng chung footer người dùng. -->
     <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

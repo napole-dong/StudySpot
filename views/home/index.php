@@ -1,12 +1,9 @@
 <?php
-/**
- * Giao diện Trang chủ StudySpot hoàn chỉnh (views/home/index.php)
- * Khu vực thực tế: TP. Long Xuyên, An Giang (Quanh Trường Đại học An Giang - AGU)
- * Phong cách thiết kế: Warm Study Cafe (Airbnb / Highlands Card UI)
- */
+// Trang chủ, do HomeController (index) render.
+// Trang chủ: $districts, $heroPlace, $featuredPlaces, $favoriteIds, phân trang nổi bật.
 ?>
 <div class="container py-4">
-    <!-- 1. HERO CHIA ĐÔI: trái chữ + tìm kiếm, phải ảnh quán nổi bật -->
+    <!-- Hero chia đôi: trái chữ + tìm kiếm, phải ảnh quán nổi bật. -->
     <section class="hero-split">
         <div>
             <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-3 mb-3" style="background: #F3F4F6; border: 1px solid #E5E7EB; color: #374151;">
@@ -19,6 +16,7 @@
             <p class="text-muted mb-4" style="font-size: 1.05rem;">
                 Khám phá các quán cà phê yên tĩnh, nhiều ổ cắm điện, Wifi mạnh, giá hạt dẻ quanh khu vực Ung Văn Khiêm, Đông Xuyên, Mỹ Xuyên, Mỹ Quý.
             </p>
+            <!-- Form tìm kiếm: GET sang place với q và district. -->
             <form action="<?= base_url('place') ?>" method="GET" class="bg-white p-3 rounded-3 border mb-3">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5">
@@ -28,6 +26,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
+                        <!-- Ô chọn phường: vòng lặp $districts, giá trị qua e() chống XSS. -->
                         <select name="district" class="form-select border-0 shadow-none text-secondary">
                             <option value="">Tất cả phường</option>
                             <?php foreach ($districts as $dist): ?>
@@ -44,12 +43,14 @@
             </form>
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <span class="small text-muted me-1"><i class="bi bi-funnel-fill me-1"></i>Gợi ý nhanh:</span>
+                <!-- Gợi ý nhanh: mỗi tag là link sang place với bộ lọc chọn sẵn. -->
                 <a href="<?= BASE_URL . '/place?amenity[]=wifi' ?>" class="hero-quick-tag">Wifi mạnh</a>
                 <a href="<?= BASE_URL . '/place?amenity[]=outlet' ?>" class="hero-quick-tag">Nhiều ổ cắm</a>
                 <a href="<?= BASE_URL . '/place?noise_level=yen_tinh' ?>" class="hero-quick-tag">Yên tĩnh</a>
                 <a href="<?= BASE_URL . '/place?price_range=2' ?>" class="hero-quick-tag">Giá sinh viên</a>
             </div>
         </div>
+        <!-- Ảnh hero: chỉ hiện khi $heroPlace không rỗng, bấm sang trang chi tiết quán đó. -->
         <?php if (!empty($heroPlace)): ?>
             <a href="<?= base_url('place/show/' . (int) $heroPlace['id']) ?>" class="text-decoration-none">
                 <img src="<?= get_image_url($heroPlace['cover_image'] ?? null, 'place', (int) $heroPlace['id']) ?>" class="hero-split-img" alt="<?= e($heroPlace['name']) ?>">
@@ -61,7 +62,7 @@
         <?php endif; ?>
     </section>
 
-    <!-- 3. QUÁN NỔI BẬT TẠI LONG XUYÊN (ĐIỂM ĐÁNH GIÁ CAO NHẤT) -->
+    <!-- Khối Quán nổi bật dưới hero; Xem tất cả sang place sort rating_desc. -->
     <section class="mb-4" id="featured">
         <div class="d-flex justify-content-between align-items-end mb-3">
             <div>
@@ -74,8 +75,10 @@
         </div>
 
         <div class="d-flex flex-column gap-4">
+            <!-- Vòng lặp $featuredPlaces: mỗi quán 1 thẻ place-row. -->
             <?php foreach ($featuredPlaces as $place): ?>
                 <?php
+// Thẻ quán: $isOpen, $favoriteIds, get_card_amenities() tối đa 3 tiện ích.
                 $isOpen = is_place_open($place['open_time'], $place['close_time']);
                 $isFav = in_array((int) $place['id'], $favoriteIds, true);
                 $cardAmenities = get_card_amenities($place);
@@ -99,6 +102,7 @@
                             <?php endforeach; ?>
                         </div>
                     </div>
+                    <!-- Cột phải thẻ quán: sao + số review đã duyệt, badge giá, tim, Xem chi tiết. -->
                     <div class="place-row-side">
                         <div>
                             <?= render_stars((float) $place['avg_rating']) ?>
@@ -106,6 +110,7 @@
                         </div>
                         <div class="place-price-badge"><?= e(format_price_range_from_min_max($place['price_min'] ?? null, $place['price_max'] ?? null)) ?></div>
                         <div class="d-flex gap-2">
+                            <!-- Nút tim: JS main.js bắt data-place-id gửi AJAX, không tải lại trang. -->
                             <button type="button" class="btn btn-sm btn-outline-coffee btn-favorite-toggle" data-place-id="<?= (int) $place['id'] ?>" title="Lưu vào quán yêu thích"><i class="bi <?= $isFav ? 'bi-heart-fill text-danger' : 'bi-heart' ?>"></i></button>
                             <a href="<?= base_url('place/show/' . (int) $place['id']) ?>" class="btn btn-sm btn-coffee">Xem chi tiết</a>
                         </div>
@@ -114,8 +119,10 @@
             <?php endforeach; ?>
         </div>
 
+        <!-- Phân trang nổi bật: chỉ hiện khi tổng số trang > 1, link có #featured. -->
         <?php if (($featuredTotalPages ?? 1) > 1): ?>
             <?php $fp = $featuredPage ?? 1; $ftp = $featuredTotalPages; $fStart = max(1, $fp - 2); $fEnd = min($ftp, $fp + 2); ?>
+            <!-- Thanh phân trang: cửa sổ 5 trang quanh trang hiện tại, ... khi bỏ qua nhiều trang. -->
             <nav aria-label="Phân trang quán nổi bật"><ul class="pagination justify-content-center mt-4">
                 <li class="page-item <?= $fp <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= $fp > 1 ? e('?featured_page=' . ($fp - 1) . '#featured') : '#' ?>"><i class="bi bi-chevron-left"></i></a></li>
                 <?php if ($fStart > 1): ?>

@@ -1,7 +1,5 @@
 <?php
-/**
- * Giao diện Thêm mới Quán học bài tại TP. Long Xuyên kèm Upload nhiều ảnh & Chọn ảnh bìa (views/admin/places/create.php)
- */
+// Form thêm quán — AdminPlaceController render
 $districts = $districts ?? [
     'Phường Đông Xuyên',
     'Phường Mỹ Xuyên',
@@ -11,27 +9,31 @@ $districts = $districts ?? [
     'Phường Bình Khánh',
 ];
 ?>
+<!-- Tiêu đề form thêm quán: trên cùng -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="page-title"><i class="bi bi-plus-circle me-2"></i>Thêm quán học bài mới tại TP. Long Xuyên</h1>
         <p class="text-muted small mb-0">Điền thông tin chi tiết về không gian, địa chỉ phường tại Long Xuyên, tiện ích học tập và tải lên bộ ảnh của quán</p>
     </div>
+        <!-- Nút Quay lại danh sách: về admin/place, không lưu những gì vừa nhập -->
     <a href="<?= base_url('admin/place') ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3">
         <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
     </a>
 </div>
 
+<!-- Form thêm quán: một form duy nhất, POST tới admin/place/create, enctype multipart/form-data để tải ảnh -->
 <form action="<?= base_url('admin/place/create') ?>" method="POST" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?>
 
     <div class="row g-4">
-        <!-- Cột trái: Thông tin cơ bản & mô tả -->
+                <!-- Cột trái: Thông tin cơ bản & mô tả (thẻ Thông tin & địa chỉ, thẻ Thư viện ảnh) -->
         <div class="col-lg-8">
             <div class="surface-card p-4 mb-4">
                 <h6 class="h6 fw-bold text-coffee mb-3">Thông tin &amp; địa chỉ</h5>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
+                                                <!-- Trường tên quán name: bắt buộc, giữ lại từ $old['name'], lỗi hiện dưới trường từ $errors['name'] -->
                         <label class="form-label fw-semibold small">Tên quán <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" placeholder="VD: NHÀ KHO Coffee hoặc Cồ-Lá Coffee" value="<?= e($old['name'] ?? '') ?>" required>
                         <?php if (isset($errors['name'])): ?>
@@ -40,6 +42,7 @@ $districts = $districts ?? [
                     </div>
 
                     <div class="col-md-4">
+                                                <!-- Trường danh mục category_id: bắt buộc, lựa chọn từ $categories, giữ lựa chọn cũ từ $old['category_id'] -->
                         <label class="form-label fw-semibold small">Danh mục loại hình <span class="text-danger">*</span></label>
                         <select name="category_id" class="form-select <?= isset($errors['category_id']) ? 'is-invalid' : '' ?>" required>
                             <option value="">-- Chọn loại hình --</option>
@@ -57,6 +60,7 @@ $districts = $districts ?? [
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-7">
+                                                <!-- Trường địa chỉ address: bắt buộc, chỉ nhập số nhà và tên đường, không gõ lại phường hay TP. Long Xuyên -->
                         <label class="form-label fw-semibold small">Địa chỉ (Số nhà &amp; Tên đường) <span class="text-danger">*</span></label>
                         <input type="text" name="address" class="form-control <?= isset($errors['address']) ? 'is-invalid' : '' ?>" placeholder="VD: Số 123 Ung Văn Khiêm hoặc Hẻm 181 Võ Thị Sáu" value="<?= e($old['address'] ?? '') ?>" required>
                         <div class="form-text small text-muted">Chỉ nhập số nhà, tên đường hoặc hẻm (không cần gõ lại Phường / TP. Long Xuyên).</div>
@@ -66,6 +70,7 @@ $districts = $districts ?? [
                     </div>
 
                     <div class="col-md-5">
+                                                <!-- Trường phường district: bắt buộc, mặc định chọn sẵn Phường Đông Xuyên khi mở form lần đầu -->
                         <label class="form-label fw-semibold small">Phường / Khu vực (TP. Long Xuyên) <span class="text-danger">*</span></label>
                         <select name="district" class="form-select <?= isset($errors['district']) ? 'is-invalid' : '' ?>" required>
                             <option value="">-- Chọn Phường tại Long Xuyên --</option>
@@ -90,7 +95,7 @@ $districts = $districts ?? [
                     <?php endif; ?>
                 </div>
 
-                <!-- Cấu hình nâng cao thu gọn: Google Maps -->
+                                <!-- Cấu hình nâng cao thu gọn: Google Maps (chỉ điền google_map_url khi muốn link riêng) -->
                 <div class="border rounded-3 p-3 bg-light">
                     <a class="text-decoration-none d-flex justify-content-between align-items-center text-secondary small fw-semibold" data-bs-toggle="collapse" href="#advancedMapSettings" role="button" aria-expanded="false" aria-controls="advancedMapSettings">
                         <span><i class="bi bi-gear-fill me-1 text-coffee"></i>Cấu hình nâng cao: tùy biến link nhúng Google Maps</span>
@@ -106,7 +111,7 @@ $districts = $districts ?? [
                 </div>
             </div>
 
-            <!-- Upload nhiều ảnh & Chọn ảnh bìa (Live Preview bằng FileReader) -->
+                        <!-- Thẻ thư viện hình ảnh & ảnh bìa: chọn nhiều ảnh (images[]), ô ẩn cover_index chỉ ảnh bìa -->
             <div class="surface-card p-4">
                 <h6 class="h6 fw-bold text-coffee mb-2">2. Thư viện hình ảnh &amp; ảnh bìa</h5>
                 <p class="text-muted small mb-3">
@@ -122,16 +127,18 @@ $districts = $districts ?? [
             </div>
         </div>
 
-        <!-- Cột phải: Tiện ích học bài, mức giá, giờ mở cửa -->
+                <!-- Cột phải: Tiêu chí học tập & giá, tiện ích, giờ mở cửa, trạng thái và nút lưu -->
         <div class="col-lg-4">
             <div class="surface-card p-4 mb-4">
                 <h6 class="h6 fw-bold text-coffee mb-3">3. Tiêu chí học tập &amp; giá</h5>
 
                 <div class="mb-3">
+                                        <!-- Trường giá thấp nhất price_min: nhập tự do theo VNĐ, để trống là không giới hạn dưới -->
                     <label class="form-label fw-semibold small">Giá thấp nhất (VNĐ)</label>
                     <input type="number" name="price_min" class="form-control" min="0" step="1000" placeholder="VD: 25000 (để trống nếu không giới hạn)" value="<?= e($old['price_min'] ?? '') ?>">
                 </div>
                 <div class="mb-3">
+                                        <!-- Trường giá cao nhất price_max: kiểm tra max >= min do controller làm, view chỉ hiện lỗi từ $errors['price_max'] -->
                     <label class="form-label fw-semibold small">Giá cao nhất (VNĐ)</label>
                     <input type="number" name="price_max" class="form-control" min="0" step="1000" placeholder="VD: 45000 (để trống nếu không giới hạn)" value="<?= e($old['price_max'] ?? '') ?>">
                     <?php if (!empty($errors['price_max'])): ?><div class="text-danger small mt-1"><?= e($errors['price_max']) ?></div><?php endif; ?>
@@ -140,6 +147,7 @@ $districts = $districts ?? [
                 </div>
 
                 <div class="mb-3">
+                                        <!-- Trường mức độ tiếng ồn noise_level: yen_tinh (yên tĩnh), vua (vừa), on (ồn) -->
                     <label class="form-label fw-semibold small">Mức độ tiếng ồn</label>
                     <select name="noise_level" class="form-select">
                         <option value="yen_tinh" <?= (($old['noise_level'] ?? '') === 'yen_tinh') ? 'selected' : '' ?>>Yên tĩnh (học tập / đọc sách)</option>
@@ -149,6 +157,7 @@ $districts = $districts ?? [
                 </div>
 
                 <div class="mb-3">
+                                        <!-- Nhóm checkbox tiện ích amenity_ids[]: công tắc lấy từ $amenities, tick sẵn theo $old['amenity_ids'] -->
                     <label class="form-label fw-semibold small d-block">Tiện ích tại quán</label>
                     <?php if (empty($amenities)): ?>
                         <p class="text-muted small mb-0">Chưa có tiện ích nào. Thêm tiện ích mới ở trang Quản trị &gt; Tiện ích.</p>
@@ -165,6 +174,7 @@ $districts = $districts ?? [
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
+                                                <!-- Cặp giờ mở/đóng cửa open_time và close_time: mặc định 06:30 và 22:00, nhãn “Phù hợp học khuya” do hệ thống tự gắn -->
                         <label class="form-label fw-semibold small">Giờ mở cửa</label>
                         <input type="time" name="open_time" class="form-control" value="<?= e(substr($old['open_time'] ?? '06:30', 0, 5)) ?>" required>
                     </div>
@@ -178,6 +188,7 @@ $districts = $districts ?? [
                 </div>
 
                 <div class="mb-4">
+                                        <!-- Trường trạng thái status: active là hiển thị công khai, hidden là tạm ẩn, mặc định là active -->
                     <label class="form-label fw-semibold small">Trạng thái hiển thị</label>
                     <select name="status" class="form-select">
                         <option value="active" <?= (($old['status'] ?? 'active') === 'active') ? 'selected' : '' ?>>Hiển thị công khai (Active)</option>
@@ -185,6 +196,7 @@ $districts = $districts ?? [
                     </select>
                 </div>
 
+                                <!-- Nút Lưu Quán học bài: nút submit duy nhất, gửi toàn bộ form về admin/place/create -->
                 <button type="submit" class="btn btn-coffee w-100 py-2 fw-semibold rounded-pill">
                     <i class="bi bi-check2-circle me-1"></i>Lưu Quán học bài
                 </button>
@@ -193,7 +205,9 @@ $districts = $districts ?? [
     </div>
 </form>
 
+<!-- Đoạn JavaScript xem trước ảnh: chạy trên trình duyệt, giải thích bằng comment // trong script -->
 <script>
+// Khi chọn file ảnh (change của imagesInput): dọn khung xem trước cũ, cover_index về 0, vẽ thẻ xem trước bằng FileReader.
 document.getElementById('imagesInput')?.addEventListener('change', function (e) {
     const container = document.getElementById('imagePreviewContainer');
     const coverInput = document.getElementById('coverIndexInput');
@@ -222,6 +236,7 @@ document.getElementById('imagesInput')?.addEventListener('change', function (e) 
 
             col.querySelector('.preview-card').addEventListener('click', function () {
                 coverInput.value = index;
+// Khi bấm một thẻ xem trước: thẻ đó nhận viền vàng, radio bìa được tick, cover_index cập nhật theo vị trí ảnh.
                 document.querySelectorAll('.preview-card').forEach(c => c.classList.remove('border-warning', 'border-2'));
                 this.classList.add('border-warning', 'border-2');
                 this.querySelector('.cover-radio').checked = true;

@@ -1,21 +1,17 @@
 <?php
-/**
- * AdminReviewController: Quản lý & Kiểm duyệt Đánh giá (Review) dành cho Admin
- * Khi Duyệt / Ẩn / Xóa review sẽ tự động tính lại avg_rating và total_reviews của quán
- */
+// Kiểm duyệt đánh giá cho admin: duyệt, ẩn, xóa.
 class AdminReviewController extends Controller
 {
     private Review $reviewModel;
 
+    // Kiểm tra quyền admin (requireAdmin) trước rồi tạo sẵn model Review.
     public function __construct()
     {
         $this->requireAdmin();
         $this->reviewModel = new Review();
     }
 
-    /**
-     * Danh sách review có lọc theo trạng thái (pending / approved / hidden) và tìm kiếm (/admin/review)
-     */
+    // Danh sách review có lọc theo trạng thái (pending / approved / hidden) và tìm kiếm (/admin/review)
     public function index(): void
     {
         $status = trim($_GET['status'] ?? '');
@@ -25,6 +21,7 @@ class AdminReviewController extends Controller
         $result = $this->reviewModel->getAdminList($status, $keyword, $page, ADMIN_ITEMS_PER_PAGE);
 
         $counts = [
+            // Đếm tất cả: truyền null là không lọc trạng thái.
             'all'      => $this->reviewModel->countByStatus(null),
             'pending'  => $this->reviewModel->countByStatus('pending'),
             'approved' => $this->reviewModel->countByStatus('approved'),
@@ -45,10 +42,7 @@ class AdminReviewController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Duyệt hoặc Ẩn một review (/admin/review/updateStatus/13)
-     * Tự động tính lại điểm trung bình của quán thông qua Review::updateStatus()
-     */
+    // Duyệt hoặc ẩn review (/admin/review/updateStatus/13), tự tính lại điểm quán.
     public function updateStatus(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -80,10 +74,7 @@ class AdminReviewController extends Controller
         $this->redirect($returnUrl);
     }
 
-    /**
-     * Xóa vĩnh viễn một review (/admin/review/delete/13)
-     * Tự động tính lại điểm trung bình của quán thông qua Review::delete()
-     */
+    // Xóa vĩnh viễn review (/admin/review/delete/13), tự tính lại điểm quán.
     public function delete(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

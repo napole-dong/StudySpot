@@ -1,22 +1,21 @@
 <?php
-/**
- * Lớp Model cơ sở: Quản lý kết nối PDO (Singleton) và các phương thức truy vấn dùng chung
- */
+// Lớp cha của mọi Model: giữ 1 kết nối PDO dùng chung (Singleton) và hàm truy vấn chung.
 class Model
 {
+    // Thuộc tính tĩnh giữ kết nối PDO duy nhất: static nghĩa là thuộc về lớp,
     protected static ?PDO $pdo = null;
 
+    // Hàm khởi tạo: mỗi khi tạo một Model con (ví dụ new Place()), hàm này tự chạy và gọi getConnection() để chắc chắn đã có kết nối CSDL trước khi truy vấn.
     public function __construct()
     {
         self::getConnection();
     }
 
-    /**
-     * Khởi tạo và trả về kết nối PDO duy nhất trong suốt vòng đời request
-     */
+        // getConnection(): tạo 1 lần PDO từ DB_*, lỗi thì báo 500, không lộ chi tiết SQL.
     public static function getConnection(): PDO
     {
         if (self::$pdo === null) {
+            // DSN: mysql, DB_HOST, DB_NAME, DB_CHARSET.
             $dsn = sprintf(
                 'mysql:host=%s;dbname=%s;charset=%s',
                 DB_HOST,
@@ -24,6 +23,7 @@ class Model
                 DB_CHARSET
             );
 
+            // PDO: ERRMODE_EXCEPTION, FETCH_ASSOC, EMULATE_PREPARES=false dùng Prepared Statement thật chống SQL Injection.
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -45,9 +45,7 @@ class Model
         return self::$pdo;
     }
 
-    /**
-     * Thực thi câu lệnh SQL với Prepared Statement
-     */
+        // query(): chạy SQL bằng Prepared Statement, tham số chỉ là dữ liệu, không thành code SQL.
     protected function query(string $sql, array $params = []): PDOStatement
     {
         $stmt = self::getConnection()->prepare($sql);
@@ -55,41 +53,31 @@ class Model
         return $stmt;
     }
 
-    /**
-     * Lấy nhiều dòng dữ liệu
-     */
+        // fetchAll(): lấy nhiều dòng từ query().
     protected function fetchAll(string $sql, array $params = []): array
     {
         return $this->query($sql, $params)->fetchAll();
     }
 
-    /**
-     * Lấy một dòng dữ liệu
-     */
+        // fetchOne(): lấy 1 dòng, không có thì trả false.
     protected function fetchOne(string $sql, array $params = []): array|false
     {
         return $this->query($sql, $params)->fetch();
     }
 
-    /**
-     * Lấy giá trị của một cột đơn lẻ (ví dụ COUNT(*), AVG(...))
-     */
+        // fetchColumn(): lấy 1 giá trị (COUNT, AVG) để phân trang, tính điểm trung bình.
     protected function fetchColumn(string $sql, array $params = []): mixed
     {
         return $this->query($sql, $params)->fetchColumn();
     }
 
-    /**
-     * Thực thi INSERT / UPDATE / DELETE và trả về số dòng bị ảnh hưởng
-     */
+        // execute(): chạy INSERT/UPDATE/DELETE, trả số dòng bị ảnh hưởng.
     protected function execute(string $sql, array $params = []): int
     {
         return $this->query($sql, $params)->rowCount();
     }
 
-    /**
-     * Lấy ID vừa được INSERT gần nhất
-     */
+        // lastInsertId(): lấy id vừa INSERT để chèn ảnh, tiện ích kèm theo.
     protected function lastInsertId(): string
     {
         return self::getConnection()->lastInsertId();

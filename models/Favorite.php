@@ -1,12 +1,9 @@
 <?php
-/**
- * Model Favorite: Quản lý danh sách quán yêu thích của người dùng (bảng favorites)
- */
+// Model Favorite: quản lý quán yêu thích (nút trái tim), bảng favorites (user_id, place_id, created_at).
+// Model này được controller nút trái tim (AJAX) và trang Quán yêu thích đã lưu gọi.
 class Favorite extends Model
 {
-    /**
-     * Kiểm tra người dùng đã lưu quán này vào Yêu thích chưa
-     */
+    // Kiểm tra người dùng đã lưu quán chưa, SELECT COUNT(*) FROM favorites WHERE user_id = :user_id AND place_id = :place_id.
     public function isFavorited(int $userId, int $placeId): bool
     {
         $sql = 'SELECT COUNT(*) FROM favorites WHERE user_id = :user_id AND place_id = :place_id';
@@ -16,9 +13,7 @@ class Favorite extends Model
         ]) > 0;
     }
 
-    /**
-     * Lấy mảng các place_id mà người dùng đã yêu thích (để tô đỏ nút trái tim trên danh sách quán)
-     */
+    // Lấy các place_id người dùng đã lưu, để tô đỏ nút trái tim trên danh sách quán.
     public function getFavoritePlaceIds(int $userId): array
     {
         $sql = 'SELECT place_id FROM favorites WHERE user_id = :user_id';
@@ -26,9 +21,7 @@ class Favorite extends Model
         return array_map('intval', array_column($rows, 'place_id'));
     }
 
-    /**
-     * Thêm hoặc bỏ yêu thích (Toggle) - Trả về trạng thái mới ('added' hoặc 'removed')
-     */
+    // Bấm nút trái tim: đã lưu thì DELETE trả 'removed', chưa lưu thì INSERT trả 'added'.
     public function toggle(int $userId, int $placeId): string
     {
         if ($this->isFavorited($userId, $placeId)) {
@@ -46,9 +39,7 @@ class Favorite extends Model
         return 'added';
     }
 
-    /**
-     * Lấy danh sách chi tiết các quán đã yêu thích của một người dùng
-     */
+    // Lấy quán đã lưu của người dùng, JOIN places + categories + ảnh bìa, chỉ lấy p.status = 'active', mới lưu trước.
     public function getFavoritePlacesByUser(int $userId): array
     {
         $sql = "SELECT p.*, c.name AS category_name, f.created_at AS favorited_at,

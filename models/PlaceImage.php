@@ -1,13 +1,9 @@
 <?php
-/**
- * Model PlaceImage: Quản lý hình ảnh của quán (bảng place_images)
- * Hỗ trợ nhiều ảnh trên 1 quán và chọn 1 ảnh làm ảnh bìa (is_cover = 1)
- */
+// Model PlaceImage: quản lý ảnh của quán, bảng place_images, mỗi quán tối đa một ảnh bìa is_cover = 1.
+// Model này được controller quản trị và trang chi tiết quán gọi.
 class PlaceImage extends Model
 {
-    /**
-     * Lấy toàn bộ ảnh của một quán (ưu tiên ảnh bìa đứng đầu)
-     */
+    // Lấy ảnh của quán, ORDER BY is_cover DESC, id ASC (ảnh bìa đứng đầu).
     public function getByPlaceId(int $placeId): array
     {
         $sql = 'SELECT * FROM place_images
@@ -16,17 +12,13 @@ class PlaceImage extends Model
         return $this->fetchAll($sql, [':place_id' => $placeId]);
     }
 
-    /**
-     * Tìm một ảnh theo ID
-     */
+    // Tìm một ảnh theo id, SELECT * FROM place_images WHERE id = :id LIMIT 1.
     public function findById(int $id): array|false
     {
         return $this->fetchOne('SELECT * FROM place_images WHERE id = :id LIMIT 1', [':id' => $id]);
     }
 
-    /**
-     * Lấy đường dẫn ảnh bìa của một quán
-     */
+    // Lấy đường dẫn ảnh bìa của quán, ảnh bìa trước rồi ảnh đầu tiên, LIMIT 1, chưa có ảnh thì null.
     public function getCoverPath(int $placeId): ?string
     {
         $sql = 'SELECT image_path FROM place_images
@@ -37,9 +29,7 @@ class PlaceImage extends Model
         return $path ? (string) $path : null;
     }
 
-    /**
-     * Thêm một ảnh mới cho quán
-     */
+    // Thêm ảnh mới, nếu là ảnh bìa thì hạ cờ is_cover của ảnh cũ cùng quán xuống 0 trước.
     public function create(int $placeId, string $imagePath, int $isCover = 0): int
     {
         if ($isCover === 1) {
@@ -59,9 +49,7 @@ class PlaceImage extends Model
         return (int) $this->lastInsertId();
     }
 
-    /**
-     * Đặt một ảnh làm ảnh bìa cho quán (đồng thời bỏ cờ is_cover của các ảnh khác cùng quán)
-     */
+    // Đặt ảnh làm ảnh bìa, kiểm tra ảnh thuộc đúng quán, hạ cờ ảnh cũ rồi đặt is_cover = 1 cho ảnh này.
     public function setCover(int $placeId, int $imageId): bool
     {
         $image = $this->findById($imageId);
@@ -79,9 +67,7 @@ class PlaceImage extends Model
         ]) > 0;
     }
 
-    /**
-     * Đảm bảo quán luôn có ít nhất 1 ảnh được đánh dấu is_cover = 1 (nếu quán có ảnh)
-     */
+    // Đảm bảo quán có ảnh bìa: nếu chưa có thì đôn ảnh cũ nhất lên làm bìa.
     public function ensureCoverExists(int $placeId): void
     {
         $hasCover = (int) $this->fetchColumn(
@@ -102,9 +88,7 @@ class PlaceImage extends Model
         }
     }
 
-    /**
-     * Xóa một ảnh (trên cả CSDL và file vật lý)
-     */
+    // Xóa ảnh cả CSDL lẫn file vật lý, nếu xóa ảnh bìa thì đôn ảnh khác lên bìa.
     public function delete(int $imageId): bool
     {
         $image = $this->findById($imageId);
@@ -122,9 +106,7 @@ class PlaceImage extends Model
         return $deleted;
     }
 
-    /**
-     * Xóa toàn bộ file ảnh vật lý của một quán trước khi xóa quán
-     */
+    // Xóa toàn bộ file ảnh vật lý của quán, chỉ xóa file (không xóa dòng CSDL, không xóa quán).
     public function deleteAllFilesByPlaceId(int $placeId): void
     {
         $images = $this->getByPlaceId($placeId);

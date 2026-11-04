@@ -1,21 +1,17 @@
 <?php
-/**
- * AdminCategoryController: Quản lý Danh mục loại hình quán (CRUD)
- * Tên class có tiền tố Admin theo quy tắc: AdminCategoryController
- */
+// Quản trị danh mục quán.
 class AdminCategoryController extends Controller
 {
     private Category $categoryModel;
 
+    // Kiểm tra quyền admin (requireAdmin) trước rồi tạo sẵn model Category.
     public function __construct()
     {
         $this->requireAdmin();
         $this->categoryModel = new Category();
     }
 
-    /**
-     * Hiển thị danh sách danh mục và form thêm/sửa (/admin/category)
-     */
+    // Hiển thị danh sách danh mục và form thêm/sửa (/admin/category)
     public function index(): void
     {
         $categories = $this->categoryModel->getAllWithPlaceCount();
@@ -32,9 +28,7 @@ class AdminCategoryController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Xử lý thêm danh mục mới (/admin/category/store)
-     */
+    // Xử lý thêm danh mục mới (/admin/category/store)
     public function store(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -54,6 +48,7 @@ class AdminCategoryController extends Controller
             $this->redirect('admin/category');
         }
 
+        // Chặn trùng tên khi thêm.
         if ($this->categoryModel->nameExists($name)) {
             Session::flash('alert', 'Tên danh mục này đã tồn tại trong hệ thống.', 'warning');
             $this->redirect('admin/category');
@@ -64,9 +59,7 @@ class AdminCategoryController extends Controller
         $this->redirect('admin/category');
     }
 
-    /**
-     * Xử lý cập nhật tên danh mục (/admin/category/update/5)
-     */
+    // Xử lý cập nhật tên danh mục (/admin/category/update/5)
     public function update(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -88,6 +81,7 @@ class AdminCategoryController extends Controller
             $this->redirect('admin/category?edit_id=' . $categoryId);
         }
 
+        // Chặn trùng tên khi sửa, trừ chính nó ra.
         if ($this->categoryModel->nameExists($name, $categoryId)) {
             Session::flash('alert', 'Tên danh mục "' . $name . '" đã bị trùng với danh mục khác.', 'warning');
             $this->redirect('admin/category?edit_id=' . $categoryId);
@@ -98,9 +92,7 @@ class AdminCategoryController extends Controller
         $this->redirect('admin/category');
     }
 
-    /**
-     * Xử lý xóa danh mục (/admin/category/delete/5)
-     */
+    // Xử lý xóa danh mục (/admin/category/delete/5)
     public function delete(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -116,7 +108,7 @@ class AdminCategoryController extends Controller
             $this->redirect('admin/category');
         }
 
-        // Kiểm tra ràng buộc khóa ngoại: không cho xóa nếu đang có quán thuộc danh mục này
+        // Chặn xóa khi còn quán thuộc danh mục này.
         $placeCount = $this->categoryModel->countPlaces($categoryId);
         if ($placeCount > 0) {
             Session::flash(

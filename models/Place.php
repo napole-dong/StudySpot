@@ -1,14 +1,9 @@
 <?php
-/**
- * Model Place: Quản lý toàn bộ truy vấn CSDL của bảng places
- * Bao gồm: CRUD Admin, Lọc đa tiêu chí phía người dùng, Tìm kiếm, Phân trang,
- * Gợi ý quán tương tự cùng khu vực Long Xuyên và Tính lại điểm trung bình
- */
+// Model Place: quản lý bảng places (quán học bài / cà phê), avg_rating và total_reviews chỉ tính review đã duyệt.
+// Model này được controller người dùng (trang chủ, Khám phá, chi tiết) và controller quản trị gọi.
 class Place extends Model
 {
-    /**
-     * Gắn tiện ích (từ bảng amenities) vào từng quán trong danh sách
-     */
+    // Gán tiện ích vào từng quán qua Amenity::getForPlaces, thêm amenities, amenity_ids, amenity_slugs.
     private function attachAmenities(array $places): array
     {
         if (empty($places)) {
@@ -26,9 +21,7 @@ class Place extends Model
         return $places;
     }
 
-    /**
-     * Suy ra mức giá (1-4) từ giá tự do min/max để bộ lọc cũ vẫn chạy; 0 = chưa có giá
-     */
+    // Suy mức giá 1-4 từ price_min/price_max, ngưỡng 25000/45000/65000; giá trần dùng <=, giá sàn dùng < nên không đối xứng.
     private function derivePriceRange($min, $max): int
     {
         $min = ($min === '' || $min === null) ? null : max(0, (int) $min);
@@ -42,9 +35,7 @@ class Place extends Model
         return 0;
     }
 
-    /**
-     * Lấy danh sách quán nổi bật (điểm cao nhất) cho Trang chủ
-     */
+    // Lấy quán nổi bật điểm cao nhất cho trang chủ, WHERE p.status = 'active', xếp avg_rating, total_reviews, id DESC.
     public function getFeaturedPlaces(int $limit = 6, int $offset = 0): array
     {
         $limit = max(1, $limit);
@@ -61,12 +52,7 @@ class Place extends Model
         return $this->attachAmenities($this->fetchAll($sql));
     }
 
-    /**
-     * Quán lên bìa hero trang chủ: điểm cao + nhiều lượt lưu nhất, tự cập nhật mỗi lần tải trang.
-     * Điều kiện: đang hoạt động, có ảnh bìa, điểm TB >= 4.5, ít nhất 3 đánh giá đã duyệt.
-     * Xếp hạng: điểm TB cao nhất -> nhiều lượt lưu nhất -> nhiều đánh giá nhất.
-     * Trả về null khi không có quán nào đạt ngưỡng (controller sẽ fallback về quán nổi bật đầu tiên).
-     */
+    // Lấy quán hero: status = 'active', avg_rating >= 4.5, total_reviews >= 3 (chỉ đếm review đã duyệt), có ảnh, LIMIT 1.
     public function getHeroPlace(): ?array
     {
         $sql = "SELECT p.*, c.name AS category_name,
@@ -90,9 +76,7 @@ class Place extends Model
         return $rows[0] ?? null;
     }
 
-    /**
-     * Lấy danh sách quán mới cập nhật cho Trang chủ
-     */
+    // Lấy quán mới cập nhật cho trang chủ, WHERE p.status = 'active', xếp created_at DESC, id DESC.
     public function getLatestPlaces(int $limit = 6): array
     {
         $limit = max(1, $limit);
@@ -108,10 +92,7 @@ class Place extends Model
         return $this->attachAmenities($this->fetchAll($sql));
     }
 
-    /**
-     * Lấy 3-4 quán tương tự cùng danh mục (category_id) hoặc cùng Phường (district) tại TP. Long Xuyên
-     * (loại trừ quán đang xem)
-     */
+    // Lấy quán tương tự: cùng danh mục hoặc cùng phường, loại quán đang xem, ưu tiên cùng phường trước rồi cùng danh mục.
     public function getRelatedPlaces(int $excludePlaceId, int $categoryId, string $district, int $limit = 4): array
     {
         $limit = max(1, $limit);
@@ -139,9 +120,7 @@ class Place extends Model
         ]);
     }
 
-    /**
-     * Lấy danh sách các Phường / Khu vực thực tế đang active trong CSDL để hiển thị bộ lọc
-     */
+    // Lấy các phường đang có quán hoạt động, SELECT DISTINCT district FROM places WHERE status = 'active' AND district != ''.
     public function getDistinctDistricts(): array
     {
         $sql = "SELECT DISTINCT district FROM places WHERE status = 'active' AND district != '' ORDER BY district ASC";
@@ -149,15 +128,13 @@ class Place extends Model
         return array_column($rows, 'district');
     }
 
-    /**
-     * Lọc đa tiêu chí, tìm kiếm, sắp xếp và phân trang danh sách quán phía Người dùng
-     */
+    // Lọc đa tiêu chí trang Khám phá: luôn chỉ lấy p.status = 'active', tìm kiếm, lọc, sắp xếp, phân trang (chi tiết lọc xem 1-6 bên dưới).
     public function getFilteredPlaces(array $filters = [], int $page = 1, int $perPage = ITEMS_PER_PAGE): array
     {
         $conditions = ["p.status = 'active'"];
         $params = [];
 
-        // 1. Tìm kiếm theo tên quán, địa chỉ hoặc phường tại Long Xuyên
+        // Tìm theo tên, địa chỉ hoặc phường bằng LIKE (OR).
         if (!empty($filters['q'])) {
             $kw = '%' . trim($filters['q']) . '%';
             $conditions[] = '(p.name LIKE :kw1 OR p.address LIKE :kw2 OR p.district LIKE :kw3)';
@@ -166,26 +143,26 @@ class Place extends Model
             $params[':kw3'] = $kw;
         }
 
-        // 2. Lọc theo danh mục loại hình
+        // Lọc category_id đúng bằng danh mục đã chọn.
         if (!empty($filters['category_id'])) {
             $conditions[] = 'p.category_id = :category_id';
             $params[':category_id'] = (int) $filters['category_id'];
         }
 
-        // 3. Lọc theo Phường / Khu vực
+        // Lọc district đúng bằng phường đã chọn.
         if (!empty($filters['district'])) {
             $conditions[] = 'p.district = :district';
             $params[':district'] = trim($filters['district']);
         }
 
-        // 4. Lọc theo mức giá (mức 1-4 suy ra từ giá tự do; mức 0 = chưa có giá, không khớp bộ lọc)
+        // Lọc giá: price_range từ 1 tới mức đã chọn, 0 (chưa có giá) bị loại.
         if (!empty($filters['price_range'])) {
             $price = (int) $filters['price_range'];
             $conditions[] = '(p.price_range >= 1 AND p.price_range <= :price_range)';
             $params[':price_range'] = $price;
         }
 
-        // 5. Lọc tiện ích từ bảng amenities (AND: quán phải có đủ các tiện ích đã chọn)
+        // Lọc tiện ích kiểu AND: quán phải đủ mọi slug đã chọn, EXISTS place_amenities + amenities is_active = 1.
         $amenitySlugs = $filters['amenity'] ?? [];
         if (!is_array($amenitySlugs)) {
             $amenitySlugs = [$amenitySlugs];
@@ -199,7 +176,7 @@ class Place extends Model
             $params[$key] = $slug;
         }
 
-        // 6. Lọc độ ồn
+        // Lọc độ ồn: chỉ yen_tinh, vua, on, giá trị lạ bỏ qua.
         if (!empty($filters['noise_level']) && in_array($filters['noise_level'], ['yen_tinh', 'vua', 'on'], true)) {
             $conditions[] = 'p.noise_level = :noise_level';
             $params[':noise_level'] = $filters['noise_level'];
@@ -207,7 +184,7 @@ class Place extends Model
 
         $whereClause = 'WHERE ' . implode(' AND ', $conditions);
 
-        // Sắp xếp
+        // Sắp xếp theo sort: newest, price_asc, price_desc, mặc định rating_desc.
         $sort = $filters['sort'] ?? 'rating_desc';
         $orderBy = match ($sort) {
             'newest'     => 'p.created_at DESC, p.id DESC',
@@ -216,7 +193,7 @@ class Place extends Model
             default      => 'p.avg_rating DESC, p.total_reviews DESC, p.id DESC',
         };
 
-        // Đếm tổng số kết quả
+        // Đếm tổng số với cùng WHERE để tính số trang.
         $countSql = "SELECT COUNT(*) FROM places p {$whereClause}";
         $total = (int) $this->fetchColumn($countSql, $params);
         $totalPages = max(1, (int) ceil($total / $perPage));
@@ -241,9 +218,7 @@ class Place extends Model
         ];
     }
 
-    /**
-     * Lấy danh sách quán cho trang Quản trị (Admin) kèm tìm kiếm, lọc và phân trang
-     */
+    // Lấy danh sách quán cho admin: không ép status = 'active', lọc status chỉ nhận 'active'/'hidden', kèm image_count.
     public function getAdminList(string $keyword = '', int $categoryId = 0, string $status = '', int $page = 1, int $perPage = ADMIN_ITEMS_PER_PAGE): array
     {
         $conditions = [];
@@ -293,9 +268,7 @@ class Place extends Model
         ];
     }
 
-    /**
-     * Tìm thông tin chi tiết 1 quán theo ID (dùng cho cả User và Admin)
-     */
+    // Tìm chi tiết một quán theo id, JOIN categories + users (author_name), onlyActive thì thêm p.status = 'active'.
     public function findById(int $id, bool $onlyActive = false): array|false
     {
         $statusCond = $onlyActive ? "AND p.status = 'active'" : '';
@@ -312,9 +285,7 @@ class Place extends Model
         return $this->attachAmenities([$place])[0];
     }
 
-    /**
-     * Tạo slug duy nhất (tự động nối số nếu bị trùng slug)
-     */
+    // Tạo slug duy nhất cho quán từ tên, trùng thì thêm -1, -2..., excludeId loại chính quán đang sửa ra.
     public function generateUniqueSlug(string $name, ?int $excludeId = null): string
     {
         $baseSlug = create_slug($name);
@@ -333,9 +304,7 @@ class Place extends Model
         return $slug;
     }
 
-    /**
-     * Kiểm tra slug đã tồn tại chưa
-     */
+    // Kiểm tra slug quán đã tồn tại chưa, SELECT COUNT(*) FROM places WHERE slug = :slug, excludeId loại chính nó ra.
     public function slugExists(string $slug, ?int $excludeId = null): bool
     {
         if ($excludeId !== null) {
@@ -347,9 +316,7 @@ class Place extends Model
         return (int) $this->fetchColumn($sql, [':slug' => $slug]) > 0;
     }
 
-    /**
-     * Thêm mới một quán học bài
-     */
+    // Thêm quán mới, price_range do derivePriceRange suy ra từ price_min/price_max, xong syncForPlace ghi bảng nối.
     public function create(array $data): int
     {
         $slug = $this->generateUniqueSlug($data['name']);
@@ -387,9 +354,7 @@ class Place extends Model
         return $placeId;
     }
 
-    /**
-     * Cập nhật thông tin quán học bài
-     */
+    // Sửa quán, sinh lại slug duy nhất (loại chính nó), xong syncForPlace đồng bộ lại tiện ích.
     public function update(int $id, array $data): bool
     {
         $slug = $this->generateUniqueSlug($data['name'], $id);
@@ -432,9 +397,7 @@ class Place extends Model
         return true;
     }
 
-    /**
-     * Đổi nhanh trạng thái hiển thị ('active' <-> 'hidden')
-     */
+    // Đổi nhanh trạng thái quán 'active'/'hidden', UPDATE places SET status WHERE id = :id.
     public function updateStatus(int $id, string $status): bool
     {
         if (!in_array($status, ['active', 'hidden'], true)) {
@@ -446,18 +409,13 @@ class Place extends Model
         ]) > 0;
     }
 
-    /**
-     * Xóa quán học bài theo ID
-     */
+    // Xóa quán, DELETE FROM places WHERE id = :id, chỉ xóa bảng places (ảnh, favorites, review do bên gọi / CSDL dọn).
     public function delete(int $id): bool
     {
         return $this->execute('DELETE FROM places WHERE id = :id', [':id' => $id]) > 0;
     }
 
-    /**
-     * Tự động tính toán và cập nhật lại avg_rating + total_reviews của quán
-     * dựa trên các review có trạng thái status = 'approved' (xử lý trong Model, không dùng Trigger)
-     */
+    // Tính lại avg_rating + total_reviews của quán, chỉ tính review status = 'approved'; recalculateRating chạy sau duyệt/ẩn/sửa/xóa review.
     public function recalculateRating(int $placeId): void
     {
         $stats = $this->fetchOne(
@@ -481,25 +439,19 @@ class Place extends Model
         );
     }
 
-    /**
-     * Đếm tổng số quán trong hệ thống
-     */
+    // Đếm tổng số quán, SELECT COUNT(*) FROM places (cả quán ẩn).
     public function countAll(): int
     {
         return (int) $this->fetchColumn('SELECT COUNT(*) FROM places');
     }
 
-    /**
-     * Đếm tổng số quán đang hoạt động (active)
-     */
+    // Đếm số quán đang hoạt động, SELECT COUNT(*) FROM places WHERE status = 'active'.
     public function countActive(): int
     {
         return (int) $this->fetchColumn("SELECT COUNT(*) FROM places WHERE status = 'active'");
     }
 
-    /**
-     * Lấy Top 5 quán có điểm đánh giá cao nhất cho Admin Dashboard
-     */
+    // Lấy Top 5 quán điểm cao nhất cho Admin Dashboard; Top 5 không lọc quán ẩn (không có WHERE status).
     public function getTopRatedPlaces(int $limit = 5): array
     {
         $limit = max(1, $limit);

@@ -1,8 +1,5 @@
 <?php
-/**
- * AdminPlaceController: Quản lý Quán học bài & Ăn uống tại TP. Long Xuyên, An Giang dành cho Admin
- * Bao gồm: Danh sách (tìm kiếm, lọc, phân trang), Thêm mới, Sửa, Xóa, Ẩn/Hiện, Upload nhiều ảnh & Chọn ảnh bìa
- */
+// Quản trị quán: danh sách, thêm, sửa, xóa, ẩn/hiện, ảnh.
 class AdminPlaceController extends Controller
 {
     private Place $placeModel;
@@ -10,6 +7,7 @@ class AdminPlaceController extends Controller
     private PlaceImage $placeImageModel;
     private Amenity $amenityModel;
 
+    // Kiểm tra quyền admin (requireAdmin) trước rồi tạo sẵn model.
     public function __construct()
     {
         $this->requireAdmin();
@@ -19,9 +17,7 @@ class AdminPlaceController extends Controller
         $this->amenityModel = new Amenity();
     }
 
-    /**
-     * Lấy danh sách Phường chuẩn tại TP. Long Xuyên kết hợp dữ liệu thực tế từ CSDL
-     */
+    // Lấy danh sách Phường chuẩn tại TP. Long Xuyên kết hợp dữ liệu thực tế từ CSDL
     private function getLongXuyenDistricts(): array
     {
         $standardWards = [
@@ -33,17 +29,17 @@ class AdminPlaceController extends Controller
             'Phường Bình Khánh',
         ];
         $dbDistricts = $this->placeModel->getDistinctDistricts();
+        // Gộp phường chuẩn và phường trong CSDL rồi bỏ trùng.
         return array_values(array_unique(array_merge($standardWards, $dbDistricts)));
     }
 
-    /**
-     * Danh sách quán trong trang Quản trị (/admin/place)
-     */
+    // Danh sách quán trong trang Quản trị (/admin/place)
     public function index(): void
     {
         $keyword = trim($_GET['q'] ?? '');
         $categoryId = (int) ($_GET['category_id'] ?? 0);
         $status = trim($_GET['status'] ?? '');
+        // PHÂN TRANG ADMIN: số trang ít nhất là 1, tránh số âm hoặc 0.
         $page = max(1, (int) ($_GET['page'] ?? 1));
 
         $result = $this->placeModel->getAdminList($keyword, $categoryId, $status, $page, ADMIN_ITEMS_PER_PAGE);
@@ -64,9 +60,7 @@ class AdminPlaceController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Thêm quán mới kèm upload nhiều ảnh và chọn ảnh bìa (/admin/place/create)
-     */
+    // Thêm quán mới kèm upload nhiều ảnh và chọn ảnh bìa (/admin/place/create)
     public function create(): void
     {
         $categories = $this->categoryModel->getAll();
@@ -100,8 +94,9 @@ class AdminPlaceController extends Controller
 
                 $placeId = $this->placeModel->create($old);
 
-                // Xử lý upload nhiều ảnh nếu Admin có chọn file
+                // Ảnh bìa khi thêm mới: vị trí đã chọn, mặc định là ảnh đầu tiên.
                 $coverIndex = isset($_POST['cover_index']) ? (int) $_POST['cover_index'] : 0;
+                // Quán mới được lấy bìa từ đợt upload này.
                 $uploadErrors = $this->handleMultipleUploads($placeId, $coverIndex, true);
 
                 if (!empty($uploadErrors)) {
@@ -129,9 +124,7 @@ class AdminPlaceController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Chỉnh sửa thông tin quán, quản lý danh sách ảnh & chọn ảnh bìa (/admin/place/edit/3)
-     */
+    // Chỉnh sửa thông tin quán, quản lý danh sách ảnh & chọn ảnh bìa (/admin/place/edit/3)
     public function edit(int|string $id = 0): void
     {
         $placeId = (int) $id;
@@ -164,6 +157,7 @@ class AdminPlaceController extends Controller
 
                 // Nếu Admin upload thêm ảnh mới
                 $hasExistingImages = !empty($images);
+                // Sửa quán: chỉ lấy bìa từ đợt upload mới khi trước đó chưa có ảnh.
                 $uploadErrors = $this->handleMultipleUploads($placeId, 0, !$hasExistingImages);
 
                 // Đảm bảo luôn có ít nhất 1 ảnh bìa
@@ -196,9 +190,7 @@ class AdminPlaceController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Đặt nhanh 1 ảnh làm ảnh bìa (/admin/place/setCover/3/10)
-     */
+    // Đặt nhanh 1 ảnh làm ảnh bìa (/admin/place/setCover/3/10)
     public function setCover(int|string $placeId = 0, int|string $imageId = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -218,9 +210,7 @@ class AdminPlaceController extends Controller
         $this->redirect('admin/place/edit/' . $pId);
     }
 
-    /**
-     * Xóa 1 ảnh của quán (/admin/place/deleteImage/3/10)
-     */
+    // Xóa 1 ảnh của quán (/admin/place/deleteImage/3/10)
     public function deleteImage(int|string $placeId = 0, int|string $imageId = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -232,6 +222,7 @@ class AdminPlaceController extends Controller
         $imgId = (int) $imageId;
 
         $image = $this->placeImageModel->findById($imgId);
+        // Ảnh phải tồn tại và thuộc đúng quán trên URL mới được xóa.
         if (!$image || (int) $image['place_id'] !== $pId) {
             Session::flash('alert', 'Hình ảnh không tồn tại hoặc không thuộc quán này.', 'danger');
             $this->redirect('admin/place/edit/' . $pId);
@@ -242,9 +233,7 @@ class AdminPlaceController extends Controller
         $this->redirect('admin/place/edit/' . $pId);
     }
 
-    /**
-     * Ẩn / Hiện nhanh quán trên danh sách (/admin/place/toggleStatus/3)
-     */
+    // Ẩn / Hiện nhanh quán trên danh sách (/admin/place/toggleStatus/3)
     public function toggleStatus(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -260,6 +249,7 @@ class AdminPlaceController extends Controller
             $this->redirect('admin/place');
         }
 
+        // Đảo trạng thái sang giá trị còn lại.
         $newStatus = ($place['status'] === 'active') ? 'hidden' : 'active';
         $this->placeModel->updateStatus($placeId, $newStatus);
 
@@ -268,9 +258,7 @@ class AdminPlaceController extends Controller
         $this->redirect('admin/place');
     }
 
-    /**
-     * Xóa hoàn toàn một quán (/admin/place/delete/3)
-     */
+    // Xóa hoàn toàn một quán (/admin/place/delete/3)
     public function delete(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -286,7 +274,7 @@ class AdminPlaceController extends Controller
             $this->redirect('admin/place');
         }
 
-        // Xóa các file ảnh vật lý trên ổ đĩa trước khi xóa bản ghi CSDL
+        // Xóa file ảnh trên ổ đĩa trước khi xóa bản ghi CSDL.
         $this->placeImageModel->deleteAllFilesByPlaceId($placeId);
         $this->placeModel->delete($placeId);
 
@@ -294,9 +282,7 @@ class AdminPlaceController extends Controller
         $this->redirect('admin/place');
     }
 
-    /**
-     * Thu thập và chuẩn hóa dữ liệu từ form POST
-     */
+    // Thu thập và chuẩn hóa dữ liệu từ form POST
     private function collectInput(): array
     {
         return [
@@ -305,6 +291,7 @@ class AdminPlaceController extends Controller
             'address'        => trim($_POST['address'] ?? ''),
             'district'       => trim($_POST['district'] ?? ''),
             'description'    => trim($_POST['description'] ?? ''),
+            // Giá trống thì lưu null, giá âm thì về 0.
             'price_min'      => trim($_POST['price_min'] ?? '') === '' ? null : max(0, (int) $_POST['price_min']),
             'price_max'      => trim($_POST['price_max'] ?? '') === '' ? null : max(0, (int) $_POST['price_max']),
             'amenity_ids'    => array_values(array_unique(array_map('intval', is_array($_POST['amenity_ids'] ?? []) ? $_POST['amenity_ids'] : []))),
@@ -312,13 +299,12 @@ class AdminPlaceController extends Controller
             'open_time'      => trim($_POST['open_time'] ?? '06:30'),
             'close_time'     => trim($_POST['close_time'] ?? '22:00'),
             'google_map_url' => trim($_POST['google_map_url'] ?? ''),
+            // Trạng thái chỉ nhận active hoặc hidden, giá trị lạ đều về active.
             'status'         => in_array($_POST['status'] ?? '', ['active', 'hidden'], true) ? $_POST['status'] : 'active',
         ];
     }
 
-    /**
-     * Kiểm tra tính hợp lệ của dữ liệu quán phía Server
-     */
+    // Kiểm tra tính hợp lệ của dữ liệu quán phía Server
     private function validateInput(array $data): array
     {
         $errors = [];
@@ -345,6 +331,7 @@ class AdminPlaceController extends Controller
             $errors['description'] = 'Vui lòng nhập mô tả không gian học tập của quán.';
         }
 
+        // Khoảng giá hợp lệ: giá cao nhất không nhỏ hơn giá thấp nhất.
         if (($data['price_min'] ?? null) !== null && ($data['price_max'] ?? null) !== null && (int) $data['price_max'] < (int) $data['price_min']) {
             $errors['price_max'] = 'Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất.';
         }
@@ -360,9 +347,7 @@ class AdminPlaceController extends Controller
         return $errors;
     }
 
-    /**
-     * Xử lý upload nhiều ảnh từ input name="images[]"
-     */
+    // Xử lý upload nhiều ảnh từ input name="images[]"
     private function handleMultipleUploads(int $placeId, int $coverIndex = 0, bool $setCoverFromBatch = false): array
     {
         $uploadErrors = [];
@@ -375,6 +360,7 @@ class AdminPlaceController extends Controller
         $uploadedIndex = 0;
 
         for ($i = 0; $i < $fileCount; $i++) {
+            // Bỏ qua ô file trống, không tính là lỗi upload.
             if (($_FILES['images']['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
                 continue;
             }
@@ -389,6 +375,7 @@ class AdminPlaceController extends Controller
 
             $result = upload_image($singleFile, 'places');
             if ($result['success'] && !empty($result['path'])) {
+                // Chỉ 1 ảnh làm bìa: ảnh thành công thứ coverIndex trong đợt này.
                 $isCover = ($setCoverFromBatch && $uploadedIndex === $coverIndex) ? 1 : 0;
                 $this->placeImageModel->create($placeId, $result['path'], $isCover);
                 $uploadedIndex++;

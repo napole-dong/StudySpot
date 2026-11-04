@@ -1,22 +1,18 @@
 <?php
-/**
- * FavoriteController: Quản lý danh sách Quán yêu thích của thành viên
- * Hỗ trợ: Trang danh sách yêu thích (/favorite) và API AJAX thêm/bỏ yêu thích không reload trang (/favorite/toggle)
- */
+// Quán yêu thích của thành viên.
 class FavoriteController extends Controller
 {
     private Favorite $favoriteModel;
     private Place $placeModel;
 
+    // Tạo sẵn model Favorite và Place.
     public function __construct()
     {
         $this->favoriteModel = new Favorite();
         $this->placeModel = new Place();
     }
 
-    /**
-     * Hiển thị danh sách các quán đã lưu yêu thích (/favorite)
-     */
+    // Hiển thị danh sách các quán đã lưu yêu thích (/favorite)
     public function index(): void
     {
         $this->requireLogin();
@@ -31,16 +27,15 @@ class FavoriteController extends Controller
         ]);
     }
 
-    /**
-     * Endpoint xử lý AJAX bằng fetch() để thêm / bỏ yêu thích (/favorite/toggle)
-     */
+    // Endpoint xử lý AJAX bằng fetch() để thêm / bỏ yêu thích (/favorite/toggle)
     public function toggle(): void
     {
+        // Chỉ nhận POST, không nhận GET.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['success' => false, 'message' => 'Phương thức không hợp lệ.'], 405);
         }
 
-        // Nếu chưa đăng nhập thì trả JSON báo frontend chuyển hướng tới trang đăng nhập
+        // Chưa đăng nhập thì trả JSON 401 kèm login_url.
         if (!Session::isLoggedIn()) {
             $this->json([
                 'success'       => false,
@@ -50,7 +45,7 @@ class FavoriteController extends Controller
             ], 401);
         }
 
-        // Kiểm tra CSRF Token từ Header X-CSRF-Token hoặc POST body
+        // CSRF của AJAX lấy từ POST body hoặc header X-CSRF-Token.
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
         if (!Session::verifyCsrf($token)) {
             $this->json([
@@ -71,6 +66,7 @@ class FavoriteController extends Controller
 
         $currentUser = Session::user();
         $userId = (int) $currentUser['id'];
+        // Toggle 1 lần: đã lưu thì bỏ, chưa lưu thì thêm, trả added hoặc removed.
         $actionStatus = $this->favoriteModel->toggle($userId, $placeId);
 
         $message = ($actionStatus === 'added')

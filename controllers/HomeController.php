@@ -1,12 +1,5 @@
 <?php
-/**
- * HomeController: Hiển thị Trang chủ StudySpot (Khu vực TP. Long Xuyên, An Giang - ĐH An Giang)
- * Bao gồm:
- * - Thống kê số lượng thực tế từ CSDL (COUNT places, reviews, users)
- * - Banner tìm kiếm nhanh + Nhóm tag lọc thật
- * - Danh mục loại hình kèm số lượng quán active thực tế
- * - Quán nổi bật điểm cao & Quán mới cập nhật tại Long Xuyên
- */
+// Trang chủ StudySpot, không cần đăng nhập.
 class HomeController extends Controller
 {
     private Place $placeModel;
@@ -15,6 +8,7 @@ class HomeController extends Controller
     private Review $reviewModel;
     private User $userModel;
 
+    // Tạo sẵn các model cho trang chủ (Place, Category, Favorite, Review, User).
     public function __construct()
     {
         $this->placeModel = new Place();
@@ -24,17 +18,19 @@ class HomeController extends Controller
         $this->userModel = new User();
     }
 
+    // Trang chủ (/): quán nổi bật phân trang, ảnh bìa, quán mới, thống kê.
     public function index(): void
     {
         $featuredPerPage = 6;
+        // Phân trang quán nổi bật: mỗi trang 6 quán, ít nhất 1 trang.
         $featuredTotalPages = max(1, (int) ceil($this->placeModel->countActive() / $featuredPerPage));
         $featuredPage = (int) ($_GET['featured_page'] ?? 1);
+        // Kẹp số trang trong khoảng hợp lệ, không ra trang trống.
         $featuredPage = max(1, min($featuredPage, $featuredTotalPages));
         $featuredPlaces = $this->placeModel->getFeaturedPlaces($featuredPerPage, ($featuredPage - 1) * $featuredPerPage);
         $heroPlace = $this->placeModel->getHeroPlace();
+        // Không có ảnh bìa thì lấy quán nổi bật số 1 toàn cục.
         if ($heroPlace === null) {
-            // Khong co quan dat nguong len bia: lay quan noi bat so 1 TOAN CUC (trang 1),
-            // khong lay quan dau tien cua trang hien tai, de bia khong doi khi chuyen trang.
             $topFeatured = $this->placeModel->getFeaturedPlaces(1, 0);
             $heroPlace = $topFeatured[0] ?? ($featuredPlaces[0] ?? null);
         }
@@ -45,12 +41,14 @@ class HomeController extends Controller
         // Đếm số liệu thực tế 100% từ Cơ sở dữ liệu (tuyệt đối không gắn cứng con số quảng cáo ảo)
         $stats = [
             'total_places'    => $this->placeModel->countActive(),
+        // Thống kê thật từ CSDL, chỉ đếm review đã duyệt (approved).
             'total_reviews'   => $this->reviewModel->countByStatus('approved'),
             'total_users'     => $this->userModel->countAll(),
             'total_districts' => count($districts),
         ];
 
         $favoriteIds = [];
+        // Chỉ khi đã đăng nhập mới lấy danh sách quán yêu thích.
         if (Session::isLoggedIn()) {
             $currentUser = Session::user();
             $favoriteIds = $this->favoriteModel->getFavoritePlaceIds((int) $currentUser['id']);

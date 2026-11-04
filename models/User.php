@@ -1,30 +1,23 @@
 <?php
-/**
- * Model User: Quản lý toàn bộ truy vấn CSDL liên quan đến bảng users
- */
+// Model User: quản lý tài khoản, bảng users, role user/admin, status active (được đăng nhập) / locked (bị khóa).
+// Model này được controller đăng ký/đăng nhập, hồ sơ cá nhân và quản trị gọi.
 class User extends Model
 {
-    /**
-     * Tìm thông tin người dùng theo địa chỉ Email
-     */
+    // Tìm người dùng theo email, SELECT * FROM users WHERE email = :email LIMIT 1.
     public function findByEmail(string $email): array|false
     {
         $sql = 'SELECT * FROM users WHERE email = :email LIMIT 1';
         return $this->fetchOne($sql, [':email' => trim($email)]);
     }
 
-    /**
-     * Tìm thông tin người dùng theo ID
-     */
+    // Tìm người dùng theo id, SELECT * FROM users WHERE id = :id LIMIT 1.
     public function findById(int $id): array|false
     {
         $sql = 'SELECT * FROM users WHERE id = :id LIMIT 1';
         return $this->fetchOne($sql, [':id' => $id]);
     }
 
-    /**
-     * Kiểm tra Email đã tồn tại trong hệ thống chưa (hỗ trợ loại trừ ID hiện tại khi sửa)
-     */
+    // Kiểm tra email đã tồn tại chưa, excludeId loại chính tài khoản đang sửa ra.
     public function emailExists(string $email, ?int $excludeId = null): bool
     {
         if ($excludeId !== null) {
@@ -39,9 +32,7 @@ class User extends Model
         return (int) $this->fetchColumn($sql, [':email' => trim($email)]) > 0;
     }
 
-    /**
-     * Tạo mới tài khoản thành viên (Đăng ký)
-     */
+    // Tạo tài khoản mới, mật khẩu chỉ lưu dạng băm password_hash, không bao giờ lưu mật khẩu gốc.
     public function create(array $data): int
     {
         $sql = 'INSERT INTO users (name, email, password, phone, avatar, role, status, created_at)
@@ -60,9 +51,7 @@ class User extends Model
         return (int) $this->lastInsertId();
     }
 
-    /**
-     * Cập nhật thông tin hồ sơ cá nhân (Họ tên, Số điện thoại, Ảnh đại diện)
-     */
+    // Sửa hồ sơ cá nhân, chỉ đổi name/phone/avatar, không đổi email, mật khẩu, role hay status qua hàm này.
     public function updateProfile(int $userId, array $data): bool
     {
         $sql = 'UPDATE users
@@ -77,9 +66,7 @@ class User extends Model
         ]) >= 0;
     }
 
-    /**
-     * Đổi mật khẩu của người dùng
-     */
+    // Đổi mật khẩu, lưu password_hash của mật khẩu mới, UPDATE users SET password WHERE id = :id.
     public function updatePassword(int $userId, string $newPlainPassword): bool
     {
         $sql = 'UPDATE users SET password = :password WHERE id = :id';
@@ -89,9 +76,7 @@ class User extends Model
         ]) > 0;
     }
 
-    /**
-     * Lấy danh sách người dùng cho trang Quản trị (có tìm kiếm, lọc trạng thái và phân trang)
-     */
+    // Lấy danh sách người dùng cho admin, tìm theo tên/email/phone, lọc status active/locked, phân trang; User::getAdminList đếm review không lọc trạng thái.
     public function getAdminList(string $keyword = '', string $status = '', int $page = 1, int $perPage = ADMIN_ITEMS_PER_PAGE): array
     {
         $conditions = [];
@@ -133,9 +118,7 @@ class User extends Model
         ];
     }
 
-    /**
-     * Cập nhật trạng thái tài khoản ('active' hoặc 'locked')
-     */
+    // Đổi trạng thái tài khoản active/locked, giá trị lạ trả false ngay, UPDATE users SET status WHERE id = :id.
     public function updateStatus(int $userId, string $status): bool
     {
         if (!in_array($status, ['active', 'locked'], true)) {
@@ -149,9 +132,7 @@ class User extends Model
         ]) > 0;
     }
 
-    /**
-     * Đếm tổng số người dùng trong hệ thống
-     */
+    // Đếm tổng số người dùng, SELECT COUNT(*) FROM users (cả tài khoản bị khóa).
     public function countAll(): int
     {
         return (int) $this->fetchColumn('SELECT COUNT(*) FROM users');

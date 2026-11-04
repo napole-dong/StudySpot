@@ -1,9 +1,8 @@
 <?php
-/**
- * Giao diện Kiểm duyệt Đánh giá dành cho Admin (views/admin/reviews/index.php)
- */
+// Biến $currentStatus: trạng thái đang lọc từ $filters['status'], rỗng nghĩa là tab “Tất cả”.
 $currentStatus = $filters['status'] ?? '';
 ?>
+<!-- Tiêu đề trang kiểm duyệt đánh giá: trên cùng, duyệt/ẩn/xóa sẽ tự cập nhật điểm quán -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <h1 class="page-title"><i class="bi bi-chat-square-quote me-2"></i>Kiểm duyệt đánh giá sinh viên</h1>
@@ -11,9 +10,10 @@ $currentStatus = $filters['status'] ?? '';
     </div>
 </div>
 
-<!-- Các nút lọc nhanh theo trạng thái kèm số đếm thực tế từ CSDL -->
+<!-- Hàng lọc nhanh theo trạng thái + ô tìm kiếm: dưới tiêu đề trang -->
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div class="d-flex flex-wrap gap-2">
+                <!-- Nút lọc “Tất cả”: số trong ngoặc từ $counts['all'], nút đang chọn tô đậm theo $currentStatus -->
         <a href="<?= base_url('admin/review') ?>" class="btn btn-sm rounded-pill px-3 <?= $currentStatus === '' ? 'btn-coffee' : 'btn-outline-coffee' ?>">
             Tất cả (<?= number_format((int) ($counts['all'] ?? 0)) ?>)
         </a>
@@ -28,6 +28,7 @@ $currentStatus = $filters['status'] ?? '';
         </a>
     </div>
 
+        <!-- Form tìm kiếm review: GET tới admin/review, giữ trạng thái lọc bằng ô ẩn status khi $currentStatus khác rỗng -->
     <form action="<?= base_url('admin/review') ?>" method="GET" class="d-flex gap-2">
         <?php if ($currentStatus !== ''): ?>
             <input type="hidden" name="status" value="<?= e($currentStatus) ?>">
@@ -39,7 +40,7 @@ $currentStatus = $filters['status'] ?? '';
     </form>
 </div>
 
-<!-- Bảng danh sách Review (.admin-table align-middle + .admin-thumb bo góc 8px) -->
+<!-- Bảng danh sách review: dưới hàng lọc, 6 cột (.admin-table, .admin-thumb) -->
 <div class="surface-card overflow-hidden">
     <div class="table-responsive">
         <table class="table admin-table table-hover align-middle mb-0">
@@ -54,6 +55,7 @@ $currentStatus = $filters['status'] ?? '';
                 </tr>
             </thead>
             <tbody>
+                                <!-- Nếu $reviews rỗng thì hiện một dòng gộp 6 cột -->
                 <?php if (empty($reviews)): ?>
                     <tr>
                         <td colspan="6" class="text-center text-muted py-5">
@@ -62,6 +64,7 @@ $currentStatus = $filters['status'] ?? '';
                         </td>
                     </tr>
                 <?php else: ?>
+                                        <!-- Vòng lặp danh sách review: $rv là một review trong $reviews -->
                     <?php foreach ($reviews as $rv): ?>
                         <tr>
                             <td class="ps-3 text-muted fw-semibold">#<?= (int) $rv['id'] ?></td>
@@ -77,6 +80,7 @@ $currentStatus = $filters['status'] ?? '';
                                 </div>
                             </td>
                             <td>
+                                                                <!-- Điểm số: sao từ $rv['rating_overall'], bên dưới là 3 nhãn Wifi, KG, Giá -->
                                 <div><?= render_stars((float) $rv['rating_overall']) ?></div>
                                 <div class="d-flex flex-wrap gap-1 mt-1" style="font-size: 0.72rem;">
                                     <span class="pill-amenity py-0 px-2">Wifi: <strong><?= (int) $rv['rating_wifi'] ?></strong></span>
@@ -85,6 +89,7 @@ $currentStatus = $filters['status'] ?? '';
                                 </div>
                             </td>
                             <td>
+                                                                <!-- Nội dung review: e() thoát ký tự đặc biệt, nl2br() giữ xuống dòng, có ảnh đính kèm thì hiện ảnh thu nhỏ -->
                                 <div class="small text-dark"><?= nl2br(e($rv['content'])) ?></div>
                                 <?php if (!empty($rv['image_path'])): ?>
                                     <div class="mt-2">
@@ -95,6 +100,7 @@ $currentStatus = $filters['status'] ?? '';
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
+                                                                <!-- Huy hiệu trạng thái: pending là Chờ duyệt, approved là Đã duyệt, nhánh else mặc định là Đã ẩn -->
                                 <?php if ($rv['status'] === 'pending'): ?>
                                     <span class="badge rounded-pill px-2 py-1" style="background: rgba(217, 119, 6, 0.16); color: #B45309;">
                                         <i class="bi bi-hourglass-split me-1"></i>Chờ duyệt
@@ -110,7 +116,9 @@ $currentStatus = $filters['status'] ?? '';
                                 <?php endif; ?>
                             </td>
                             <td class="text-end pe-3">
+                                                                <!-- Cột thao tác: nút icon nhỏ, màu theo ý nghĩa; nút Duyệt/Ẩn chỉ hiện khi chưa duyệt/chưa ẩn, nút Xóa luôn hiện -->
                                 <div class="d-inline-flex gap-1">
+                                                                        <!-- Form Duyệt: POST tới admin/review/updateStatus/{id} với status=approved -->
                                     <?php if ($rv['status'] !== 'approved'): ?>
                                         <form action="<?= base_url('admin/review/updateStatus/' . (int) $rv['id']) ?>" method="POST">
                                             <?= csrf_field() ?>
@@ -121,6 +129,7 @@ $currentStatus = $filters['status'] ?? '';
                                         </form>
                                     <?php endif; ?>
 
+                                                                        <!-- Form Ẩn: POST tới cùng route updateStatus/{id} với status=hidden -->
                                     <?php if ($rv['status'] !== 'hidden'): ?>
                                         <form action="<?= base_url('admin/review/updateStatus/' . (int) $rv['id']) ?>" method="POST">
                                             <?= csrf_field() ?>
@@ -131,6 +140,7 @@ $currentStatus = $filters['status'] ?? '';
                                         </form>
                                     <?php endif; ?>
 
+                                                                        <!-- Form Xóa: POST tới admin/review/delete/{id}, xóa vĩnh viễn và tính lại điểm quán -->
                                     <form action="<?= base_url('admin/review/delete/' . (int) $rv['id']) ?>" method="POST" onsubmit="return confirm('Xóa vĩnh viễn đánh giá này và tính lại điểm quán?');">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Xóa vĩnh viễn">
@@ -147,4 +157,5 @@ $currentStatus = $filters['status'] ?? '';
     </div>
 </div>
 
+<!-- Phân trang: render_pagination() từ $currentPage và $totalPages về admin/review -->
 <?= render_pagination($currentPage, $totalPages, 'admin/review') ?>

@@ -1,22 +1,17 @@
 <?php
-/**
- * AdminUserController: Quản lý danh sách Người dùng dành cho Admin
- * Bao gồm: Tìm kiếm, lọc trạng thái, phân trang và Khóa / Mở khóa tài khoản
- * Bảo vệ: Tuyệt đối không cho phép khóa chính mình hoặc khóa tài khoản Admin khác
- */
+// Quản trị người dùng: danh sách, khóa/mở khóa.
 class AdminUserController extends Controller
 {
     private User $userModel;
 
+    // Kiểm tra quyền admin (requireAdmin) trước rồi tạo sẵn model User.
     public function __construct()
     {
         $this->requireAdmin();
         $this->userModel = new User();
     }
 
-    /**
-     * Danh sách người dùng trong hệ thống (/admin/user)
-     */
+    // Danh sách người dùng trong hệ thống (/admin/user)
     public function index(): void
     {
         $keyword = trim($_GET['q'] ?? '');
@@ -38,9 +33,7 @@ class AdminUserController extends Controller
         ], 'admin');
     }
 
-    /**
-     * Khóa hoặc Mở khóa tài khoản thành viên (/admin/user/toggleStatus/6)
-     */
+    // Khóa hoặc Mở khóa tài khoản thành viên (/admin/user/toggleStatus/6)
     public function toggleStatus(int|string $id = 0): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -60,18 +53,19 @@ class AdminUserController extends Controller
         $currentAdmin = Session::user();
         $currentAdminId = (int) ($currentAdmin['id'] ?? 0);
 
-        // Chặn khóa chính mình
+        // Chặn tự khóa mình.
         if ($targetUserId === $currentAdminId) {
             Session::flash('alert', 'Không thể tự khóa tài khoản của chính bạn!', 'warning');
             $this->redirect('admin/user');
         }
 
-        // Chặn khóa tài khoản Admin khác
+        // Chặn khóa tài khoản admin khác, chỉ khóa được thành viên.
         if ($targetUser['role'] === 'admin') {
             Session::flash('alert', 'Không được phép khóa tài khoản Quản trị viên khác!', 'warning');
             $this->redirect('admin/user');
         }
 
+        // Đảo trạng thái sang giá trị còn lại.
         $newStatus = ($targetUser['status'] === 'active') ? 'locked' : 'active';
         $this->userModel->updateStatus($targetUserId, $newStatus);
 

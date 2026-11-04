@@ -1,14 +1,12 @@
 <?php
-/**
- * ProfileController: Quản lý Trang cá nhân của thành viên
- * Bao gồm: Xem tổng quan hồ sơ, Quán yêu thích, Lịch sử Review, Cập nhật thông tin, Đổi Avatar & Đổi mật khẩu
- */
+// Trang cá nhân thành viên: xem, sửa hồ sơ, đổi avatar, đổi mật khẩu.
 class ProfileController extends Controller
 {
     private User $userModel;
     private Favorite $favoriteModel;
     private Review $reviewModel;
 
+    // Yêu cầu đăng nhập (requireLogin) rồi tạo sẵn model User, Favorite, Review.
     public function __construct()
     {
         $this->requireLogin();
@@ -17,9 +15,7 @@ class ProfileController extends Controller
         $this->reviewModel = new Review();
     }
 
-    /**
-     * Trang tổng quan hồ sơ cá nhân (/profile)
-     */
+    // Trang tổng quan hồ sơ cá nhân (/profile)
     public function index(): void
     {
         $sessionUser = Session::user();
@@ -37,9 +33,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Trang chỉnh sửa thông tin cá nhân, đổi Avatar & đổi Mật khẩu (/profile/edit)
-     */
+    // Trang chỉnh sửa thông tin cá nhân, đổi Avatar & đổi Mật khẩu (/profile/edit)
     public function edit(): void
     {
         $sessionUser = Session::user();
@@ -51,6 +45,7 @@ class ProfileController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->verifyCsrfToken();
 
+            // form_type phân biệt sửa thông tin và đổi mật khẩu, mặc định update_info.
             $formType = $_POST['form_type'] ?? 'update_info';
 
             // 1. Xử lý Cập nhật thông tin hồ sơ & đổi Avatar
@@ -59,6 +54,7 @@ class ProfileController extends Controller
                 $phone = trim($_POST['phone'] ?? '');
                 $avatarPath = $user['avatar'];
 
+                // Họ tên 2–100 ký tự, giống quy tắc lúc đăng ký.
                 if ($name === '' || mb_strlen($name, 'UTF-8') < 2 || mb_strlen($name, 'UTF-8') > 100) {
                     $errors['name'] = 'Họ và tên phải từ 2 đến 100 ký tự.';
                 }
@@ -73,6 +69,7 @@ class ProfileController extends Controller
                     if (!$uploadResult['success']) {
                         $errors['avatar'] = $uploadResult['error'];
                     } else {
+                        // Chỉ xóa avatar cũ khi avatar mới đã upload thành công.
                         delete_uploaded_file($user['avatar']);
                         $avatarPath = $uploadResult['path'];
                     }
@@ -87,6 +84,7 @@ class ProfileController extends Controller
 
                     // Đồng bộ lại thông tin trong Session để Navbar hiển thị ngay lập tức
                     $updatedUser = $this->userModel->findById($userId);
+                    // Đồng bộ session sau khi sửa hồ sơ để navbar hiện ngay.
                     Session::set('user', [
                         'id'     => (int) $updatedUser['id'],
                         'name'   => $updatedUser['name'],
@@ -107,6 +105,7 @@ class ProfileController extends Controller
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
 
+                // Đổi mật khẩu phải biết mật khẩu cũ và khớp hash.
                 if ($currentPassword === '' || !password_verify($currentPassword, $user['password'])) {
                     $errors['current_password'] = 'Mật khẩu hiện tại không chính xác.';
                 }
@@ -120,6 +119,7 @@ class ProfileController extends Controller
                 }
 
                 if (empty($errors)) {
+                    // Mật khẩu mới do model băm (hash) trước khi lưu.
                     $this->userModel->updatePassword($userId, $newPassword);
                     Session::regenerate();
                     Session::flash('alert', 'Đã đổi mật khẩu thành công!', 'success');

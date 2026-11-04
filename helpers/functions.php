@@ -1,66 +1,56 @@
 <?php
-/**
- * Các hàm tiện ích dùng chung toàn hệ thống (Helpers)
- */
+// Helper dùng chung: chống XSS, URL, CSRF, ảnh, slug, giá, giờ mở cửa, sao, phân trang.
 
-/**
- * Làm sạch chuỗi trước khi xuất ra HTML (chống XSS)
- */
+// e(): chống XSS bằng htmlspecialchars, đổi cả nháy đơn và kép, giữ tiếng Việt UTF-8.
 function e(?string $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-/**
- * Tạo URL đầy đủ từ đường dẫn tương đối dựa trên hằng số BASE_URL
- */
+// base_url(): ghép BASE_URL với đường dẫn, cắt dấu / thừa.
 function base_url(string $path = ''): string
 {
     return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
 }
 
-/**
- * In ra thẻ input ẩn chứa CSRF Token cho mọi form POST
- */
+// csrf_field(): in input ẩn csrf_token cho mọi form POST.
 function csrf_field(): string
 {
     $token = Session::csrfToken();
     return '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
 }
 
-/**
- * Lấy đường dẫn hiển thị ảnh an toàn (Fallback về ảnh quán thực tế đa dạng hoặc SVG cục bộ)
- *
- * @param string|null     $path Đường dẫn tương đối lưu trong CSDL (VD: 'uploads/places/cafe1.jpg')
- * @param string          $type Loại ảnh: 'place' | 'review' | 'avatar'
- * @param int|string|null $seed Mã ID hoặc chuỗi phân biệt để chọn ảnh quán tương thích, tránh trùng lặp
- * @return string URL đầy đủ tới file ảnh
- */
+// get_image_url(): ưu tiên ảnh thật, rồi avatar mặc định, ảnh quán mẫu cafe_1..8, cuối cùng SVG giữ chỗ.
 function get_image_url(?string $path, string $type = 'place', int|string|null $seed = null): string
 {
+    // Ảnh giữ chỗ cuối cùng: avatar dùng hình đại diện mặc định, các loại còn lại dùng hình giữ chỗ chung; chỉ tới đây khi mọi nguồn ảnh khác đều thất bại.
     $defaultSvg = ($type === 'avatar')
         ? 'assets/img/avatar-default.svg'
         : 'assets/img/placeholder.svg';
 
+    // Nhánh 1: nếu CSDL có lưu đường dẫn ảnh thì thử dùng ảnh thật trước.
     if (!empty($path)) {
-        // Chuẩn hóa đường dẫn tương đối trong thư mục assets/
+        // Chuẩn hóa đường dẫn tương đối trong thư mục assets/: cắt dấu / ở đầu,
         $cleanPath = ltrim($path, '/');
         if (!str_starts_with($cleanPath, 'assets/')) {
             $cleanPath = 'assets/' . $cleanPath;
         }
 
+        // Chỉ dùng ảnh thật khi file thật sự tồn tại trên ổ đĩa (kiểm tra cả
         $fullDiskPath = ROOT_PATH . '/' . $cleanPath;
         if (is_file($fullDiskPath) && file_exists($fullDiskPath)) {
             return base_url($cleanPath);
         }
     }
 
+    // Nhánh 2: avatar không có ảnh thật thì trả ngay ảnh đại diện mặc định, không đi vào logic chọn ảnh quán mẫu bên dưới (vì avatar không phải ảnh quán).
     if ($type === 'avatar') {
         return base_url('assets/img/avatar-default.svg');
     }
 
-    // Nếu là ảnh quán (place): Luân phiên giữa 8 ảnh không gian quán thực tế độ nét cao, không bao giờ trùng nhau
+    // Nhánh 3, chỉ còn ảnh quán/review không có ảnh thật: luân phiên giữa 8 ảnh
     $index = 1;
+    // Cách tính $index: nếu có seed thì dùng seed (seed là số thì lấy trực tiếp,
     if ($seed !== null && $seed !== '') {
         $index = (abs(is_numeric($seed) ? (int) $seed : crc32((string) $seed)) % 8) + 1;
     } elseif (!empty($path)) {
@@ -79,13 +69,7 @@ function get_image_url(?string $path, string $type = 'place', int|string|null $s
     return base_url($defaultSvg);
 }
 
-/**
- * Upload 1 file ảnh an toàn (kiểm tra dung lượng <= 2MB, kiểm tra MIME thật bằng finfo, đổi tên ngẫu nhiên)
- *
- * @param array  $file   Mảng phần tử từ $_FILES['ten_input']
- * @param string $folder Thư mục con trong assets/uploads/ ('places', 'avatars', 'reviews')
- * @return array ['success' => bool, 'path' => ?string, 'error' => ?string]
- */
+// upload_image(): lưu ảnh vào assets/uploads/, kiểm tra lỗi, 2MB, MIME thật bằng finfo, đổi tên ngẫu nhiên.
 function upload_image(array $file, string $folder = 'places'): array
 {
     if (empty($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
@@ -100,7 +84,7 @@ function upload_image(array $file, string $folder = 'places'): array
         return ['success' => false, 'path' => null, 'error' => 'Kích thước ảnh vượt quá giới hạn 2MB.'];
     }
 
-    // Kiểm tra MIME type thực tế bằng finfo
+    // Chỉ chấp nhận ảnh JPG/PNG/WEBP, kiểm tra MIME thật bằng finfo, không tin đuôi file.
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->file($file['tmp_name']);
 
@@ -115,7 +99,7 @@ function upload_image(array $file, string $folder = 'places'): array
         mkdir($targetDir, 0755, true);
     }
 
-    // Đặt tên file ngẫu nhiên để chống ghi đè và lộ tên file gốc
+    // Đặt tên file ngẫu nhiên để chống ghi đè và lộ tên file gốc: uniqid() tạo
     $fileName = uniqid($folder . '_', true) . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
     $destination = $targetDir . '/' . $fileName;
 
@@ -130,9 +114,7 @@ function upload_image(array $file, string $folder = 'places'): array
     ];
 }
 
-/**
- * Xóa file ảnh cũ trên ổ đĩa (nếu tồn tại và nằm trong thư mục uploads)
- */
+// delete_uploaded_file(): chỉ xóa file trong assets/uploads/ nếu file thật sự tồn tại.
 function delete_uploaded_file(?string $path): void
 {
     if (empty($path)) {
@@ -148,9 +130,7 @@ function delete_uploaded_file(?string $path): void
     }
 }
 
-/**
- * Chuyển chuỗi tiếng Việt có dấu thành slug chuẩn SEO
- */
+// create_slug(): đổi tiếng Việt có dấu thành slug không dấu, nối bằng '-'.
 function create_slug(string $str): string
 {
     $str = mb_strtolower(trim($str), 'UTF-8');
@@ -169,9 +149,7 @@ function create_slug(string $str): string
     return trim($str, '-');
 }
 
-/**
- * Định dạng mức giá (1 -> 4) thành chuỗi dễ hiểu cho sinh viên (hỗ trợ dạng ngắn gọn cho thẻ card)
- */
+// format_price_range(): đổi mức giá 1..4 thành chữ, $short=true thì dạng ngắn cho thẻ quán.
 function format_price_range(int $priceRange, bool $short = false): string
 {
     if ($short) {
@@ -193,9 +171,7 @@ function format_price_range(int $priceRange, bool $short = false): string
     };
 }
 
-/**
- * Định dạng giá tự do (VNĐ) từ price_min/price_max: "25.000₫ - 45.000₫", "Dưới 25.000₫", "Từ 65.000₫", "Đang cập nhật"
- */
+// format_price_range_from_min_max(): đổi price_min/price_max thành 'min - max', 'Dưới max', 'Từ min' hoặc 'Đang cập nhật'.
 function format_price_range_from_min_max($min, $max): string
 {
     $min = ($min === '' || $min === null) ? null : (int) $min;
@@ -216,9 +192,7 @@ function format_price_range_from_min_max($min, $max): string
     return 'Đang cập nhật';
 }
 
-/**
- * Định dạng nhãn độ ồn theo bảng màu Warm Study Cafe
- */
+// format_noise_level(): đổi mã yen_tinh/vua/on thành nhãn, class CSS và icon.
 function format_noise_level(string $noiseLevel): array
 {
     return match ($noiseLevel) {
@@ -229,10 +203,7 @@ function format_noise_level(string $noiseLevel): array
     };
 }
 
-/**
- * Kiểm tra quán hiện tại đang Mở cửa hay Đã đóng cửa dựa trên open_time và close_time
- * Xử lý chính xác cả trường hợp mở trong ngày và mở xuyên đêm (close_time < open_time)
- */
+// is_place_open(): đang mở khi giờ hiện tại nằm giữa giờ mở/đóng, kể cả mở xuyên đêm.
 function is_place_open(?string $openTime, ?string $closeTime): bool
 {
     if (empty($openTime) || empty($closeTime)) {
@@ -249,10 +220,7 @@ function is_place_open(?string $openTime, ?string $closeTime): bool
     return ($now >= $openTime || $now <= $closeTime);
 }
 
-/**
- * Kiểm tra quán có đạt tiêu chí tag tự động "Phù hợp học khuya" không
- * Điều kiện: Mở từ 22:00 trở đi (hoặc xuyên đêm) + có Wifi + có Ổ cắm
- */
+// is_late_night_friendly(): tag 'Phù hợp học khuya' khi có wifi + ổ cắm và đóng từ 22:00 trở đi hoặc xuyên đêm.
 function is_late_night_friendly(array $place): bool
 {
     $slugs = $place['amenity_slugs'] ?? array_map(fn($a) => $a['slug'] ?? '', $place['amenities'] ?? []);
@@ -268,26 +236,20 @@ function is_late_night_friendly(array $place): bool
     return ($closeTime >= '22:00:00' || $closeTime < $openTime);
 }
 
-/**
- * Kiểm tra quán có đạt tiêu chí tag tự động "Giá sinh viên" không (price_range <= 2)
- */
+// is_student_price(): tag 'Giá sinh viên' khi price_range là 1 hoặc 2.
 function is_student_price(array $place): bool
 {
     return isset($place['price_range']) && (int) $place['price_range'] >= 1 && (int) $place['price_range'] <= 2;
 }
 
-/**
- * Tạo URL nhúng bản đồ Google Maps thật theo tên + địa chỉ quán tại TP. Long Xuyên, An Giang
- */
+// get_google_map_embed_url(): tạo link nhúng Google Maps theo tên + địa chỉ quán ở Long Xuyên, zoom 16.
 function get_google_map_embed_url(array $place): string
 {
     $query = trim(($place['name'] ?? '') . ' ' . ($place['address'] ?? 'TP. Long Xuyên, An Giang'));
     return 'https://maps.google.com/maps?q=' . urlencode($query) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
 }
 
-/**
- * Hiển thị chuỗi icon ngôi sao (Bootstrap Icons) từ điểm số (0 - 5)
- */
+// render_stars(): vẽ 5 sao (đầy, nửa, rỗng) từ điểm 0..5, $showNumber thì in thêm con số.
 function render_stars(float $rating, bool $showNumber = true): string
 {
     $rating = max(0, min(5, $rating));
@@ -311,9 +273,7 @@ function render_stars(float $rating, bool $showNumber = true): string
     return $html;
 }
 
-/**
- * Tạo thanh phân trang chuẩn Bootstrap 5 (giữ nguyên các query string lọc hiện tại)
- */
+// render_pagination(): vẽ phân trang Bootstrap 5, giữ nguyên query lọc, cửa sổ trang hiện tại ±2.
 function render_pagination(int $currentPage, int $totalPages, string $basePath = ''): string
 {
     if ($totalPages <= 1) {
@@ -332,12 +292,12 @@ function render_pagination(int $currentPage, int $totalPages, string $basePath =
 
     $html = '<nav aria-label="Phân trang"><ul class="pagination justify-content-center mt-4">';
 
-    // Nút Trang trước
+    // Nút Trang trước: nếu đang ở trang 1 thì gán class 'disabled' (không bấm được) và link là '#', ngược lại link tới trang hiện tại trừ 1.
     $prevDisabled = ($currentPage <= 1) ? 'disabled' : '';
     $prevUrl = ($currentPage > 1) ? e($buildPageUrl($currentPage - 1)) : '#';
     $html .= '<li class="page-item ' . $prevDisabled . '"><a class="page-link" href="' . $prevUrl . '"><i class="bi bi-chevron-left"></i></a></li>';
 
-    // Các trang ở giữa
+    // Các trang ở giữa: $start và $end là cửa sổ trang hiện tại +- 2, kẹp trong
     $start = max(1, $currentPage - 2);
     $end = min($totalPages, $currentPage + 2);
 
@@ -360,7 +320,7 @@ function render_pagination(int $currentPage, int $totalPages, string $basePath =
         $html .= '<li class="page-item"><a class="page-link" href="' . e($buildPageUrl($totalPages)) . '">' . $totalPages . '</a></li>';
     }
 
-    // Nút Trang sau
+    // Nút Trang sau: ngược với nút Trang trước, nếu đang ở trang cuối thì disabled và link '#', ngược lại link tới trang hiện tại cộng 1.
     $nextDisabled = ($currentPage >= $totalPages) ? 'disabled' : '';
     $nextUrl = ($currentPage < $totalPages) ? e($buildPageUrl($currentPage + 1)) : '#';
     $html .= '<li class="page-item ' . $nextDisabled . '"><a class="page-link" href="' . $nextUrl . '"><i class="bi bi-chevron-right"></i></a></li>';
@@ -369,9 +329,7 @@ function render_pagination(int $currentPage, int $totalPages, string $basePath =
     return $html;
 }
 
-/**
- * Rút gọn chuỗi văn bản nếu vượt quá độ dài tối đa (giữ nguyên độ dài ký tự an toàn tiếng Việt UTF-8)
- */
+// truncate_text(): cắt chuỗi quá $limit ký tự (mb_substr giữ tiếng Việt) rồi thêm '...'.
 function truncate_text(?string $text, int $limit = 100, string $ellipsis = '...'): string
 {
     $text = trim((string) $text);
@@ -381,13 +339,7 @@ function truncate_text(?string $text, int $limit = 100, string $ellipsis = '...'
     return mb_substr($text, 0, $limit, 'UTF-8') . $ellipsis;
 }
 
-/**
- * Trả về tối đa 3 tiện ích quan trọng nhất để hiển thị gọn gàng trên thẻ quán (place card),
- * tránh tràn dòng và loại bỏ sự rườm rà.
- *
- * @param array $place Dữ liệu địa điểm từ CSDL
- * @return array Mảng tối đa 3 tiện ích [['icon' => string, 'label' => string, 'class' => string]]
- */
+// get_card_amenities(): lấy tối đa 3 tiện ích đầu tiên của quán (bảng amenities) để hiện trên thẻ quán.
 function get_card_amenities(array $place): array
 {
     // Tiện ích lấy từ bảng amenities (đã gắn sẵn bởi Place model, hoặc truy vấn trực tiếp nếu chưa có)

@@ -1,20 +1,14 @@
 <?php
-/**
- * Giao diện Chi tiết Quán học bài tại TP. Long Xuyên, An Giang (views/places/show.php)
- * Bao gồm:
- * - Slider ảnh, Thông tin địa chỉ & Phường thực tế tại Long Xuyên
- * - Trạng thái Đang mở cửa / Đã đóng cửa tính toán thật theo date('H:i:s')
- * - Điểm trung bình tổng + từng tiêu chí (AVG Wifi, Không gian, Giá cả) từ review đã approved
- * - Bản đồ Google Maps nhúng động theo tên + địa chỉ thật tại Long Xuyên
- * - Quán tương tự / Gợi ý cùng khu vực tại TP. Long Xuyên
- */
+// Trang chi tiết 1 quán, do PlaceController (show) render.
+// Trang chi tiết: $place, $images, $reviews, $reviewTotal, $relatedPlaces, $favoriteIds, $isFavorited, $myReview, $criteriaStats.
 $placeId = (int) $place['id'];
 $isOpen = is_place_open($place['open_time'], $place['close_time']);
 $noiseInfo = format_noise_level($place['noise_level']);
+// Biến $dynamicMapEmbedUrl dựng sẵn link Maps; iframe cột phải dựng lại công thức trong src, không dùng biến này.
 $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name'] . ' ' . $place['address']) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
 ?>
 <div class="container py-4">
-    <!-- Breadcrumb điều hướng -->
+    <!-- Breadcrumb: Trang chủ > Khám phá Long Xuyên > Phường > Tên quán. -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small mb-0">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>" class="text-decoration-none text-coffee">Trang chủ</a></li>
@@ -24,11 +18,14 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
         </ol>
     </nav>
 
-    <!-- Header: tiêu đề + badge + nút, không còn thẻ card bao quanh -->
+    <!-- Header: tiêu đề + badge + nút, không thẻ card bao quanh. -->
     <div class="page-head">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <!-- Hàng badge: danh mục là link lọc cùng danh mục, rồi badge mở/đóng, 2 badge điều kiện. -->
             <a href="<?= base_url('place?category_id=' . (int) $place['category_id']) ?>" class="badge bg-coffee text-decoration-none px-3 py-2 rounded-pill"><?= e($place['category_name']) ?></a>
+            <!-- Badge trạng thái: $isOpen thì 'Đang mở cửa', không thì 'Đã đóng cửa'; giờ cắt HH:MM. -->
             <span class="<?= $isOpen ? 'badge-status-open' : 'badge-status-closed' ?> px-3 py-2"><i class="bi <?= $isOpen ? 'bi-door-open-fill' : 'bi-door-closed-fill' ?> me-1"></i><?= $isOpen ? 'Đang mở cửa' : 'Đã đóng cửa' ?> (<?= e(substr($place['open_time'], 0, 5)) ?> - <?= e(substr($place['close_time'], 0, 5)) ?>)</span>
+            <!-- Badge 'Phù hợp học khuya' chỉ khi is_late_night_friendly(); 'Giá sinh viên AGU' chỉ khi is_student_price(). -->
             <?php if (is_late_night_friendly($place)): ?><span class="pill-late-night px-3 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>Phù hợp học khuya</span><?php endif; ?>
             <?php if (is_student_price($place)): ?><span class="pill-amenity pill-quiet px-3 py-1">Giá sinh viên AGU</span><?php endif; ?>
         </div>
@@ -37,10 +34,12 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 <h1 class="page-title"><?= e($place['name']) ?></h1>
                 <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill me-1"></i><?= e($place['address']) ?></p>
                 <div class="d-flex flex-wrap align-items-center gap-3 small">
+                    <!-- Số trong ngoặc sau sao là số review ĐÃ DUYỆT; review chờ duyệt chưa tính. -->
                     <div><?= render_stars((float) $place['avg_rating']) ?> <span class="text-muted ms-1">(<?= (int) $place['total_reviews'] ?> đánh giá)</span></div>
                     <span class="text-secondary">•</span>
                     <div class="fw-semibold"><i class="bi bi-cash-stack me-1"></i>Mức giá: <?= e(format_price_range_from_min_max($place['price_min'] ?? null, $place['price_max'] ?? null)) ?></div>
                 </div>
+                <!-- Khối Google: chỉ hiện khi có điểm Google hoặc link Google Maps; tách biệt điểm nội bộ. -->
                 <?php if (!empty($place['google_rating']) || !empty($place['google_maps_place_url'])): ?>
                 <div class="d-flex flex-wrap align-items-center gap-2 small mt-2">
                     <span class="fw-semibold">Google:</span>
@@ -53,17 +52,20 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 <?php endif; ?>
             </div>
             <div class="d-flex gap-2 flex-shrink-0 flex-wrap">
+                <!-- Nút lưu: btn-favorite-toggle gửi AJAX, data-with-label=1 đổi chữ trên nút, không chuyển trang. -->
                 <button type="button" class="btn <?= $isFavorited ? 'btn-danger' : 'btn-outline-danger' ?> px-4 btn-favorite-toggle" data-place-id="<?= $placeId ?>" data-with-label="1"><i class="bi <?= $isFavorited ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i><span class="fav-label"><?= $isFavorited ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' ?></span></button>
+                <!-- Nút Viết đánh giá: link neo #review-form-section, cuộn xuống form ở cột trái. -->
                 <a href="#review-form-section" class="btn btn-coffee px-4"><i class="bi bi-star-fill me-1 text-warning"></i>Viết đánh giá</a>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- CỘT TRÁI: SLIDER ẢNH + MÔ TẢ + FORM & DANH SÁCH REVIEW -->
+        <!-- Cột trái: ảnh + tiện ích + form review + danh sách review. -->
         <div class="col-lg-8">
-            <!-- 1. GALLERY: ảnh lớn trái, ảnh nhỏ phải -->
+            <!-- Gallery: ảnh lớn trái, tối đa 2 ảnh nhỏ phải (array_slice ảnh thứ 2 và 3). -->
             <div class="gallery-grid">
+                <!-- Chưa có ảnh thì dùng get_image_url(null, ...) lấy placeholder; chỉ 1 ảnh thì lặp lại ở cột phải. -->
                 <?php if (empty($images)): ?>
                     <img src="<?= get_image_url(null, 'place', $placeId) ?>" class="gallery-main" style="grid-column: 1 / -1;" alt="<?= e($place['name']) ?>">
                 <?php else: ?>
@@ -79,9 +81,10 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 <?php endif; ?>
             </div>
 
-            <!-- 2. TIỆN ÍCH HỌC TẬP & MÔ TẢ CHI TIẾT -->
+            <!-- Tiện ích và mô tả ở cột trái. -->
             <div class="card surface-card p-4 mb-4">
                 <h2 class="h6 fw-bold text-coffee mb-3">
+                    <!-- Thẻ tiện ích cột trái: vòng lặp $place['amenities'], rỗng thì 'Chưa cập nhật tiện ích'. -->
                     <i class="bi bi-card-checklist me-2"></i>Tiện ích học tập &amp; Không gian tại quán
                 </h2>
 
@@ -94,6 +97,7 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 <?php else: ?>
                     <p class="text-muted small mb-3">Chưa cập nhật tiện ích cho quán này.</p>
                 <?php endif; ?>
+                <!-- Mức ồn lấy nhãn từ $noiseInfo; mô tả dùng nl2br(e(...)), e() chống XSS. -->
                 <p class="small text-muted mb-4">Mức độ tiếng ồn: <strong class="text-dark"><?= e($noiseInfo['label']) ?></strong></p>
 
                 <h3 class="h6 fw-bold text-dark mb-2">Giới thiệu chi tiết</h3>
@@ -102,18 +106,21 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 </div>
             </div>
 
-            <!-- 3. FORM VIẾT / SỬA ĐÁNH GIÁ (KÈM WIDGET CHỌN 5 NGÔI SAO & LIVE PREVIEW) -->
+            <!-- Form viết/sửa review ở cột trái. -->
+            <!-- Nhúng partial _form.php dưới thẻ tiện ích. -->
             <?php require ROOT_PATH . '/views/reviews/_form.php'; ?>
 
-            <!-- 4. DANH SÁCH ĐÁNH GIÁ ĐÃ DUYỆT -->
+            <!-- Danh sách đánh giá đã duyệt. -->
+            <!-- Nhúng partial _list.php dưới form review. -->
             <?php require ROOT_PATH . '/views/reviews/_list.php'; ?>
         </div>
 
-        <!-- CỘT PHẢI: ĐIỂM TRUNG BÌNH TỪNG TIÊU CHÍ (SQL AVG THẬT) + BẢN ĐỒ LONG XUYÊN -->
+        <!-- Cột phải: điểm trung bình từng tiêu chí + bản đồ. -->
         <div class="col-lg-4"><div class="sticky-card d-flex flex-column gap-4">
-            <!-- Khối Điểm trung bình tổng + từng tiêu chí từ AVG(rating_*) -->
+            <!-- Khối điểm: điểm tổng + từng tiêu chí từ AVG(rating_*). -->
             <div class="card surface-card p-4 mb-4">
                 <h2 class="h6 fw-bold text-coffee mb-3">
+                    <!-- Thẻ điểm cột phải (dính khi cuộn): điểm tổng, sao, tổng số từ $criteriaStats['total'] hoặc $place['total_reviews']. -->
                     <i class="bi bi-bar-chart-fill me-2"></i>Điểm đánh giá từ Sinh viên
                 </h2>
 
@@ -127,8 +134,9 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                     </div>
                 </div>
 
-                <!-- Thanh điểm 3 tiêu chí thành phần tính 100% bằng SQL AVG() -->
+                <!-- Thanh điểm 3 tiêu chí từ SQL AVG(). -->
                 <?php
+// Điểm từng tiêu chí từ $criteriaStats; phần trăm = điểm/5*100, kẹp 0-100.
                 $wifiScore   = (float) ($criteriaStats['avg_wifi'] ?? 0.0);
                 $spaceScore  = (float) ($criteriaStats['avg_space'] ?? 0.0);
                 $priceScore  = (float) ($criteriaStats['avg_price'] ?? 0.0);
@@ -168,9 +176,10 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 </div>
             </div>
 
-            <!-- Khối Thông tin giờ hoạt động & Bản đồ Google Maps thật tại TP. Long Xuyên -->
+            <!-- Khối giờ hoạt động và bản đồ Google Maps. -->
             <div class="card surface-card p-4 mb-4">
                 <h2 class="h6 fw-bold text-coffee mb-3">
+                    <!-- Thẻ vị trí cột phải: giờ mở/đóng, trạng thái kèm date('H:i'), phường, rồi bản đồ. -->
                     <i class="bi bi-geo-alt-fill me-2"></i>Vị trí tại TP. Long Xuyên &amp; Giờ mở cửa
                 </h2>
 
@@ -191,6 +200,7 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                     </li>
                 </ul>
 
+                <!-- Bản đồ Maps nhúng theo tên + địa chỉ (4x3); 'Mở chỉ đường' mở tab mới, không mất trang chi tiết. -->
                 <div class="ratio ratio-4x3 rounded-4 overflow-hidden border mb-2">
                     <iframe
                         src="https://maps.google.com/maps?q=<?= urlencode($place['name'] . ' ' . $place['address']) ?>&t=&z=16&ie=UTF8&iwloc=&output=embed"
@@ -216,7 +226,8 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
         </div>
     </div>
 
-    <!-- 5. QUÁN TƯƠNG TỰ / GỢI Ý CÙNG KHU VỰC TẠI TP. LONG XUYÊN (QUERY THẬT TỪ CSDL) -->
+    <!-- Quán tương tự ở cuối trang. -->
+    <!-- Khối quán tương tự: chỉ khi $relatedPlaces không rỗng, cùng phường hoặc cùng danh mục. -->
     <?php if (!empty($relatedPlaces)): ?>
         <section class="mt-5 pt-2">
             <div class="d-flex justify-content-between align-items-end mb-3">
@@ -234,8 +245,10 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
             </div>
 
             <div class="d-flex flex-column gap-3">
+                <!-- Vòng lặp quán tương tự: mỗi quán 1 thẻ place-row; 'Xem thêm tại phường' sang place đã lọc theo phường. -->
                 <?php foreach ($relatedPlaces as $rel): ?>
                     <?php
+// Quán tương tự: tính lại $relOpen, kiểm tra $favoriteIds, tối đa 3 tiện ích.
                     $relOpen = is_place_open($rel['open_time'], $rel['close_time']);
                     $relFav = in_array((int) $rel['id'], $favoriteIds ?? [], true);
                     $relAmenities = get_card_amenities($rel);

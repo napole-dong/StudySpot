@@ -1,16 +1,15 @@
 <?php
-/**
- * Partial View: Biểu mẫu Viết hoặc Chỉnh sửa Review của thành viên (views/reviews/_form.php)
- * Mỗi sinh viên chỉ được đánh giá 1 lần cho 1 quán.
- * Các thẻ <select name="rating_*"> được tự động nâng cấp thành Widget 5 Ngôi sao trực quan bởi assets/js/main.js
- */
+// Partial form viết/sửa review, nhúng vào cột trái trang chi tiết.
+// Partial _form.php: $place, $myReview; 1 người 1 review/quán, đúng 3 nhánh.
 $placeId = (int) $place['id'];
 ?>
+<!-- Thẻ form id review-form-section: nút 'Viết đánh giá' và link 'Sửa tại trang quán' đều cuộn tới đây. -->
 <div class="card surface-card p-4 mb-4" id="review-form-section">
     <h3 class="h6 fw-bold text-coffee mb-3">
         <i class="bi bi-pencil-square me-2"></i>Đánh giá trải nghiệm học tập tại <?= e($place['name']) ?>
     </h3>
 
+    <!-- Nhánh 1 - chưa đăng nhập: chỉ mời đăng nhập, không hiện form. -->
     <?php if (!Session::isLoggedIn()): ?>
         <div class="p-3 rounded-4 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
             <div class="small">
@@ -21,8 +20,9 @@ $placeId = (int) $place['id'];
                 <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập ngay
             </a>
         </div>
+    <!-- Nhánh 2 - đã có review: hiện trạng thái và nút mở form sửa (collapse), không hiện form viết mới. -->
     <?php elseif (!empty($myReview)): ?>
-        <!-- Trường hợp thành viên ĐÃ có review tại quán này -> Cho phép Sửa hoặc Xóa -->
+        <!-- Màu trạng thái: xanh đã duyệt (approved), vàng chờ duyệt (pending), xám tạm ẩn. -->
         <div class="alert <?= $myReview['status'] === 'approved' ? 'alert-success' : ($myReview['status'] === 'pending' ? 'alert-warning' : 'alert-secondary') ?> rounded-4 py-2 px-3 small d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <i class="bi bi-check-circle-fill me-1"></i>
@@ -36,12 +36,14 @@ $placeId = (int) $place['id'];
                     <strong>Đang tạm ẩn</strong>
                 <?php endif; ?>
             </div>
+            <!-- Form sửa trong collapse: ban đầu thu gọn, chỉ mở khi bấm 'Chỉnh sửa đánh giá'. -->
             <button class="btn btn-sm btn-outline-coffee rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#editMyReviewCollapse">
                 <i class="bi bi-pencil me-1"></i>Chỉnh sửa đánh giá
             </button>
         </div>
 
         <div class="collapse mt-3" id="editMyReviewCollapse">
+            <!-- Form sửa: POST tới review/update/{id}, multipart để gửi ảnh, csrf_field(), hidden place_id. -->
             <form action="<?= base_url('review/update/' . (int) $myReview['id']) ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="place_id" value="<?= $placeId ?>">
@@ -49,6 +51,7 @@ $placeId = (int) $place['id'];
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold"><i class="bi bi-star-fill text-warning me-1"></i>Điểm tổng thể <span class="text-danger">*</span></label>
+                        <!-- 4 ô sao khi sửa: tổng thể bắt buộc, wifi/không gian/giá tùy chọn; option trùng điểm cũ thì selected. -->
                         <select name="rating_overall" class="form-select form-select-sm js-star-rating" required>
                             <?php for ($s = 5; $s >= 1; $s--): ?>
                                 <option value="<?= $s ?>" <?= ((int) $myReview['rating_overall'] === $s) ? 'selected' : '' ?>><?= $s ?> sao</option>
@@ -83,10 +86,12 @@ $placeId = (int) $place['id'];
 
                 <div class="mb-3">
                     <label class="form-label small fw-semibold">Nội dung nhận xét <span class="text-danger">*</span></label>
+                    <!-- Ô nội dung khi sửa: bắt buộc, tối thiểu 10 ký tự; nội dung cũ qua e() chống XSS. -->
                     <textarea name="content" rows="3" class="form-control" required minlength="10"><?= e($myReview['content']) ?></textarea>
                 </div>
 
                 <div class="mb-3">
+                    <!-- Ô đổi ảnh khi sửa: tùy chọn, chỉ JPG/PNG/WEBP; ảnh hiện tại chỉ hiện khi có image_path. -->
                     <label class="form-label small fw-semibold">Đổi ảnh đính kèm (Tùy chọn - JPG, PNG, WEBP tối đa 2MB)</label>
                     <input type="file" name="image" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp">
                     <?php if (!empty($myReview['image_path'])): ?>
@@ -105,6 +110,7 @@ $placeId = (int) $place['id'];
             </form>
 
             <hr class="my-3">
+            <!-- Form xóa review: POST tới review/delete/{id}, onsubmit hỏi xác nhận trước khi gửi. -->
             <form action="<?= base_url('review/delete/' . (int) $myReview['id']) ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá của mình tại quán này?');">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
@@ -113,7 +119,7 @@ $placeId = (int) $place['id'];
             </form>
         </div>
     <?php else: ?>
-        <!-- Trường hợp thành viên CHƯA review quán này -> Hiển thị form viết review mới -->
+        <!-- Nhánh 3 - form viết mới: POST tới review/store, multipart để gửi ảnh; mặc định các ô sao ở 5 sao. -->
         <form action="<?= base_url('review/store') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <input type="hidden" name="place_id" value="<?= $placeId ?>">
@@ -175,6 +181,7 @@ $placeId = (int) $place['id'];
 
             <div class="row g-3 align-items-start">
                 <div class="col-md-7">
+                    <!-- Ô đính ảnh khi viết mới: tùy chọn, tối đa 2MB, chỉ JPG/PNG/WEBP. -->
                     <label class="form-label small fw-semibold mb-1">Đính kèm ảnh chụp thực tế tại quán (Tùy chọn, tối đa 2MB)</label>
                     <input type="file" name="image" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp">
                 </div>
@@ -185,6 +192,7 @@ $placeId = (int) $place['id'];
                 </div>
             </div>
             <div class="form-text small mt-2">
+                <!-- Ghi chú cuối form mới: review mới chờ duyệt (pending), chưa hiển thị công khai, chưa cộng điểm. -->
                 <i class="bi bi-shield-check me-1 text-coffee"></i>Đánh giá mới sẽ ở trạng thái <strong>Chờ duyệt (pending)</strong> trước khi hiển thị công khai và cộng vào điểm trung bình của quán.
             </div>
         </form>

@@ -1,7 +1,5 @@
 <?php
-/**
- * Giao diện Chỉnh sửa Quán học bài tại TP. Long Xuyên & Quản lý Thư viện Ảnh (views/admin/places/edit.php)
- */
+// Form sửa quán — AdminPlaceController render
 $districts = $districts ?? [
     'Phường Đông Xuyên',
     'Phường Mỹ Xuyên',
@@ -12,12 +10,14 @@ $districts = $districts ?? [
 ];
 $placeId = (int) $place['id'];
 ?>
+<!-- Tiêu đề form sửa quán: trên cùng, ghi rõ “Chỉnh sửa quán #{id}: {tên quán}” từ $placeId và $place['name'] -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
     <div>
         <h1 class="page-title"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa quán #<?= $placeId ?>: <?= e($place['name']) ?></h1>
         <p class="text-muted small mb-0">Slug đường dẫn: <code><?= e($place['slug']) ?></code> • Khu vực: <strong><?= e($place['district']) ?></strong></p>
     </div>
     <div class="d-flex gap-2">
+                <!-- Nút Xem trang chi tiết: sang trang chi tiết phía người dùng (place/show/{id}), không lưu form -->
         <a href="<?= base_url('place/show/' . $placeId) ?>" class="btn btn-sm btn-outline-coffee rounded-pill px-3">
             <i class="bi bi-box-arrow-up-right me-1"></i>Xem trang chi tiết
         </a>
@@ -27,7 +27,7 @@ $placeId = (int) $place['id'];
     </div>
 </div>
 
-<!-- Form cập nhật thông tin quán & tải thêm ảnh mới -->
+<!-- Form sửa quán (form chính): POST tới admin/place/edit/{id}, khu vực ảnh hiện có ở cuối trang nằm ngoài form chính -->
 <form action="<?= base_url('admin/place/edit/' . $placeId) ?>" method="POST" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?>
 
@@ -38,6 +38,7 @@ $placeId = (int) $place['id'];
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
+                                                <!-- Trường tên quán name: bắt buộc, điền sẵn tên cũ từ $old['name'] -->
                         <label class="form-label fw-semibold small">Tên quán <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" value="<?= e($old['name'] ?? '') ?>" required>
                         <?php if (isset($errors['name'])): ?>
@@ -68,6 +69,7 @@ $placeId = (int) $place['id'];
                     </div>
 
                     <div class="col-md-5">
+                                                <!-- Trường phường district: bắt buộc, chọn sẵn phường cũ của quán, không có phường mặc định như form thêm -->
                         <label class="form-label fw-semibold small">Phường / Khu vực (TP. Long Xuyên) <span class="text-danger">*</span></label>
                         <select name="district" class="form-select <?= isset($errors['district']) ? 'is-invalid' : '' ?>" required>
                             <option value="">-- Chọn Phường tại Long Xuyên --</option>
@@ -92,7 +94,7 @@ $placeId = (int) $place['id'];
                     <?php endif; ?>
                 </div>
 
-                <!-- Cấu hình nâng cao thu gọn: Google Maps -->
+                                <!-- Cấu hình nâng cao thu gọn: Google Maps (chỉ điền google_map_url khi muốn link riêng) -->
                 <div class="border rounded-3 p-3 bg-light">
                     <a class="text-decoration-none d-flex justify-content-between align-items-center text-secondary small fw-semibold" data-bs-toggle="collapse" href="#advancedMapSettings" role="button" aria-expanded="false" aria-controls="advancedMapSettings">
                         <span><i class="bi bi-gear-fill me-1 text-coffee"></i>Cấu hình nâng cao: tùy biến link nhúng Google Maps</span>
@@ -108,7 +110,7 @@ $placeId = (int) $place['id'];
                 </div>
             </div>
 
-            <!-- Tải thêm ảnh mới kèm Live Preview -->
+                        <!-- Thẻ tải thêm ảnh mới: chỉ tải thêm vào album có sẵn, xem trước qua #editImagePreview -->
             <div class="surface-card p-4 mb-4">
                 <h6 class="h6 fw-bold text-coffee mb-2">2. Tải thêm ảnh mới cho quán</h5>
                 <p class="text-muted small mb-3">Chọn một hoặc nhiều file ảnh (JPG, PNG, WEBP, tối đa 2MB/ảnh) để bổ sung vào album của quán.</p>
@@ -122,6 +124,7 @@ $placeId = (int) $place['id'];
                 <h6 class="h6 fw-bold text-coffee mb-3">3. Tiêu chí học tập &amp; giá</h5>
 
                 <div class="mb-3">
+                                        <!-- Cặp giá thấp nhất / cao nhất price_min, price_max: kiểm tra max >= min do controller làm, view chỉ hiện lỗi $errors['price_max'] -->
                     <label class="form-label fw-semibold small">Giá thấp nhất (VNĐ)</label>
                     <input type="number" name="price_min" class="form-control" min="0" step="1000" placeholder="VD: 25000 (để trống nếu không giới hạn)" value="<?= e($old['price_min'] ?? '') ?>">
                 </div>
@@ -143,6 +146,7 @@ $placeId = (int) $place['id'];
                 </div>
 
                 <div class="mb-3">
+                                        <!-- Nhóm checkbox tiện ích amenity_ids[]: tick sẵn theo $old['amenity_ids'], bỏ tick là gỡ tiện ích khi lưu -->
                     <label class="form-label fw-semibold small d-block">Tiện ích tại quán</label>
                     <?php if (empty($amenities)): ?>
                         <p class="text-muted small mb-0">Chưa có tiện ích nào. Thêm tiện ích mới ở trang Quản trị &gt; Tiện ích.</p>
@@ -176,6 +180,7 @@ $placeId = (int) $place['id'];
                     </select>
                 </div>
 
+                                <!-- Nút Lưu cập nhật: nút submit của form chính, chỉ gửi trường thông tin và ảnh mới, không kèm ảnh hiện có -->
                 <button type="submit" class="btn btn-coffee w-100 py-2 fw-semibold rounded-pill">
                     <i class="bi bi-save me-1"></i>Lưu cập nhật
                 </button>
@@ -184,7 +189,7 @@ $placeId = (int) $place['id'];
     </div>
 </form>
 
-<!-- Khu vực quản lý các ảnh hiện có (Chọn ảnh bìa / Xóa từng ảnh) -->
+<!-- Khu vực quản lý các ảnh hiện có: cuối trang, nằm ngoài form chính, nút bấm có hiệu lực ngay không cần Lưu cập nhật -->
 <div class="surface-card p-4 mt-2">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="h6 fw-bold text-coffee mb-0">
@@ -192,12 +197,14 @@ $placeId = (int) $place['id'];
         </h5>
     </div>
 
+        <!-- Nếu $images rỗng thì báo quán chưa có ảnh, hệ thống đang hiển thị placeholder.svg mặc định -->
     <?php if (empty($images)): ?>
         <div class="alert alert-light border text-center mb-0">
             Quán hiện chưa có ảnh nào. Hệ thống đang hiển thị ảnh <code>placeholder.svg</code> mặc định.
         </div>
     <?php else: ?>
         <div class="row g-3">
+                        <!-- Vòng lặp ảnh hiện có: $img là một ảnh trong $images, $isCover cho biết ảnh có phải ảnh bìa không -->
             <?php foreach ($images as $img): ?>
                 <?php $isCover = ((int) $img['is_cover'] === 1); ?>
                 <div class="col-6 col-md-4 col-lg-3">
@@ -215,6 +222,7 @@ $placeId = (int) $place['id'];
                                 <?= e(basename($img['image_path'])) ?>
                             </div>
                             <div class="d-flex gap-1">
+                                                                <!-- Nút Đặt làm bìa: chỉ hiện với ảnh chưa phải bìa, form POST tới admin/place/setCover/{id quán}/{id ảnh} -->
                                 <?php if (!$isCover): ?>
                                     <form action="<?= base_url('admin/place/setCover/' . $placeId . '/' . (int) $img['id']) ?>" method="POST" class="flex-grow-1">
                                         <?= csrf_field() ?>
@@ -222,12 +230,14 @@ $placeId = (int) $place['id'];
                                             <i class="bi bi-star me-1"></i>Đặt làm bìa
                                         </button>
                                     </form>
+                                                                <!-- Ảnh đang là bìa: nút “Đang là bìa” chỉ để hiển thị, bấm vào không gửi gì -->
                                 <?php else: ?>
                                     <button type="button" class="btn btn-sm btn-warning flex-grow-1 disabled">
                                         <i class="bi bi-check2 me-1"></i>Đang là bìa
                                     </button>
                                 <?php endif; ?>
 
+                                                                <!-- Form xóa ảnh: POST tới admin/place/deleteImage/{id quán}/{id ảnh}, hiện với mọi ảnh kể cả ảnh bìa -->
                                 <form action="<?= base_url('admin/place/deleteImage/' . $placeId . '/' . (int) $img['id']) ?>" method="POST" onsubmit="return confirm('Xóa ảnh này khỏi quán?');">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Xóa ảnh này">

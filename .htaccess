@@ -1,17 +1,21 @@
-# Bật mod_rewrite của Apache
+# .htaccess: viết URL đẹp thành index.php?url=... và chặn truy cập trực tiếp vào code nguồn.
+# File/thư mục thật (ảnh, CSS, JS) không bị viết lại; RewriteBase /studyspot/.
 <IfModule mod_rewrite.c>
+    # Bật công cụ viết lại URL; mọi RewriteRule bên dưới chỉ có tác dụng khi dòng này bật.
     RewriteEngine On
+    # Tiền tố thư mục gốc của web trên máy dev (http://localhost/studyspot/): mọi đường dẫn viết lại đều tính từ đây, khi đưa lên domain gốc thì đổi thành /.
     RewriteBase /studyspot/
 
-    # Chặn truy cập trực tiếp vào các thư mục nhạy cảm (ngoại trừ các file database/seed_*.php chạy nạp dữ liệu)
+    # Chặn truy cập trực tiếp vào config, core, models, controllers, views, helpers, database (trừ database/seed_*.php).
     RewriteCond %{REQUEST_URI} !/database/seed_.*\.php$
     RewriteRule ^(config|core|models|controllers|views|helpers|database)/ - [F,L]
 
-    # Nếu đường dẫn không phải là file thật hoặc thư mục thật thì điều hướng về index.php
+    # URL đẹp: chỉ viết lại khi không phải file/thư mục thật, giữ query cũ bằng QSA.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+    # Đưa phần sau /studyspot/ vào biến GET url cho index.php (QSA giữ query cũ, L dừng).
     RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 </IfModule>
 
-# Chặn liệt kê danh sách thư mục
+# Chặn liệt kê thư mục: Options -Indexes.
 Options -Indexes
