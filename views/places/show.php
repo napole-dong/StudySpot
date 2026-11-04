@@ -37,7 +37,7 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                 <h1 class="page-title"><?= e($place['name']) ?></h1>
                 <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill me-1"></i><?= e($place['address']) ?></p>
                 <div class="d-flex flex-wrap align-items-center gap-3 small">
-                    <div><?= render_stars((float) $place['avg_rating']) ?> <span class="text-muted ms-1">(<?= (int) $place['total_reviews'] ?> đánh giá đã duyệt)</span></div>
+                    <div><?= render_stars((float) $place['avg_rating']) ?> <span class="text-muted ms-1">(<?= (int) $place['total_reviews'] ?> đánh giá)</span></div>
                     <span class="text-secondary">•</span>
                     <div class="fw-semibold"><i class="bi bi-cash-stack me-1"></i>Mức giá: <?= e(format_price_range_from_min_max($place['price_min'] ?? null, $place['price_max'] ?? null)) ?></div>
                 </div>
@@ -123,7 +123,7 @@ $dynamicMapEmbedUrl = 'https://maps.google.com/maps?q=' . urlencode($place['name
                     </div>
                     <div>
                         <div><?= render_stars((float) $place['avg_rating'], false) ?></div>
-                        <div class="small text-muted">Từ <strong><?= (int) ($criteriaStats['total'] ?? $place['total_reviews']) ?></strong> đánh giá đã duyệt</div>
+                        <div class="small text-muted">Từ <strong><?= (int) ($criteriaStats['total'] ?? $place['total_reviews']) ?></strong> đánh giá</div>
                     </div>
                 </div>
 

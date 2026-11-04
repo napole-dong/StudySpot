@@ -271,16 +271,4 @@ class Review extends Model
     /**
      * Thống kê số lượng review theo 6 tháng gần nhất để vẽ biểu đồ Chart.js trên Admin Dashboard
      */
-    public function getMonthlyStats(int $months = 6): array
-    {
-        $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS ym,
-                       DATE_FORMAT(created_at, '%m/%Y') AS label,
-                       COUNT(*) AS total
-                FROM reviews
-                GROUP BY ym, label
-                ORDER BY ym DESC
-                LIMIT {$months}";
-        $rows = array_reverse($this->fetchAll($sql));
-        return $rows;
-    }
 }

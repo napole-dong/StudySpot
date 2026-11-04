@@ -1,7 +1,7 @@
 <?php
 /**
  * Giao diện Admin Dashboard — Phong cách Warm Study Cafe (views/admin/dashboard.php)
- * Bao gồm: 4 thẻ KPI tổng quan thực tế từ CSDL, Biểu đồ Chart.js 6 tháng gần nhất (GROUP BY DATE_FORMAT(created_at, '%Y-%m')),
+ * Bao gồm: 4 thẻ KPI tổng quan thực tế từ CSDL,
  * Bảng Top 5 quán điểm cao nhất tại TP. Long Xuyên & Danh sách nhanh Review chờ duyệt.
  */
 ?>
@@ -97,36 +97,10 @@
     </div>
 </div>
 
-<!-- 2. BIỂU ĐỒ CHART.JS 6 THÁNG GẦN NHẤT & BẢNG TOP 5 QUÁN ĐIỂM CAO NHẤT -->
+<!-- 2. BẢNG TOP 5 QUÁN ĐIỂM CAO NHẤT -->
 <div class="row g-4 mb-4">
-    <!-- Biểu đồ số lượng Review theo tháng (truy vấn thật GROUP BY DATE_FORMAT(created_at, '%Y-%m')) -->
-    <div class="col-lg-7">
-        <div class="surface-card p-4 h-100">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <div>
-                    <h2 class="h6 fw-bold text-coffee mb-1">
-                        <i class="bi bi-bar-chart-line-fill me-2"></i>Đánh giá theo tháng
-                    </h2>
-                    <p class="small text-muted mb-0">6 tháng gần nhất</p>
-                </div>
-                <span class="pill-amenity"><i class="bi bi-calendar3 me-1"></i>6 tháng gần nhất</span>
-            </div>
-
-            <?php if (empty($chartLabels)): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-bar-chart fs-1 d-block mb-2"></i>
-                    Chưa có dữ liệu đánh giá để hiển thị biểu đồ.
-                </div>
-            <?php else: ?>
-                <div style="position: relative; height: 295px;">
-                    <canvas id="monthlyReviewsChart"></canvas>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
     <!-- Top 5 quán điểm cao nhất tại Long Xuyên -->
-    <div class="col-lg-5">
+    <div class="col-12">
         <div class="surface-card p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -210,75 +184,3 @@
         </div>
     </div>
 <?php endif; ?>
-
-<!-- Nhúng thư viện Chart.js từ CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('monthlyReviewsChart');
-    if (!ctx || typeof Chart === 'undefined') {
-        return;
-    }
-
-    const labels = <?= json_encode($chartLabels, JSON_UNESCAPED_UNICODE) ?>;
-    const values = <?= json_encode($chartValues, JSON_UNESCAPED_UNICODE) ?>;
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Số lượng đánh giá (Reviews)',
-                data: values,
-                backgroundColor: 'rgba(17, 24, 39, 0.90)',
-                hoverBackgroundColor: '#374151',
-                borderColor: '#111827',
-                borderWidth: 1,
-                borderRadius: 8,
-                maxBarThickness: 46
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            family: "'Plus Jakarta Sans', sans-serif",
-                            weight: '600'
-                        },
-                        color: '#2C221E'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#786B63',
-                        font: {
-                            family: "'Plus Jakarta Sans', sans-serif"
-                        }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(92, 61, 46, 0.08)'
-                    },
-                    ticks: {
-                        stepSize: 1,
-                        precision: 0,
-                        color: '#786B63'
-                    }
-                }
-            }
-        }
-    });
-});
-</script>
