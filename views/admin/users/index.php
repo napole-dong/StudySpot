@@ -117,8 +117,8 @@ $currentAdminId = (int) (Session::user()['id'] ?? 0);
                                 <?php if ($isSelf || $isAdminRole): ?>
                                     <span class="small text-muted fst-italic"><i class="bi bi-shield-check text-coffee me-1"></i>Được bảo vệ</span>
                                 <?php else: ?>
+                                    <!-- Form khóa/mở khóa: chỉ có với tài khoản sinh viên bình thường, POST tới admin/user/toggleStatus/{id} để đảo trạng thái -->
                                     <form
-                                                                                <!-- Form khóa/mở khóa: chỉ có với tài khoản sinh viên bình thường, POST tới admin/user/toggleStatus/{id} để đảo trạng thái -->
                                         action="<?= base_url('admin/user/toggleStatus/' . $uid) ?>"
                                         method="POST"
                                         class="d-inline"
