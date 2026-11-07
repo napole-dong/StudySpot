@@ -82,33 +82,7 @@
                     <a href="<?= base_url('auth/register') ?>" class="text-coffee fw-bold text-decoration-none">Đăng ký miễn phí</a>
                 </div>
 
-                <hr class="my-4">
-                <div class="rounded-4 p-3" style="background-color: #F9FAFB; border: 1px solid #E5E7EB;">
-                    <div class="small fw-bold text-coffee mb-2">
-                        <!-- Hộp điền nhanh chỉ kiểm thử: 3 nút chỉ điền sẵn, không tự đăng nhập. -->
-                        <i class="bi bi-lightning-charge-fill text-accent me-1"></i>Điền nhanh tài khoản thử nghiệm (Mật khẩu: <code>123456</code>):
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-coffee rounded-pill py-1 px-3" onclick="fillDemoAccount('admin@studyspot.vn', '123456')">
-                            <i class="bi bi-shield-lock me-1"></i>Admin AGU
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-coffee rounded-pill py-1 px-3" onclick="fillDemoAccount('khoi.nguyen@student.edu.vn', '123456')">
-                            <i class="bi bi-person me-1"></i>SV Minh Khôi
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-1 px-3" onclick="fillDemoAccount('bao.vo@student.edu.vn', '123456')">
-                            <i class="bi bi-lock-fill me-1"></i>Tài khoản khóa
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-// JS điền nhanh: gán email/mật khẩu vào 2 ô email, password.
-function fillDemoAccount(email, password) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = password;
-}
-</script>
