@@ -340,6 +340,24 @@ define('BASE_URL', 'http://localhost/studyspot');
 - **Trang Đăng nhập:** [http://localhost/studyspot/auth/login](http://localhost/studyspot/auth/login)
 - **Trang Quản trị (Admin):** [http://localhost/studyspot/admin/dashboard](http://localhost/studyspot/admin/dashboard)
 
+#### Bước 6: Cấu hình đăng nhập Google (@agu.edu.vn) — tùy chọn
+Hệ thống hỗ trợ đăng nhập bằng tài khoản Google của Trường Đại học An Giang. Chỉ email `@agu.edu.vn` đã xác minh mới đăng nhập được; tài khoản mới được tạo tự động với vai trò thành viên.
+1. Vào [Google Cloud Console](https://console.cloud.google.com/), tạo (hoặc chọn) một project.
+2. **APIs & Services → OAuth consent screen:** chọn loại **External**, điền tên ứng dụng (StudySpot) và email hỗ trợ. Khi ứng dụng còn ở chế độ **Testing**, chỉ tài khoản được thêm vào mục **Test users** mới đăng nhập được — nhớ thêm email `@agu.edu.vn` của bạn vào đó.
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**, loại **Web application**, thêm **Authorized redirect URI** đúng y hệt:
+   ```text
+   http://localhost/studyspot/auth/google-callback
+   ```
+4. Sao chép **Client ID** và **Client Secret** vào `config/config.php`:
+   ```php
+   define('GOOGLE_CLIENT_ID', '...');      // Client ID vừa tạo
+   define('GOOGLE_CLIENT_SECRET', '...');  // Client Secret vừa tạo
+   ```
+   **Lưu ý:** không đẩy 2 giá trị thật lên GitHub công khai.
+5. Mở trang đăng nhập, bấm **Đăng nhập với Google** và chọn tài khoản `@agu.edu.vn`.
+   - Luồng chạy: `/auth/google` chuyển tới Google (giới hạn tài khoản `@agu.edu.vn`) → Google trả về `/auth/google-callback` kèm mã `code` → server đổi `code` lấy access token → gọi `userinfo` lấy email, tên → kiểm tra tên miền `@agu.edu.vn` và `verified_email` → tìm tài khoản theo email, chưa có thì tạo mới → đăng nhập như bình thường (đổi Session ID, lưu session, chuyển theo role).
+   - Không cần cài thêm thư viện: luồng OAuth 2.0 được viết tay bằng PHP thuần (`file_get_contents` + stream context, kiểm tra `state` chống CSRF).
+
 ---
 
 ## 👥 7. Danh Sách Tài Khoản Thử Nghiệm (Test Accounts)

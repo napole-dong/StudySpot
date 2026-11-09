@@ -31,3 +31,12 @@ define('ITEMS_PER_PAGE', 9);
 define('ADMIN_ITEMS_PER_PAGE', 10);
 // Trang chi tiết quán: 5 đánh giá mỗi trang, để phần đánh giá không lấn phần thông tin quán.
 define('REVIEWS_PER_PAGE', 5);
+
+// Đăng nhập Google: Client ID và Secret lấy từ Google Cloud Console (APIs & Services > Credentials > OAuth client ID, loại Web application).
+// Điền 2 giá trị thật vào đây trên máy dev; KHÔNG đẩy giá trị thật lên GitHub công khai.
+define('GOOGLE_CLIENT_ID', '');
+define('GOOGLE_CLIENT_SECRET', '');
+// Chỉ chấp nhận tài khoản Google thuộc tên miền này (email sinh viên/cán bộ AGU).
+define('GOOGLE_ALLOWED_DOMAIN', 'agu.edu.vn');
+// Link Google trả về sau khi đăng nhập: phải trùng y hệt link đã đăng ký trong Google Cloud Console.
+define('GOOGLE_REDIRECT_URI', BASE_URL . '/auth/google-callback');
