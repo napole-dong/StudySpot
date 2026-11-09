@@ -1,0 +1,5 @@
+<?php
+// Mẫu cấu hình Google OAuth 2.0 (Sao chép thành google.php và điền thông tin của bạn)
+define('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET');
+

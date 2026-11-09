@@ -167,6 +167,19 @@ class AuthController extends Controller
             || str_ends_with($domain, '.' . GOOGLE_ALLOWED_DOMAIN);
     }
 
+    // Email được phép đăng ký bằng mật khẩu: chỉ @gmail.com, ngoại lệ duy nhất là admin@studyspot.vn.
+    private function passwordEmailAllowed(string $email): bool
+    {
+        if (strtolower($email) === 'admin@studyspot.vn') {
+            return true;
+        }
+        $at = strrpos($email, '@');
+        if ($at === false) {
+            return false;
+        }
+        return strtolower(substr($email, $at + 1)) === 'gmail.com';
+    }
+
     // Đăng nhập xong: đổi Session ID, lưu user vào session, chuyển theo role.
     private function startUserSession(array $user): void
     {
@@ -334,6 +347,8 @@ class AuthController extends Controller
                 $errors['email'] = 'Vui lòng nhập địa chỉ email.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors['email'] = 'Định dạng email không hợp lệ.';
+            } elseif (!$this->passwordEmailAllowed($email)) {
+                $errors['email'] = 'Chỉ chấp nhận email @gmail.com. Sinh viên AGU vui lòng đăng nhập bằng Google.';
             } elseif ($this->userModel->emailExists($email)) {
                 $errors['email'] = 'Email này đã được sử dụng. Vui lòng chọn email khác.';
             }
@@ -388,9 +403,10 @@ class AuthController extends Controller
         }
 
         $this->render('auth/register', [
-            'pageTitle' => 'Đăng ký tài khoản',
-            'errors'    => $errors,
-            'old'       => $old,
+            'pageTitle'          => 'Đăng ký tài khoản',
+            'errors'             => $errors,
+            'old'                => $old,
+            'googleLoginEnabled' => $this->googleConfigured(),
         ]);
     }
 

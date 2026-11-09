@@ -6,7 +6,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 /* Biến màu dùng chung (:root): bảng cũ Warm Cafe, bảng đơn sắc cuối file mới có hiệu lực. */
-/* Cảnh báo: --bg-cream, --border-color, --font-heading dùng trong file nhưng chưa định nghĩa trong :root. */
 :root {
     /* Bảng màu chủ đạo Warm Study Cafe */
     --primary: #5C3D2E;
@@ -1083,6 +1082,9 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     --bs-link-color: #111827;
     --bs-link-hover-color: #000000;
     --bs-border-color: #E5E7EB;
+    --font-heading: 'Be Vietnam Pro', sans-serif; /* Chữ tiêu đề, giống chữ body. */
+    --bg-cream: #F3F4F6; /* Nền badge giá, xám nhạt như --bg-pill. */
+    --border-color: #E5E7EB; /* Viền badge giá, xám nhạt như --border-soft. */
 }
 /* Toàn bộ nội dung trang: kiểu chữ, màu nền, màu chữ, chiều cao dòng. */
 body {
