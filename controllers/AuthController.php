@@ -136,10 +136,12 @@ class AuthController extends Controller
             $this->redirect('auth/login');
         }
 
-        // Chỉ chấp nhận email @agu.edu.vn đã xác minh (kiểm tra cả hd nếu Google trả).
+        // Chỉ chấp nhận email AGU đã xác minh (tên miền agu.edu.vn và cả tên miền con như student.agu.edu.vn).
         $email = strtolower(trim($profile['email']));
-        $domainOk = str_ends_with($email, '@' . GOOGLE_ALLOWED_DOMAIN);
-        $hdOk = empty($profile['hd']) || $profile['hd'] === GOOGLE_ALLOWED_DOMAIN;
+        $atPos = strrpos($email, '@');
+        $emailDomain = $atPos === false ? '' : substr($email, $atPos + 1);
+        $domainOk = $this->googleDomainAllowed($emailDomain);
+        $hdOk = empty($profile['hd']) || $this->googleDomainAllowed(strtolower(trim($profile['hd'])));
         $verified = ($profile['verified_email'] ?? false) === true;
         if (!$domainOk || !$hdOk || !$verified) {
             Session::flash('alert', 'Chỉ tài khoản email @' . GOOGLE_ALLOWED_DOMAIN . ' mới được đăng nhập bằng Google.', 'danger');
@@ -155,6 +157,13 @@ class AuthController extends Controller
     {
         return defined('GOOGLE_CLIENT_ID') && defined('GOOGLE_CLIENT_SECRET')
             && GOOGLE_CLIENT_ID !== '' && GOOGLE_CLIENT_SECRET !== '';
+    }
+
+    // Kiểm tra tên miền Google: bằng agu.edu.vn hoặc là tên miền con của nó (VD student.agu.edu.vn).
+    private function googleDomainAllowed(string $domain): bool
+    {
+        return $domain === GOOGLE_ALLOWED_DOMAIN
+            || str_ends_with($domain, '.' . GOOGLE_ALLOWED_DOMAIN);
     }
 
     // Đăng nhập xong: đổi Session ID, lưu user vào session, chuyển theo role.

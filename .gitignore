@@ -19,3 +19,6 @@ assets/uploads/avatars/*
 !assets/uploads/avatars/.gitkeep
 assets/uploads/reviews/*
 !assets/uploads/reviews/.gitkeep
+
+# Secrets (không đẩy lên GitHub)
+config/google.php

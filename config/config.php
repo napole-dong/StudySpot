@@ -33,10 +33,17 @@ define('ADMIN_ITEMS_PER_PAGE', 10);
 define('REVIEWS_PER_PAGE', 5);
 
 // Đăng nhập Google: Client ID và Secret lấy từ Google Cloud Console (APIs & Services > Credentials > OAuth client ID, loại Web application).
-// Điền 2 giá trị thật vào đây trên máy dev; KHÔNG đẩy giá trị thật lên GitHub công khai.
-define('GOOGLE_CLIENT_ID', '');
-define('GOOGLE_CLIENT_SECRET', '');
-// Chỉ chấp nhận tài khoản Google thuộc tên miền này (email sinh viên/cán bộ AGU).
+// Giá trị thật nằm trong config/google.php (file riêng, đã thêm vào .gitignore, KHÔNG đẩy lên GitHub); ở đây chỉ giữ chỗ trống.
+if (file_exists(__DIR__ . '/google.php')) {
+    require __DIR__ . '/google.php';
+}
+if (!defined('GOOGLE_CLIENT_ID')) {
+    define('GOOGLE_CLIENT_ID', '');
+}
+if (!defined('GOOGLE_CLIENT_SECRET')) {
+    define('GOOGLE_CLIENT_SECRET', '');
+}
+// Chỉ chấp nhận tài khoản Google thuộc tên miền này (email sinh viên/cán bộ AGU, kể cả tên miền con như student.agu.edu.vn).
 define('GOOGLE_ALLOWED_DOMAIN', 'agu.edu.vn');
 // Link Google trả về sau khi đăng nhập: phải trùng y hệt link đã đăng ký trong Google Cloud Console.
 define('GOOGLE_REDIRECT_URI', BASE_URL . '/auth/google-callback');
