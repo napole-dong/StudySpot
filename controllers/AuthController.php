@@ -142,7 +142,8 @@ class AuthController extends Controller
         $emailDomain = $atPos === false ? '' : substr($email, $atPos + 1);
         $domainOk = $this->googleDomainAllowed($emailDomain);
         $hdOk = empty($profile['hd']) || $this->googleDomainAllowed(strtolower(trim($profile['hd'])));
-        $verified = ($profile['verified_email'] ?? false) === true;
+        // userinfo v3 trả email_verified (không phải verified_email như API cũ).
+        $verified = ($profile['email_verified'] ?? $profile['verified_email'] ?? false) === true;
         if (!$domainOk || !$hdOk || !$verified) {
             Session::flash('alert', 'Chỉ tài khoản email @' . GOOGLE_ALLOWED_DOMAIN . ' mới được đăng nhập bằng Google.', 'danger');
             $this->redirect('auth/login');
