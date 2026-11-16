@@ -151,6 +151,18 @@ class Review extends Model
 
         // Tự động cập nhật avg_rating và total_reviews của quán
         (new Place())->recalculateRating((int) $review['place_id']);
+
+        // Báo cho người viết biết kết quả kiểm duyệt, chỉ khi trạng thái thật sự đổi sang đã duyệt hoặc bị ẩn.
+        if ($review['status'] !== $status && ($status === 'approved' || $status === 'hidden')) {
+            if ($status === 'approved') {
+                $notifContent = 'Đánh giá của bạn về quán "' . ($review['place_name'] ?? '') . '" đã được duyệt và đang hiển thị.';
+                $notifLink = 'place/show/' . (int) $review['place_id'];
+            } else {
+                $notifContent = 'Đánh giá của bạn về quán "' . ($review['place_name'] ?? '') . '" đã bị ẩn sau kiểm duyệt.';
+                $notifLink = 'profile';
+            }
+            (new Notification())->create((int) $review['user_id'], 'review_' . $status, $notifContent, $notifLink);
+        }
         return true;
     }
 

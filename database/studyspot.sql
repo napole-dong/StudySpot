@@ -4,7 +4,8 @@
 -- Hệ quản trị CSDL: MySQL / MariaDB (XAMPP) - Charset: utf8mb4
 -- File này được ĐỒNG BỘ từ database live ngày 2026-11-09
 -- Ngày 2026-11-16: thêm bảng password_resets (tính năng quên mật khẩu), bảng trống, không có dữ liệu mẫu.
--- Ngày 2026-11-16: thêm bảng auth_attempts (giới hạn số lần thử đăng nhập / quên mật khẩu), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
+-- Ngày 2026-11-16: thêm bảng auth_attempts (giới hạn số lần thử đăng nhập / quên mật khẩu), bảng trống, không có dữ liệu mẫu.
+-- Ngày 2026-11-16: thêm bảng notifications (thông báo trong web cho thành viên), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
 -- Seed này ĐÃ BAO GỒM bảng amenities, place_amenities, cột price_min/price_max
 -- và cột google_rating/google_rating_count/google_maps_place_url,
 -- nên khi setup mới chỉ cần import file này, KHÔNG cần chạy các file migrate_20261103 nữa.
@@ -334,6 +335,27 @@ CREATE TABLE `auth_attempts` (
   PRIMARY KEY (`id`),
   KEY `idx_auth_attempts_subject` (`action`,`subject`),
   KEY `idx_auth_attempts_ip` (`action`,`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT 'Tài khoản nhận thông báo',
+  `type` varchar(30) NOT NULL COMMENT 'Loại thông báo: review_approved hoặc review_hidden',
+  `content` varchar(500) NOT NULL COMMENT 'Nội dung thông báo hiển thị cho người dùng',
+  `link` varchar(255) NOT NULL DEFAULT '' COMMENT 'Đường dẫn đích khi bấm vào thông báo',
+  `is_read` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = chưa đọc, 1 = đã đọc',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_user` (`user_id`,`is_read`),
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

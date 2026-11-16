@@ -1591,3 +1591,11 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 /* Chống nhảy layout khi chuyển trang: luôn giữ chỗ cho thanh cuộn đọc. */
 /* Thẻ html góc của trang. */
 html { scrollbar-gutter: stable; }
+
+/* Chuông thông báo ở header: nút tròn 34px, huy hiệu đỏ đếm số chưa đọc, menu thả rộng 320px. */
+.notif-bell-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+.notif-badge { font-size: 0.6rem; padding: 0.25em 0.45em; }
+.notif-menu { width: 320px; max-width: 88vw; max-height: 70vh; overflow-y: auto; }
+.notif-item { white-space: normal; }
+.notif-unread { background-color: #F3F4F6; font-weight: 600; }
+.notif-time { font-size: 0.72rem; margin-top: 2px; }

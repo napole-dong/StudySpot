@@ -16,6 +16,17 @@ class Controller
         // Giải nén mảng dữ liệu thành các biến cục bộ cho View: extract() biến
         extract($data, EXTR_SKIP);
 
+        // Header người dùng cần dữ liệu thông báo: nạp sẵn cho layout 'main' khi đã đăng nhập,
+        // header.php và notification_bell.php dùng $headerNotifications + $headerUnreadCount.
+        $headerNotifications = [];
+        $headerUnreadCount = 0;
+        if ($layout === 'main' && Session::isLoggedIn()) {
+            $notifModel = new Notification();
+            $notifUserId = (int) (Session::user()['id'] ?? 0);
+            $headerNotifications = $notifModel->getRecentByUser($notifUserId, 10);
+            $headerUnreadCount = $notifModel->countUnread($notifUserId);
+        }
+
         // Bắt nội dung của View con vào biến $content: ob_start() bật bộ đệm để
         ob_start();
         require $viewFile;

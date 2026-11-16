@@ -18,6 +18,13 @@ $currentUrl = $_GET['url'] ?? '';
                 </div>
             </a>
 
+            <?php if (Session::isLoggedIn()): ?>
+                <!-- Chuông thông báo trên mobile: nằm ngay trên thanh header, ngoài menu trượt. -->
+                <div class="d-lg-none ms-auto me-1">
+                    <?php require ROOT_PATH . '/views/layouts/notification_bell.php'; ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Nút hamburger mobile: mở sidebar trượt (offcanvas). -->
             <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Mở menu">
                 <span class="navbar-toggler-icon"></span>
@@ -56,6 +63,9 @@ $currentUrl = $_GET['url'] ?? '';
                                 <i class="bi bi-speedometer2 me-1"></i>Trang quản lí
                             </a>
                         <?php endif; ?>
+
+                        <!-- Chuông thông báo desktop: nằm ngay trước cụm tài khoản. -->
+                        <?php require ROOT_PATH . '/views/layouts/notification_bell.php'; ?>
 
                         <div class="dropdown flex-shrink-0">
                             <!-- Nút tài khoản: avatar qua get_image_url() (chưa có thì ảnh mặc định), tên qua e() chống XSS. -->

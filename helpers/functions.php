@@ -360,3 +360,25 @@ function get_card_amenities(array $place): array
     }
     return array_slice($amenities, 0, 3);
 }
+
+// time_ago(): đổi mốc thời gian CSDL thành dạng dễ đọc: "Vừa xong", "5 phút trước", "2 giờ trước", "3 ngày trước" hoặc ngày d/m/Y.
+function time_ago(?string $datetime): string
+{
+    if (!$datetime) {
+        return '';
+    }
+    $seconds = time() - strtotime($datetime);
+    if ($seconds < 60) {
+        return 'Vừa xong';
+    }
+    if ($seconds < 3600) {
+        return intdiv($seconds, 60) . ' phút trước';
+    }
+    if ($seconds < 86400) {
+        return intdiv($seconds, 3600) . ' giờ trước';
+    }
+    if ($seconds < 7 * 86400) {
+        return intdiv($seconds, 86400) . ' ngày trước';
+    }
+    return date('d/m/Y', strtotime($datetime));
+}
