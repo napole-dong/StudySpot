@@ -63,3 +63,12 @@ define('MAIL_FROM_NAME', SITE_NAME);
 // Link đặt lại mật khẩu sống 60 phút, hết hạn phải xin link mới.
 define('PASSWORD_RESET_EXPIRE_MINUTES', 60);
 
+// Giới hạn số lần thử đăng nhập: sai quá số lần trong cửa sổ thì tạm dừng theo email, thêm trần theo IP.
+define('LOGIN_MAX_ATTEMPTS', 5);
+define('LOGIN_LOCKOUT_MINUTES', 15);
+define('LOGIN_MAX_PER_IP', 50);
+// Giới hạn xin link quên mật khẩu: tối đa theo email và theo IP trong cửa sổ 60 phút.
+define('FORGOT_MAX_PER_EMAIL', 3);
+define('FORGOT_MAX_PER_IP', 10);
+define('FORGOT_WINDOW_MINUTES', 60);
+

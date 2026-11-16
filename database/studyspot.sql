@@ -3,7 +3,8 @@
 -- DỰ ÁN: StudySpot - Website review quán nước tại TP. Long Xuyên, An Giang (Khu ĐH An Giang - AGU)
 -- Hệ quản trị CSDL: MySQL / MariaDB (XAMPP) - Charset: utf8mb4
 -- File này được ĐỒNG BỘ từ database live ngày 2026-11-09
--- Ngày 2026-11-16: thêm bảng password_resets (tính năng quên mật khẩu), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
+-- Ngày 2026-11-16: thêm bảng password_resets (tính năng quên mật khẩu), bảng trống, không có dữ liệu mẫu.
+-- Ngày 2026-11-16: thêm bảng auth_attempts (giới hạn số lần thử đăng nhập / quên mật khẩu), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
 -- Seed này ĐÃ BAO GỒM bảng amenities, place_amenities, cột price_min/price_max
 -- và cột google_rating/google_rating_count/google_maps_place_url,
 -- nên khi setup mới chỉ cần import file này, KHÔNG cần chạy các file migrate_20261103 nữa.
@@ -314,6 +315,25 @@ CREATE TABLE `password_resets` (
   KEY `idx_password_resets_token` (`token_hash`),
   KEY `idx_password_resets_user` (`user_id`),
   CONSTRAINT `fk_password_resets_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `auth_attempts`
+--
+
+DROP TABLE IF EXISTS `auth_attempts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `auth_attempts` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `action` varchar(20) NOT NULL COMMENT 'Loại hành động: login hoặc forgot',
+  `subject` varchar(190) NOT NULL COMMENT 'Email đã chuẩn hóa chữ thường để đếm số lần thử',
+  `ip` varchar(45) NOT NULL COMMENT 'IP của người thử',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_auth_attempts_subject` (`action`,`subject`),
+  KEY `idx_auth_attempts_ip` (`action`,`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

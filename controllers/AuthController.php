@@ -4,12 +4,14 @@ class AuthController extends Controller
 {
     private User $userModel;
     private PasswordReset $passwordResetModel;
+    private AuthAttempt $authAttemptModel;
 
-    // Tạo sẵn model User cho đăng nhập và đăng ký.
+    // Tạo sẵn các model User, PasswordReset và AuthAttempt (đếm số lần thử).
     public function __construct()
     {
         $this->userModel = new User();
         $this->passwordResetModel = new PasswordReset();
+        $this->authAttemptModel = new AuthAttempt();
     }
 
     // Hiển thị và xử lý form Đăng nhập (/auth/login)
@@ -42,19 +44,33 @@ class AuthController extends Controller
             }
 
             if (empty($errors)) {
-                $user = $this->userModel->findByEmail($email);
+                // Chặn dò mật khẩu: sai quá số lần cho phép trong cửa sổ thì tạm dừng đăng nhập kể cả
+                // khi mật khẩu đúng; khóa theo email là chính, thêm trần theo IP để chặn quét diện rộng.
+                $attemptKey = strtolower($email);
+                $clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+                $tooMany = $this->authAttemptModel->countBySubject('login', $attemptKey, LOGIN_LOCKOUT_MINUTES) >= LOGIN_MAX_ATTEMPTS
+                    || $this->authAttemptModel->countByIp('login', $clientIp, LOGIN_LOCKOUT_MINUTES) >= LOGIN_MAX_PER_IP;
 
-            // Sai email hay sai mật khẩu đều báo chung một câu, không lộ email nào tồn tại.
-                if (!$user || !password_verify($password, $user['password'])) {
-                    $errors['general'] = 'Email hoặc mật khẩu không chính xác.';
-            // Tài khoản bị khóa thì không cho vào dù mật khẩu đúng.
-                } elseif ($user['status'] === 'locked') {
-                    $errors['general'] = 'Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ Quản trị viên.';
+                if ($tooMany) {
+                    $errors['general'] = 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau ' . LOGIN_LOCKOUT_MINUTES . ' phút.';
                 } else {
-                    Session::flash('alert', 'Chào mừng ' . $user['name'] . ' đã quay trở lại StudySpot!', 'success');
+                    $user = $this->userModel->findByEmail($email);
 
-                    // Đăng nhập xong: lưu session rồi chuyển theo role.
-                    $this->startUserSession($user);
+                    // Sai email hay sai mật khẩu đều báo chung một câu, không lộ email nào tồn tại; mỗi lần sai đều ghi lại để tính giới hạn.
+                    if (!$user || !password_verify($password, $user['password'])) {
+                        $this->authAttemptModel->record('login', $attemptKey, $clientIp);
+                        $errors['general'] = 'Email hoặc mật khẩu không chính xác.';
+                    // Tài khoản bị khóa thì không cho vào dù mật khẩu đúng.
+                    } elseif ($user['status'] === 'locked') {
+                        $errors['general'] = 'Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ Quản trị viên.';
+                    } else {
+                        // Đăng nhập đúng: xóa lịch sử các lần sai của email này để không bị khóa oan.
+                        $this->authAttemptModel->clearBySubject('login', $attemptKey);
+                        Session::flash('alert', 'Chào mừng ' . $user['name'] . ' đã quay trở lại StudySpot!', 'success');
+
+                        // Đăng nhập xong: lưu session rồi chuyển theo role.
+                        $this->startUserSession($user);
+                    }
                 }
             }
         }
@@ -443,9 +459,22 @@ class AuthController extends Controller
             if (empty($errors)) {
                 $user = $this->userModel->findByEmail($email);
 
+                // Chặn spam link: vượt quá số yêu cầu cho phép theo email hoặc theo IP trong cửa sổ thì
+                // bỏ qua lặng lẽ (không tạo link, không gởi email) nhưng vẫn báo thành công như thường.
+                $attemptKey = strtolower($email);
+                $clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+                $overLimit = $this->authAttemptModel->countBySubject('forgot', $attemptKey, FORGOT_WINDOW_MINUTES) >= FORGOT_MAX_PER_EMAIL
+                    || $this->authAttemptModel->countByIp('forgot', $clientIp, FORGOT_WINDOW_MINUTES) >= FORGOT_MAX_PER_IP;
+                if ($overLimit) {
+                    error_log('StudySpot: bỏ qua yêu cầu quên mật khẩu do vượt giới hạn cho ' . $email);
+                } else {
+                    // Mỗi yêu cầu trong hạn mức đều ghi lại để tính giới hạn, dù email có tài khoản hay không.
+                    $this->authAttemptModel->record('forgot', $attemptKey, $clientIp);
+                }
+
                 // Chỉ gởi link cho tài khoản mật khẩu còn hoạt động (email @gmail.com hoặc admin@studyspot.vn);
                 // các trường hợp còn lại im lặng để không lộ email nào có tài khoản.
-                if ($user && $user['status'] === 'active' && $this->passwordEmailAllowed($user['email']) && Mailer::configured()) {
+                if (!$overLimit && $user && $user['status'] === 'active' && $this->passwordEmailAllowed($user['email']) && Mailer::configured()) {
                     $this->passwordResetModel->deleteExpired();
 
                     // Token gốc chỉ có trong email, CSDL chỉ lưu bản băm SHA-256 của nó.
