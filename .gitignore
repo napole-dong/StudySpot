@@ -22,3 +22,4 @@ assets/uploads/reviews/*
 
 # Secrets (không đẩy lên GitHub)
 config/google.php
+config/mail.php

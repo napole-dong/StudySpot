@@ -1,0 +1,7 @@
+<?php
+// Tài khoản Gmail dùng để gởi email quên mật khẩu (SMTP smtp.gmail.com).
+// Đổi tên file này thành mail.php rồi điền giá trị thật; file mail.php đã bị .gitignore chặn, không đẩy lên GitHub.
+// MAIL_PASSWORD là Mật khẩu ứng dụng (App Password) 16 ký tự của Gmail, KHÔNG phải mật khẩu đăng nhập Gmail.
+define('MAIL_USERNAME', '');
+// Nhập Mật khẩu ứng dụng Gmail vào giữa 2 dấu nháy đơn dưới đây.
+define('MAIL_PASSWORD', '');

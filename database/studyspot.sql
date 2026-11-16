@@ -2,7 +2,8 @@
 -- ĐỒ ÁN HỌC PHẦN: CÔNG NGHỆ WEB - PHP (SEE518)
 -- DỰ ÁN: StudySpot - Website review quán nước tại TP. Long Xuyên, An Giang (Khu ĐH An Giang - AGU)
 -- Hệ quản trị CSDL: MySQL / MariaDB (XAMPP) - Charset: utf8mb4
--- File này được ĐỒNG BỘ từ database live ngày 2026-11-09 (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
+-- File này được ĐỒNG BỘ từ database live ngày 2026-11-09
+-- Ngày 2026-11-16: thêm bảng password_resets (tính năng quên mật khẩu), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
 -- Seed này ĐÃ BAO GỒM bảng amenities, place_amenities, cột price_min/price_max
 -- và cột google_rating/google_rating_count/google_maps_place_url,
 -- nên khi setup mới chỉ cần import file này, KHÔNG cần chạy các file migrate_20261103 nữa.
@@ -296,6 +297,26 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (1,'Quản Trị Viên StudySpot AGU','admin@studyspot.vn','$2y$10$Bn3yo9RyTN353VEE3GQzr.F0/x.Mlu52nxXBfeLzQWv2reVU8nVGK','0901234567',NULL,'admin','active','2026-06-01 08:00:00'),(7,'HUYNH NGUYEN PHUONG DONG','dong_dth235628@student.agu.edu.vn','$2y$10$CnudRxlSdb2zkCE4C7T9ZOVoHGfNR7fYHtP2v6MYwRD80qT6ozEsq',NULL,NULL,'user','active','2026-11-09 09:33:47');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+--
+-- Table structure for table `password_resets`
+--
+
+DROP TABLE IF EXISTS `password_resets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `password_resets` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT 'Tài khoản xin đặt lại mật khẩu',
+  `token_hash` char(64) NOT NULL COMMENT 'Mã token đã băm SHA-256, không lưu token gốc',
+  `expires_at` datetime NOT NULL COMMENT 'Hạn dùng của link đặt lại mật khẩu',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_password_resets_token` (`token_hash`),
+  KEY `idx_password_resets_user` (`user_id`),
+  CONSTRAINT `fk_password_resets_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

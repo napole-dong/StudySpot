@@ -121,6 +121,10 @@ class ProfileController extends Controller
                 if (empty($errors)) {
                     // Mật khẩu mới do model băm (hash) trước khi lưu.
                     $this->userModel->updatePassword($userId, $newPassword);
+                    // Báo cho người dùng biết mật khẩu vừa thay đổi (gởi không được cũng không chặn).
+                    if (Mailer::configured() && !Mailer::sendPasswordChangedNotice($user['email'], $user['name'], 'trong trang Hồ sơ cá nhân')) {
+                        error_log('StudySpot: gởi email thông báo đổi mật khẩu thất bại cho ' . $user['email']);
+                    }
                     Session::regenerate();
                     Session::flash('alert', 'Đã đổi mật khẩu thành công!', 'success');
                     $this->redirect('profile');

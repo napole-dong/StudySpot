@@ -47,3 +47,19 @@ if (!defined('GOOGLE_CLIENT_SECRET')) {
 define('GOOGLE_ALLOWED_DOMAIN', 'agu.edu.vn');
 // Link Google trả về sau khi đăng nhập: phải trùng y hệt link đã đăng ký trong Google Cloud Console.
 define('GOOGLE_REDIRECT_URI', BASE_URL . '/auth/google-callback');
+
+// Gởi email quên mật khẩu: tài khoản Gmail gởi thư đặt trong config/mail.php (file riêng, đã thêm vào .gitignore, KHÔNG đẩy lên GitHub); ở đây chỉ giữ chỗ trống.
+if (file_exists(__DIR__ . '/mail.php')) {
+    require __DIR__ . '/mail.php';
+}
+if (!defined('MAIL_USERNAME')) {
+    define('MAIL_USERNAME', '');
+}
+if (!defined('MAIL_PASSWORD')) {
+    define('MAIL_PASSWORD', '');
+}
+// Tên người gởi hiển thị trong email nhận được: StudySpot.
+define('MAIL_FROM_NAME', SITE_NAME);
+// Link đặt lại mật khẩu sống 60 phút, hết hạn phải xin link mới.
+define('PASSWORD_RESET_EXPIRE_MINUTES', 60);
+

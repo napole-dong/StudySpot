@@ -60,7 +60,7 @@
                                     class="form-control border-start-0 <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
                                     id="email"
                                     name="email"
-                                    placeholder="@gmail.com"
+                                    placeholder="Email"
                                     value="<?= e($old['email'] ?? '') ?>"
                                     required
                                 >
@@ -69,7 +69,7 @@
                                 <?php endif; ?>
                             </div>
                             <!-- Chỉ chấp nhận email @gmail.com; sinh viên AGU đăng nhập bằng Google. -->
-                            <div class="form-text">Chỉ chấp nhận email @gmail.com. Sinh viên AGU đăng nhập bằng Google.</div>
+                            <div class="form-text"></div>
                         </div>
 
                         <div class="col-md-5">

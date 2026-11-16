@@ -40,7 +40,7 @@
                                 class="form-control border-start-0 <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
                                 id="email"
                                 name="email"
-                                placeholder="sinhvien@student.edu.vn"
+                                placeholder="Email"s
                                 value="<?= e($oldEmail ?? '') ?>"
                                 required
                                 autofocus
@@ -51,7 +51,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-2">
                         <!-- Trường mật khẩu: type password, không giữ giá trị cũ khi nhập sai. -->
                         <label for="password" class="form-label fw-semibold small">Mật khẩu <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -68,6 +68,11 @@
                                 <div class="invalid-feedback"><?= e($errors['password']) ?></div>
                             <?php endif; ?>
                         </div>
+                    </div>
+
+                    <div class="text-end mb-4">
+                        <!-- Link quên mật khẩu: sang trang xin link đặt lại mật khẩu qua email. -->
+                        <a href="<?= base_url('auth/forgot-password') ?>" class="small text-coffee fw-semibold text-decoration-none">Quên mật khẩu?</a>
                     </div>
 
                     <button type="submit" class="btn btn-coffee rounded-pill w-100 py-2 fw-semibold mb-3">

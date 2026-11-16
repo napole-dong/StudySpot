@@ -1,13 +1,15 @@
 <?php
-// Xác thực: đăng nhập, đăng ký, đăng xuất.
+// Xác thực: đăng nhập, đăng ký, đăng xuất, quên mật khẩu.
 class AuthController extends Controller
 {
     private User $userModel;
+    private PasswordReset $passwordResetModel;
 
     // Tạo sẵn model User cho đăng nhập và đăng ký.
     public function __construct()
     {
         $this->userModel = new User();
+        $this->passwordResetModel = new PasswordReset();
     }
 
     // Hiển thị và xử lý form Đăng nhập (/auth/login)
@@ -397,6 +399,11 @@ class AuthController extends Controller
                     ]);
                 }
 
+                // Gởi email chào mừng cho tài khoản mới (gởi không được cũng không chặn đăng ký).
+                if (Mailer::configured() && !Mailer::sendWelcomeEmail($email, $name)) {
+                    error_log('StudySpot: gởi email chào mừng thất bại cho ' . $email);
+                }
+
                 Session::flash('alert', 'Đăng ký tài khoản thành công! Chào mừng bạn đến với cộng đồng StudySpot.', 'success');
                 $this->redirect('');
             }
@@ -408,6 +415,152 @@ class AuthController extends Controller
             'old'                => $old,
             'googleLoginEnabled' => $this->googleConfigured(),
         ]);
+    }
+
+    // Hiển thị và xử lý form Quên mật khẩu (/auth/forgot-password)
+    public function forgotPassword(): void
+    {
+        // Đã đăng nhập thì về trang chủ.
+        if (Session::isLoggedIn()) {
+            $this->redirect('');
+        }
+
+        $errors = [];
+        $oldEmail = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Kiểm tra CSRF trước khi xử lý form.
+            $this->verifyCsrfToken();
+
+            $email = trim($_POST['email'] ?? '');
+            $oldEmail = $email;
+
+            if ($email === '') {
+                $errors['email'] = 'Vui lòng nhập địa chỉ email.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Định dạng email không hợp lệ.';
+            }
+
+            if (empty($errors)) {
+                $user = $this->userModel->findByEmail($email);
+
+                // Chỉ gởi link cho tài khoản mật khẩu còn hoạt động (email @gmail.com hoặc admin@studyspot.vn);
+                // các trường hợp còn lại im lặng để không lộ email nào có tài khoản.
+                if ($user && $user['status'] === 'active' && $this->passwordEmailAllowed($user['email']) && Mailer::configured()) {
+                    $this->passwordResetModel->deleteExpired();
+
+                    // Token gốc chỉ có trong email, CSDL chỉ lưu bản băm SHA-256 của nó.
+                    $token = bin2hex(random_bytes(32));
+                    $expiresAt = date('Y-m-d H:i:s', time() + PASSWORD_RESET_EXPIRE_MINUTES * 60);
+                    $this->passwordResetModel->create((int) $user['id'], hash('sha256', $token), $expiresAt);
+
+                    $resetUrl = BASE_URL . '/auth/reset-password?token=' . $token;
+                    if (!$this->sendResetEmail($user['email'], $user['name'], $resetUrl)) {
+                        error_log('StudySpot: gởi email quên mật khẩu thất bại cho ' . $user['email']);
+                    }
+                }
+
+                // Luôn báo cùng một câu dù email có tồn tại hay không.
+                Session::flash('alert', 'Nếu email có tài khoản tại StudySpot, link đặt lại mật khẩu đã được gởi tới email của bạn. Link có hiệu lực ' . PASSWORD_RESET_EXPIRE_MINUTES . ' phút.', 'success');
+                $this->redirect('auth/login');
+            }
+        }
+
+        $this->render('auth/forgot', [
+            'pageTitle' => 'Quên mật khẩu',
+            'errors'    => $errors,
+            'oldEmail'  => $oldEmail,
+        ]);
+    }
+
+    // Hiển thị và xử lý form Đặt lại mật khẩu (/auth/reset-password?token=...)
+    public function resetPassword(): void
+    {
+        // Đã đăng nhập thì về trang chủ.
+        if (Session::isLoggedIn()) {
+            $this->redirect('');
+        }
+
+        $token = trim($_GET['token'] ?? $_POST['token'] ?? '');
+        $reset = $token !== '' ? $this->passwordResetModel->findByTokenHash(hash('sha256', $token)) : false;
+
+        // Token không có, sai hoặc đã hết hạn thì báo lỗi rồi về trang đăng nhập.
+        if (!$reset || strtotime($reset['expires_at']) < time()) {
+            if ($reset) {
+                $this->passwordResetModel->deleteByUser((int) $reset['user_id']);
+            }
+            Session::flash('alert', 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.', 'danger');
+            $this->redirect('auth/login');
+        }
+
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Kiểm tra CSRF trước khi xử lý form.
+            $this->verifyCsrfToken();
+
+            $password = $_POST['password'] ?? '';
+            $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+            // Validate Mật khẩu mới (>= 6 ký tự, giống quy tắc đăng ký).
+            if ($password === '') {
+                $errors['password'] = 'Vui lòng nhập mật khẩu mới.';
+            } elseif (strlen($password) < 6) {
+                $errors['password'] = 'Mật khẩu phải có ít nhất 6 ký tự.';
+            }
+
+            // Validate Nhập lại mật khẩu
+            if ($passwordConfirm === '') {
+                $errors['password_confirm'] = 'Vui lòng xác nhận lại mật khẩu.';
+            } elseif ($password !== $passwordConfirm) {
+                $errors['password_confirm'] = 'Mật khẩu nhập lại không khớp.';
+            }
+
+            if (empty($errors)) {
+                // Đổi mật khẩu rồi xóa token để link không dùng lại được nữa.
+                $this->userModel->updatePassword((int) $reset['user_id'], $password);
+                $this->passwordResetModel->deleteByUser((int) $reset['user_id']);
+
+                // Báo cho người dùng biết mật khẩu vừa thay đổi (gởi không được cũng không chặn).
+                $user = $this->userModel->findById((int) $reset['user_id']);
+                if ($user && Mailer::configured() && !Mailer::sendPasswordChangedNotice($user['email'], $user['name'], 'qua tính năng Quên mật khẩu')) {
+                    error_log('StudySpot: gởi email thông báo đổi mật khẩu thất bại cho ' . $user['email']);
+                }
+
+                Session::flash('alert', 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.', 'success');
+                $this->redirect('auth/login');
+            }
+        }
+
+        $this->render('auth/reset', [
+            'pageTitle' => 'Đặt lại mật khẩu',
+            'errors'    => $errors,
+            'token'     => $token,
+        ]);
+    }
+
+    // Soạn email đặt lại mật khẩu (bản chữ + bản HTML) rồi nhờ Mailer gởi.
+    private function sendResetEmail(string $toEmail, string $toName, string $resetUrl): bool
+    {
+        $subject = 'Khôi phục mật khẩu';
+
+        // Bản chữ thuần cho trình đọc email không hiện HTML.
+        $text = "Xin chào {$toName},\r\n\r\n"
+            . 'Bạn vừa yêu cầu ' . SITE_NAME . " khôi phục mật khẩu của mình.\r\n"
+            . 'Liên kết đặt lại mật khẩu này sẽ hết hạn sau ' . PASSWORD_RESET_EXPIRE_MINUTES . " phút.\r\n\r\n"
+            . "Nhấn vào liên kết sau để đặt lại mật khẩu:\r\n{$resetUrl}\r\n\r\n"
+            . 'Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng không làm gì thêm và báo lại cho quản trị hệ thống về vấn đề này.';
+
+        // Bản HTML: cùng nội dung, link đặt trong nút bấm.
+        $html = '<p>Xin chào <strong>' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</strong></p>'
+            . '<p>Bạn vừa yêu cầu ' . SITE_NAME . ' khôi phục mật khẩu của mình.</p>'
+            . '<p>Liên kết đặt lại mật khẩu này sẽ hết hạn sau ' . PASSWORD_RESET_EXPIRE_MINUTES . ' phút.</p>'
+            . '<p><a href="' . $resetUrl . '" style="display:inline-block;padding:10px 22px;background:#111827;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold;">Khôi phục mật khẩu</a></p>'
+            . '<p>Nếu nút bấm không hoạt động, hãy mở liên kết này: <a href="' . $resetUrl . '">' . $resetUrl . '</a></p>'
+            . '<p>Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng không làm gì thêm và báo lại cho quản trị hệ thống về vấn đề này.</p>';
+
+        // Đưa thư cho Mailer gởi qua Gmail SMTP.
+        return Mailer::send($toEmail, $toName, $subject, $text, $html);
     }
 
     // Đăng xuất khỏi hệ thống (/auth/logout)
