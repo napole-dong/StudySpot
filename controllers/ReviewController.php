@@ -137,6 +137,14 @@ class ReviewController extends Controller
         // Admin sửa thì review hiện ngay (approved), không chờ duyệt lại.
         if ($wasAdmin) {
             $this->reviewModel->updateStatus($reviewId, 'approved');
+        } else {
+            // Thành viên sửa thì review quay về chờ duyệt: báo cho admin biết.
+            $place = $this->placeModel->findById($placeId);
+            (new Notification())->notifyAdmins(
+                'review_pending',
+                'Một đánh giá tại quán "' . ($place['name'] ?? '') . '" vừa được chỉnh sửa và đang chờ duyệt lại.',
+                'admin/review?status=pending'
+            );
         }
 
         Session::flash(

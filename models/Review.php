@@ -104,6 +104,16 @@ class Review extends Model
             (new Place())->recalculateRating((int) $data['place_id']);
         }
 
+        // Review của thành viên phải chờ duyệt: báo cho admin biết có việc mới.
+        if (($data['status'] ?? 'pending') === 'pending') {
+            $placeName = (string) $this->fetchColumn('SELECT name FROM places WHERE id = :id', [':id' => (int) $data['place_id']]);
+            (new Notification())->notifyAdmins(
+                'review_pending',
+                'Có đánh giá mới đang chờ duyệt' . ($placeName !== '' ? ' tại quán "' . $placeName . '"' : '') . '.',
+                'admin/review?status=pending'
+            );
+        }
+
         return $newId;
     }
 

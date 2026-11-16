@@ -19,6 +19,15 @@ class Notification extends Model
         return (int) $this->lastInsertId();
     }
 
+    // Gửi cùng một thông báo cho mọi tài khoản admin đang hoạt động (dùng khi có việc mới chờ xử lý).
+    public function notifyAdmins(string $type, string $content, string $link): void
+    {
+        $admins = $this->fetchAll("SELECT id FROM users WHERE role = 'admin' AND status = 'active'");
+        foreach ($admins as $admin) {
+            $this->create((int) $admin['id'], $type, $content, $link);
+        }
+    }
+
     // Lấy các thông báo mới nhất của tài khoản, mới nhất xếp trước, SELECT * FROM notifications theo user_id.
     public function getRecentByUser(int $userId, int $limit = 10): array
     {

@@ -26,6 +26,18 @@ class ReviewReport extends Model
              VALUES (:review_id, :user_id, :reason, :note, 'pending', NOW())",
             [':review_id' => $reviewId, ':user_id' => $userId, ':reason' => $reason, ':note' => $note]
         );
+
+        // Báo cho admin biết có báo cáo vi phạm mới đang chờ xử lý.
+        $placeName = (string) $this->fetchColumn(
+            'SELECT p.name FROM reviews r INNER JOIN places p ON p.id = r.place_id WHERE r.id = :id',
+            [':id' => $reviewId]
+        );
+        (new Notification())->notifyAdmins(
+            'report_new',
+            'Có báo cáo vi phạm mới về một đánh giá' . ($placeName !== '' ? ' tại quán "' . $placeName . '"' : '') . ', đang chờ xử lý.',
+            'admin/report'
+        );
+
         return true;
     }
 

@@ -23,14 +23,6 @@ try {
     $pendingReportBadgeCount = 0;
 }
 
-$pendingSuggestionBadgeCount = 0;
-try {
-    if (class_exists('PlaceSuggestion')) {
-        $pendingSuggestionBadgeCount = (new PlaceSuggestion())->countPending();
-    }
-} catch (Throwable $e) {
-    $pendingSuggestionBadgeCount = 0;
-}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -63,6 +55,11 @@ try {
                 </a>
 
                 <!-- Nút mobile: mở sidebar trượt (offcanvas). -->
+                <!-- Chuông thông báo trên mobile: nằm ngay trên thanh header, ngoài menu trượt. -->
+                <div class="d-lg-none ms-auto me-1">
+                    <?php require ROOT_PATH . '/views/layouts/notification_bell.php'; ?>
+                </div>
+
                 <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Mở menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -80,23 +77,15 @@ try {
                                 <i class="bi bi-shop me-1"></i>Quán
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <!-- Mục Đánh giá: huy hiệu $pendingReviewBadgeCount chỉ hiện khi > 0. -->
-                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">
-                                <i class="bi bi-chat-square-quote me-1"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?>
+                        <li class="nav-item dropdown">
+                            <!-- Cụm Kiểm duyệt: gộp Đánh giá + Báo cáo cho topbar gọn; huy hiệu trên nút sổ là tổng chờ xử lý của cả hai mục. -->
+                            <a class="nav-link dropdown-toggle text-nowrap <?= (str_starts_with($currentUrl, 'admin/review') || str_starts_with($currentUrl, 'admin/report')) ? 'active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-shield-check me-1"></i>Kiểm duyệt<?php if (($pendingReviewBadgeCount + $pendingReportBadgeCount) > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount + $pendingReportBadgeCount ?></span><?php endif; ?>
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <!-- Mục Báo cáo: huy hiệu $pendingReportBadgeCount chỉ hiện khi > 0. -->
-                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>">
-                                <i class="bi bi-flag me-1"></i>Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <!-- Mục Đề xuất: huy hiệu $pendingSuggestionBadgeCount chỉ hiện khi > 0. -->
-                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/suggestion') ? 'active' : '' ?>" href="<?= base_url('admin/suggestion') ?>">
-                                <i class="bi bi-plus-circle me-1"></i>Đề xuất<?php if ($pendingSuggestionBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingSuggestionBadgeCount ?></span><?php endif; ?>
-                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a></li>
+                                <li><a class="dropdown-item <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>">Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?></a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>">
@@ -120,6 +109,8 @@ try {
                             <i class="bi bi-house-door me-1"></i>Trang người dùng
                         </a>
                         <?php if (!empty($adminUser)): ?>
+                            <!-- Chuông thông báo desktop: dùng chung partial với header người dùng. -->
+                            <?php require ROOT_PATH . '/views/layouts/notification_bell.php'; ?>
                             <div class="dropdown flex-shrink-0">
                                 <a class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-white shadow-xs text-nowrap header-account-btn" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <img src="<?= get_image_url($adminUser['avatar'] ?? null, 'avatar') ?>" alt="<?= e($adminUser['name']) ?>" class="rounded-circle object-fit-cover border" width="28" height="28">
@@ -165,9 +156,13 @@ try {
                 <nav class="d-flex flex-column gap-1">
                     <a class="sidebar-link <?= ($currentUrl === 'admin' || str_starts_with($currentUrl, 'admin/dashboard')) ? 'active' : '' ?>" href="<?= base_url('admin/dashboard') ?>"><i class="bi bi-speedometer2"></i>Tổng quan</a>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/place') ? 'active' : '' ?>" href="<?= base_url('admin/place') ?>"><i class="bi bi-shop"></i>Quán</a>
-                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>"><i class="bi bi-chat-square-quote"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a>
-                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>"><i class="bi bi-flag"></i>Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?></a>
-                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/suggestion') ? 'active' : '' ?>" href="<?= base_url('admin/suggestion') ?>"><i class="bi bi-plus-circle"></i>Đề xuất<?php if ($pendingSuggestionBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingSuggestionBadgeCount ?></span><?php endif; ?></a>
+                    <?php $isModeration = str_starts_with($currentUrl, 'admin/review') || str_starts_with($currentUrl, 'admin/report'); ?>
+                    <!-- Nhóm Kiểm duyệt mobile: Đánh giá, Báo cáo; $isModeration giữ mở sẵn, huy hiệu là tổng chờ xử lý. -->
+                    <a class="sidebar-link <?= $isModeration ? 'active' : '' ?>" data-bs-toggle="collapse" href="#sidebarModeration" role="button" aria-expanded="<?= $isModeration ? 'true' : 'false' ?>" aria-controls="sidebarModeration"><i class="bi bi-shield-check"></i>Kiểm duyệt<?php if (($pendingReviewBadgeCount + $pendingReportBadgeCount) > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount + $pendingReportBadgeCount ?></span><?php endif; ?><i class="bi bi-chevron-down ms-auto sidebar-chevron"></i></a>
+                    <div class="collapse <?= $isModeration ? 'show' : '' ?>" id="sidebarModeration">
+                        <a class="sidebar-link ps-4 <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a>
+                        <a class="sidebar-link ps-4 <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>">Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?></a>
+                    </div>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>"><i class="bi bi-people"></i>Người dùng</a>
                     <?php $isTaxonomy = str_starts_with($currentUrl, 'admin/category') || str_starts_with($currentUrl, 'admin/amenity'); ?>
                     <!-- Nhóm Phân loại mobile: Danh mục, Tiện ích; $isTaxonomy giữ mở sẵn. -->

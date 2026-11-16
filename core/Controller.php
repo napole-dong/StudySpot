@@ -16,11 +16,11 @@ class Controller
         // Giải nén mảng dữ liệu thành các biến cục bộ cho View: extract() biến
         extract($data, EXTR_SKIP);
 
-        // Header người dùng cần dữ liệu thông báo: nạp sẵn cho layout 'main' khi đã đăng nhập,
-        // header.php và notification_bell.php dùng $headerNotifications + $headerUnreadCount.
+        // Header cần dữ liệu thông báo: nạp sẵn cho layout 'main' và 'admin' khi đã đăng nhập,
+        // header.php, layout admin và notification_bell.php dùng $headerNotifications + $headerUnreadCount.
         $headerNotifications = [];
         $headerUnreadCount = 0;
-        if ($layout === 'main' && Session::isLoggedIn()) {
+        if (($layout === 'main' || $layout === 'admin') && Session::isLoggedIn()) {
             $notifModel = new Notification();
             $notifUserId = (int) (Session::user()['id'] ?? 0);
             $headerNotifications = $notifModel->getRecentByUser($notifUserId, 10);

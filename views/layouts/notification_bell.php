@@ -1,6 +1,6 @@
 <?php
 // Chuông thông báo: dùng chung cho header desktop và mobile.
-// Dữ liệu $headerNotifications và $headerUnreadCount do Controller::render() nạp sẵn cho layout main.
+// Dữ liệu $headerNotifications và $headerUnreadCount do Controller::render() nạp sẵn cho layout main và admin.
 $notifItems = $headerNotifications ?? [];
 $notifUnread = $headerUnreadCount ?? 0;
 ?>
