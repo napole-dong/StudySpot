@@ -142,8 +142,8 @@
 
                 <div class="text-center small text-muted mb-2">
                     Sinh viên AGU không cần đăng ký —
-                    <!-- Link thay cho nút Google cũ: sinh viên AGU qua trang đăng nhập rồi nhấn nút đăng nhập Google. -->
-                    <a href="<?= base_url('auth/login') ?>" class="text-coffee fw-bold text-decoration-none">đăng nhập bằng Google</a>
+                    <!-- Link nhảy thẳng vào luồng đăng nhập Google, thay cho nút Google cũ ở trang đăng ký. -->
+                    <a href="<?= base_url('auth/google') ?>" class="text-coffee fw-bold text-decoration-none">đăng nhập bằng Google</a>
                 </div>
 
                 <div class="text-center small text-muted">
