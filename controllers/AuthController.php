@@ -410,10 +410,9 @@ class AuthController extends Controller
         }
 
         $this->render('auth/register', [
-            'pageTitle'          => 'Đăng ký tài khoản',
-            'errors'             => $errors,
-            'old'                => $old,
-            'googleLoginEnabled' => $this->googleConfigured(),
+            'pageTitle' => 'Đăng ký tài khoản',
+            'errors'    => $errors,
+            'old'       => $old,
         ]);
     }
 
