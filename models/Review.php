@@ -4,7 +4,7 @@
 class Review extends Model
 {
     // Lấy review đã duyệt của quán có phân trang, WHERE place_id = :place_id AND status = 'approved', mới nhất trước.
-    public function getApprovedByPlace(int $placeId, int $page = 1, int $perPage = REVIEWS_PER_PAGE): array
+    public function getApprovedByPlace(int $placeId, int $page = 1, int $perPage = REVIEWS_PER_PAGE, int $currentUserId = 0): array
     {
         $countSql = "SELECT COUNT(*) FROM reviews WHERE place_id = :place_id AND status = 'approved'";
         $total = (int) $this->fetchColumn($countSql, [':place_id' => $placeId]);
@@ -12,7 +12,12 @@ class Review extends Model
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT r.*, u.name AS user_name, u.avatar AS user_avatar
+        // helped_by_me: người đang xem đã đánh dấu hữu ích review nào thì nút của review đó sáng lên.
+        $helpedSelect = $currentUserId > 0
+            ? ", (SELECT COUNT(*) FROM review_helpful_votes hv WHERE hv.review_id = r.id AND hv.user_id = {$currentUserId}) AS helped_by_me"
+            : ', 0 AS helped_by_me';
+
+        $sql = "SELECT r.*, u.name AS user_name, u.avatar AS user_avatar{$helpedSelect}
                 FROM reviews r
                 INNER JOIN users u ON u.id = r.user_id
                 WHERE r.place_id = :place_id AND r.status = 'approved'
@@ -184,6 +189,37 @@ class Review extends Model
         }
 
         return $deleted;
+    }
+
+    // Bật/tắt dấu "hữu ích" của một thành viên cho một review: đã dấu thì bỏ, chưa thì thêm; cập nhật luôn cột helpful_count của review.
+    public function toggleHelpful(int $reviewId, int $userId): string
+    {
+        $exists = (int) $this->fetchColumn(
+            'SELECT COUNT(*) FROM review_helpful_votes WHERE review_id = :review_id AND user_id = :user_id',
+            [':review_id' => $reviewId, ':user_id' => $userId]
+        );
+
+        if ($exists > 0) {
+            $this->execute('DELETE FROM review_helpful_votes WHERE review_id = :review_id AND user_id = :user_id', [
+                ':review_id' => $reviewId,
+                ':user_id'   => $userId,
+            ]);
+            $this->execute('UPDATE reviews SET helpful_count = GREATEST(helpful_count - 1, 0) WHERE id = :id', [':id' => $reviewId]);
+            return 'removed';
+        }
+
+        $this->execute('INSERT INTO review_helpful_votes (review_id, user_id, created_at) VALUES (:review_id, :user_id, NOW())', [
+            ':review_id' => $reviewId,
+            ':user_id'   => $userId,
+        ]);
+        $this->execute('UPDATE reviews SET helpful_count = helpful_count + 1 WHERE id = :id', [':id' => $reviewId]);
+        return 'added';
+    }
+
+    // Đọc số lượt hữu ích hiện tại của review từ cột helpful_count.
+    public function getHelpfulCount(int $reviewId): int
+    {
+        return (int) $this->fetchColumn('SELECT helpful_count FROM reviews WHERE id = :id', [':id' => $reviewId]);
     }
 
     // Lấy lịch sử review của một thành viên, không lọc status để chủ review thấy cả review chờ duyệt và bị ẩn.

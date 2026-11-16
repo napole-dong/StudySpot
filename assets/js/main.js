@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 4. Xử lý nút Thêm / Bỏ Yêu thích bằng AJAX (fetch)
     initFavoriteToggleAjax();
+    initHelpfulToggleAjax();
 
     // 5. Khởi tạo Bootstrap Tooltip (dùng cho các nút icon ở Admin & User)
     initBootstrapTooltips();
@@ -438,3 +439,101 @@ function initFilterSelectTitles() {
         sync();
     });
 }
+
+// Hữu ích AJAX: bấm nút Hữu ích gửi POST /review/helpful/{id}, cập nhật số đếm không tải lại trang.
+function initHelpfulToggleAjax() {
+    const baseUrl = document.body.getAttribute('data-base-url') || ''; // baseUrl do PHP in sẵn vào thuộc tính data-base-url trên thẻ body.
+    const csrfToken = document.body.getAttribute('data-csrf') || ''; // CSRF token do PHP in sẵn vào thuộc tính data-csrf trên thẻ body.
+
+    document.addEventListener('click', async function (event) {
+        const btn = event.target.closest('.btn-helpful-toggle');
+        if (!btn) {
+            return;
+        }
+
+        event.preventDefault();
+        if (btn.disabled) {
+            return;
+        }
+
+        const reviewId = btn.getAttribute('data-review-id');
+        if (!reviewId) {
+            return;
+        }
+
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+
+            const response = await fetch(baseUrl + '/review/helpful/' + reviewId, { // POST /review/helpful/{id}, kèm CSRF token trong cả FormData và header X-CSRF-Token.
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                showStudySpotToast(data.message || 'Không thể thực hiện thao tác.', 'danger');
+                return;
+            }
+
+            // Cập nhật mọi nút Hữu ích của cùng review trên trang: số đếm, trạng thái sáng, icon đặc/rỗng.
+            document.querySelectorAll('.btn-helpful-toggle[data-review-id="' + reviewId + '"]').forEach(function (buttonEl) {
+                const countEl = buttonEl.querySelector('.helpful-count');
+                if (countEl) {
+                    countEl.textContent = data.helpful_count;
+                }
+                const icon = buttonEl.querySelector('i');
+                if (data.status === 'added') {
+                    buttonEl.classList.add('active-helpful');
+                    if (icon) {
+                        icon.className = 'bi bi-hand-thumbs-up-fill';
+                    }
+                } else {
+                    buttonEl.classList.remove('active-helpful');
+                    if (icon) {
+                        icon.className = 'bi bi-hand-thumbs-up';
+                    }
+                }
+            });
+
+            showStudySpotToast(data.message, data.status === 'added' ? 'success' : 'secondary');
+        } catch (err) {
+            showStudySpotToast('Đã xảy ra lỗi. Vui lòng thử lại.', 'danger');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+}
+
+// Modal báo cáo review: khi mở modal, gán action của form theo review vừa bấm và điền tên tác giả vào nội dung.
+document.addEventListener('DOMContentLoaded', function () {
+    const reportModal = document.getElementById('reportReviewModal');
+    if (!reportModal) {
+        return;
+    }
+
+    reportModal.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        if (!btn) {
+            return;
+        }
+
+        const baseUrl = document.body.getAttribute('data-base-url') || '';
+        const form = document.getElementById('reportReviewForm');
+        if (form) {
+            form.action = baseUrl + '/review/report/' + btn.getAttribute('data-review-id');
+        }
+
+        const authorEl = document.getElementById('reportReviewAuthor');
+        if (authorEl) {
+            authorEl.textContent = btn.getAttribute('data-review-author') || '';
+        }
+    });
+});

@@ -13,6 +13,24 @@ try {
 } catch (Throwable $e) {
     $pendingReviewBadgeCount = 0;
 }
+
+$pendingReportBadgeCount = 0;
+try {
+    if (class_exists('ReviewReport')) {
+        $pendingReportBadgeCount = (new ReviewReport())->countPending();
+    }
+} catch (Throwable $e) {
+    $pendingReportBadgeCount = 0;
+}
+
+$pendingSuggestionBadgeCount = 0;
+try {
+    if (class_exists('PlaceSuggestion')) {
+        $pendingSuggestionBadgeCount = (new PlaceSuggestion())->countPending();
+    }
+} catch (Throwable $e) {
+    $pendingSuggestionBadgeCount = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -66,6 +84,18 @@ try {
                             <!-- Mục Đánh giá: huy hiệu $pendingReviewBadgeCount chỉ hiện khi > 0. -->
                             <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">
                                 <i class="bi bi-chat-square-quote me-1"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <!-- Mục Báo cáo: huy hiệu $pendingReportBadgeCount chỉ hiện khi > 0. -->
+                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>">
+                                <i class="bi bi-flag me-1"></i>Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <!-- Mục Đề xuất: huy hiệu $pendingSuggestionBadgeCount chỉ hiện khi > 0. -->
+                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/suggestion') ? 'active' : '' ?>" href="<?= base_url('admin/suggestion') ?>">
+                                <i class="bi bi-plus-circle me-1"></i>Đề xuất<?php if ($pendingSuggestionBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingSuggestionBadgeCount ?></span><?php endif; ?>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -136,6 +166,8 @@ try {
                     <a class="sidebar-link <?= ($currentUrl === 'admin' || str_starts_with($currentUrl, 'admin/dashboard')) ? 'active' : '' ?>" href="<?= base_url('admin/dashboard') ?>"><i class="bi bi-speedometer2"></i>Tổng quan</a>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/place') ? 'active' : '' ?>" href="<?= base_url('admin/place') ?>"><i class="bi bi-shop"></i>Quán</a>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>"><i class="bi bi-chat-square-quote"></i>Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a>
+                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>"><i class="bi bi-flag"></i>Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?></a>
+                    <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/suggestion') ? 'active' : '' ?>" href="<?= base_url('admin/suggestion') ?>"><i class="bi bi-plus-circle"></i>Đề xuất<?php if ($pendingSuggestionBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingSuggestionBadgeCount ?></span><?php endif; ?></a>
                     <a class="sidebar-link <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>"><i class="bi bi-people"></i>Người dùng</a>
                     <?php $isTaxonomy = str_starts_with($currentUrl, 'admin/category') || str_starts_with($currentUrl, 'admin/amenity'); ?>
                     <!-- Nhóm Phân loại mobile: Danh mục, Tiện ích; $isTaxonomy giữ mở sẵn. -->

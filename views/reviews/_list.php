@@ -63,6 +63,26 @@
                             <img src="<?= get_image_url($rv['image_path'], 'review') ?>" alt="Ảnh thực tế từ sinh viên" class="rounded-3 border object-fit-cover" style="max-height: 190px; max-width: 100%;">
                         </div>
                     <?php endif; ?>
+
+                    <!-- Hàng hành động dưới review: nút Hữu ích (AJAX cho thành viên, khách thì dẫn sang đăng nhập) và nút Báo cáo. -->
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <?php if (Session::isLoggedIn()): ?>
+                            <button type="button" class="btn btn-sm btn-light border rounded-pill btn-helpful-toggle <?= !empty($rv['helped_by_me']) ? 'active-helpful' : '' ?>" data-review-id="<?= (int) $rv['id'] ?>">
+                                <i class="bi bi-hand-thumbs-up<?= !empty($rv['helped_by_me']) ? '-fill' : '' ?>"></i>
+                                Hữu ích (<span class="helpful-count"><?= (int) ($rv['helpful_count'] ?? 0) ?></span>)
+                            </button>
+                        <?php else: ?>
+                            <a href="<?= base_url('auth/login') ?>" class="btn btn-sm btn-light border rounded-pill text-decoration-none">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                                Hữu ích (<?= (int) ($rv['helpful_count'] ?? 0) ?>)
+                            </a>
+                        <?php endif; ?>
+                        <?php if (Session::isLoggedIn() && (int) ($rv['user_id'] ?? 0) !== (int) (Session::user()['id'] ?? 0)): ?>
+                            <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none btn-report-review" data-bs-toggle="modal" data-bs-target="#reportReviewModal" data-review-id="<?= (int) $rv['id'] ?>" data-review-author="<?= e($rv['user_name']) ?>">
+                                <i class="bi bi-flag me-1"></i>Báo cáo
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -70,4 +90,32 @@
         <!-- Phân trang review: render_pagination() với route place/show/{id quán}, vẫn ở trang chi tiết. -->
         <?= render_pagination($reviewPage, $reviewPages, 'place/show/' . (int) $place['id']) ?>
     <?php endif; ?>
+</div>
+
+<!-- Modal báo cáo đánh giá: 1 modal dùng chung cho mọi review, main.js gán action theo review vừa bấm. -->
+<div class="modal fade" id="reportReviewModal" tabindex="-1" aria-labelledby="reportReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="#" id="reportReviewForm" class="modal-content">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportReviewModalLabel"><i class="bi bi-flag me-2"></i>Báo cáo đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Đánh giá của <strong id="reportReviewAuthor" class="text-dark"></strong> sẽ được quản trị viên xem xét. Vui lòng chọn lý do phù hợp nhất:</p>
+                <?php foreach (ReviewReport::REASONS as $reasonKey => $reasonLabel): ?>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="reason" id="reason-<?= e($reasonKey) ?>" value="<?= e($reasonKey) ?>" <?= $reasonKey === 'spam' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="reason-<?= e($reasonKey) ?>"><?= e($reasonLabel) ?></label>
+                    </div>
+                <?php endforeach; ?>
+                <label for="reportNote" class="form-label small mt-3">Ghi chú thêm (không bắt buộc)</label>
+                <textarea class="form-control" id="reportNote" name="note" rows="2" maxlength="255" placeholder="Mô tả ngắn gọn vấn đề..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-dark rounded-pill px-3">Gửi báo cáo</button>
+            </div>
+        </form>
+    </div>
 </div>

@@ -1599,3 +1599,6 @@ html { scrollbar-gutter: stable; }
 .notif-item { white-space: normal; }
 .notif-unread { background-color: #F3F4F6; font-weight: 600; }
 .notif-time { font-size: 0.72rem; margin-top: 2px; }
+
+/* Nút Hữu ích dưới mỗi review: đã đánh dấu thì viền mực + chữ đậm như trạng thái đang chọn. */
+.btn-helpful-toggle.active-helpful { background-color: #E5E7EB; border-color: #111827 !important; font-weight: 600; }

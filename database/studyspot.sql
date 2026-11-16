@@ -6,6 +6,9 @@
 -- Ngày 2026-11-16: thêm bảng password_resets (tính năng quên mật khẩu), bảng trống, không có dữ liệu mẫu.
 -- Ngày 2026-11-16: thêm bảng auth_attempts (giới hạn số lần thử đăng nhập / quên mật khẩu), bảng trống, không có dữ liệu mẫu.
 -- Ngày 2026-11-16: thêm bảng notifications (thông báo trong web cho thành viên), bảng trống, không có dữ liệu mẫu. (33 quán, 4 danh mục, 5 tiện ích, 3 đánh giá, 1 lượt lưu, 2 người dùng).
+-- Ngày 2026-11-16: thêm cột helpful_count vào bảng reviews và bảng review_helpful_votes (nút Hữu ích cho đánh giá), bảng trống, không có dữ liệu mẫu.
+-- Ngày 2026-11-16: thêm bảng review_reports (báo cáo đánh giá vi phạm), bảng trống, không có dữ liệu mẫu.
+-- Ngày 2026-11-16: thêm bảng place_suggestions (thành viên đề xuất quán mới chờ admin duyệt), bảng trống, không có dữ liệu mẫu.
 -- Seed này ĐÃ BAO GỒM bảng amenities, place_amenities, cột price_min/price_max
 -- và cột google_rating/google_rating_count/google_maps_place_url,
 -- nên khi setup mới chỉ cần import file này, KHÔNG cần chạy các file migrate_20261103 nữa.
@@ -246,6 +249,7 @@ CREATE TABLE `reviews` (
   `content` text NOT NULL COMMENT 'Nội dung nhận xét chi tiết',
   `image_path` varchar(255) DEFAULT NULL COMMENT 'Ảnh chụp thực tế đính kèm (tùy chọn)',
   `status` enum('pending','approved','hidden') NOT NULL DEFAULT 'pending' COMMENT 'Trạng thái kiểm duyệt',
+  `helpful_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Số lượt đánh dấu hữu ích',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_reviews_place_user` (`place_id`,`user_id`),
@@ -263,7 +267,7 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (29,10,7,5,5,5,5,'ngon và rẻ','uploads/reviews/reviews_6af1358ec1f6e3.70465936_29e4dbb6.jpg','approved','2026-11-09 09:53:02'),(30,10,1,5,5,5,5,'tốt đệp vl',NULL,'approved','2026-11-09 09:54:05'),(31,1,7,3,1,5,2,'như ccccccc',NULL,'approved','2026-11-09 09:54:49');
+INSERT INTO `reviews` VALUES (29,10,7,5,5,5,5,'ngon và rẻ','uploads/reviews/reviews_6af1358ec1f6e3.70465936_29e4dbb6.jpg','approved',0,'2026-11-09 09:53:02'),(30,10,1,5,5,5,5,'tốt đệp vl',NULL,'approved',0,'2026-11-09 09:54:05'),(31,1,7,3,1,5,2,'như ccccccc',NULL,'approved',0,'2026-11-09 09:54:49');
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -348,7 +352,7 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(10) unsigned NOT NULL COMMENT 'Tài khoản nhận thông báo',
-  `type` varchar(30) NOT NULL COMMENT 'Loại thông báo: review_approved hoặc review_hidden',
+  `type` varchar(30) NOT NULL COMMENT 'Loại thông báo: review_approved, review_hidden, report_resolved, report_dismissed, suggestion_approved, suggestion_rejected',
   `content` varchar(500) NOT NULL COMMENT 'Nội dung thông báo hiển thị cho người dùng',
   `link` varchar(255) NOT NULL DEFAULT '' COMMENT 'Đường dẫn đích khi bấm vào thông báo',
   `is_read` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = chưa đọc, 1 = đã đọc',
@@ -357,6 +361,78 @@ CREATE TABLE `notifications` (
   KEY `idx_notifications_user` (`user_id`,`is_read`),
   CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `review_helpful_votes`
+--
+
+DROP TABLE IF EXISTS `review_helpful_votes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `review_helpful_votes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `review_id` int(10) unsigned NOT NULL COMMENT 'Review được đánh dấu',
+  `user_id` int(10) unsigned NOT NULL COMMENT 'Thành viên đánh dấu',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_helpful_vote` (`review_id`,`user_id`),
+  KEY `idx_helpful_user` (`user_id`),
+  CONSTRAINT `fk_helpful_review` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_helpful_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Lượt đánh dấu hữu ích cho từng review';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `review_reports`
+--
+
+DROP TABLE IF EXISTS `review_reports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `review_reports` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `review_id` int(10) unsigned NOT NULL COMMENT 'Review bị báo cáo',
+  `user_id` int(10) unsigned NOT NULL COMMENT 'Thành viên gửi báo cáo',
+  `reason` varchar(50) NOT NULL COMMENT 'spam / offensive / fake / other',
+  `note` varchar(255) DEFAULT NULL COMMENT 'Ghi chú thêm của người báo cáo',
+  `status` enum('pending','resolved','dismissed') NOT NULL DEFAULT 'pending' COMMENT 'pending chờ xử lý, resolved đã xử lý (ẩn review), dismissed bỏ qua',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_report` (`review_id`,`user_id`),
+  KEY `idx_report_status` (`status`),
+  KEY `idx_report_user` (`user_id`),
+  CONSTRAINT `fk_report_review` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_report_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Báo cáo vi phạm về từng review';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `place_suggestions`
+--
+
+DROP TABLE IF EXISTS `place_suggestions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `place_suggestions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT 'Thành viên đề xuất',
+  `name` varchar(150) NOT NULL COMMENT 'Tên quán đề xuất',
+  `address` varchar(255) NOT NULL COMMENT 'Địa chỉ quán',
+  `district` varchar(100) NOT NULL COMMENT 'Phường / khu vực',
+  `category_id` int(10) unsigned DEFAULT NULL COMMENT 'Danh mục đề xuất',
+  `description` text DEFAULT NULL COMMENT 'Mô tả: vì sao quán hợp để học tập',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending' COMMENT 'pending chờ duyệt, approved đã tạo quán, rejected bị từ chối',
+  `created_place_id` int(10) unsigned DEFAULT NULL COMMENT 'Quán đã tạo khi duyệt',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `reviewed_at` timestamp NULL DEFAULT NULL COMMENT 'Thời điểm admin xử lý',
+  PRIMARY KEY (`id`),
+  KEY `idx_sug_user` (`user_id`),
+  KEY `idx_sug_status` (`status`),
+  CONSTRAINT `fk_sug_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sug_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_sug_place` FOREIGN KEY (`created_place_id`) REFERENCES `places` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Quán do thành viên đề xuất, chờ admin duyệt';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

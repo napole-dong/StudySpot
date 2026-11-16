@@ -168,5 +168,16 @@ $hasActiveFilter = !empty($filters['q'])
         <!-- Phân trang: render_pagination() từ $currentPage, $totalPages cho route place. -->
         <?= render_pagination($currentPage, $totalPages, 'place') ?>
     <?php endif; ?>
+
+    <!-- Thẻ mời đề xuất quán mới: thành viên sang trang /suggestion, khách thì sang đăng nhập. -->
+    <div class="surface-card p-4 mt-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <div class="fw-bold text-dark"><i class="bi bi-plus-circle me-2"></i>Không tìm thấy quán bạn muốn?</div>
+            <div class="small text-muted">Hãy đề xuất quán mới, quản trị viên sẽ xem xét và thêm vào danh sách cho mọi người.</div>
+        </div>
+        <a href="<?= base_url(Session::isLoggedIn() ? 'suggestion' : 'auth/login') ?>" class="btn btn-coffee rounded-pill px-4 flex-shrink-0">
+            <i class="bi bi-send me-1"></i>Đề xuất quán mới
+        </a>
+    </div>
 </div>
 </div>

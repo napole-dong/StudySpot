@@ -119,7 +119,7 @@ class PlaceController extends Controller
 
         // Phân trang review: số trang nhỏ nhất là 1.
         $reviewPage = max(1, (int) ($_GET['page'] ?? 1));
-        $reviewsData = $this->reviewModel->getApprovedByPlace($placeId, $reviewPage, REVIEWS_PER_PAGE);
+        $reviewsData = $this->reviewModel->getApprovedByPlace($placeId, $reviewPage, REVIEWS_PER_PAGE, Session::isLoggedIn() ? (int) Session::user()['id'] : 0);
 
         // Kiểm tra thông tin yêu thích và review của người dùng đang đăng nhập
         $isFavorited = false;

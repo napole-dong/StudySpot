@@ -149,6 +149,87 @@ class ReviewController extends Controller
         $this->redirect('place/show/' . $placeId . '#review-form-section');
     }
 
+    // Gửi báo cáo vi phạm về một review (/review/report/12), mỗi thành viên chỉ báo cáo 1 lần cho 1 review.
+    public function report(int|string $id = 0): void
+    {
+        // Chỉ nhận POST, không nhận GET.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('place');
+        }
+
+        $this->verifyCsrfToken();
+        $reviewId = (int) $id;
+        $review = $this->reviewModel->findById($reviewId);
+
+        if (!$review) {
+            Session::flash('alert', 'Không tìm thấy đánh giá cần báo cáo.', 'danger');
+            $this->redirect('place');
+        }
+
+        $placeId = (int) $review['place_id'];
+        $userId = (int) (Session::user()['id'] ?? 0);
+
+        // Không tự báo cáo review của chính mình.
+        if ((int) $review['user_id'] === $userId) {
+            Session::flash('alert', 'Bạn không thể báo cáo đánh giá của chính mình.', 'warning');
+            $this->redirect('place/show/' . $placeId);
+        }
+
+        $reason = trim($_POST['reason'] ?? '');
+        $note = trim($_POST['note'] ?? '');
+
+        if (!array_key_exists($reason, ReviewReport::REASONS)) {
+            Session::flash('alert', 'Vui lòng chọn lý do báo cáo.', 'warning');
+            $this->redirect('place/show/' . $placeId);
+        }
+
+        $created = (new ReviewReport())->create($reviewId, $userId, $reason, $note !== '' ? mb_substr($note, 0, 255) : null);
+        if ($created) {
+            Session::flash('alert', 'Đã gửi báo cáo. Quản trị viên sẽ xem xét đánh giá này, cảm ơn bạn!', 'success');
+        } else {
+            Session::flash('alert', 'Bạn đã báo cáo đánh giá này rồi, quản trị viên đang xem xét.', 'info');
+        }
+        $this->redirect('place/show/' . $placeId);
+    }
+
+    // Endpoint AJAX: bật/tắt dấu "hữu ích" cho một review (/review/helpful/12), trả JSON cho main.js.
+    public function helpful(int|string $id = 0): void
+    {
+        // Chỉ nhận POST, không nhận GET.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Phương thức không hợp lệ.'], 405);
+        }
+
+        // CSRF của AJAX lấy từ POST body hoặc header X-CSRF-Token.
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        if (!Session::verifyCsrf($token)) {
+            $this->json(['success' => false, 'message' => 'Phiên làm việc không hợp lệ (CSRF). Vui lòng tải lại trang.'], 403);
+        }
+
+        $reviewId = (int) $id;
+        $review = $this->reviewModel->findById($reviewId);
+
+        // Chỉ đánh dấu được review đang hiển thị (approved).
+        if (!$review || $review['status'] !== 'approved') {
+            $this->json(['success' => false, 'message' => 'Đánh giá không tồn tại.'], 404);
+        }
+
+        $userId = (int) (Session::user()['id'] ?? 0);
+
+        // Không tự đánh dấu hữu ích cho review của chính mình.
+        if ((int) $review['user_id'] === $userId) {
+            $this->json(['success' => false, 'message' => 'Bạn không thể tự đánh dấu đánh giá của mình.'], 422);
+        }
+
+        $status = $this->reviewModel->toggleHelpful($reviewId, $userId);
+        $this->json([
+            'success'       => true,
+            'status'        => $status,
+            'helpful_count' => $this->reviewModel->getHelpfulCount($reviewId),
+            'message'       => $status === 'added' ? 'Đã đánh dấu đánh giá này là hữu ích.' : 'Đã bỏ đánh dấu hữu ích.',
+        ]);
+    }
+
     // Xóa đánh giá của chính mình (/review/delete/12)
     public function delete(int|string $id = 0): void
     {
