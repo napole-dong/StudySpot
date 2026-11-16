@@ -77,7 +77,12 @@ try {
                                 <i class="bi bi-shop me-1"></i>Quán
                             </a>
                         </li>
-                        <li class="nav-item dropdown">
+                        <li class="nav-item">
+                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>">
+                                <i class="bi bi-people me-1"></i>Người dùng
+                            </a>
+                        </li>
+                         <li class="nav-item dropdown">
                             <!-- Cụm Kiểm duyệt: gộp Đánh giá + Báo cáo cho topbar gọn; huy hiệu trên nút sổ là tổng chờ xử lý của cả hai mục. -->
                             <a class="nav-link dropdown-toggle text-nowrap <?= (str_starts_with($currentUrl, 'admin/review') || str_starts_with($currentUrl, 'admin/report')) ? 'active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-shield-check me-1"></i>Kiểm duyệt<?php if (($pendingReviewBadgeCount + $pendingReportBadgeCount) > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount + $pendingReportBadgeCount ?></span><?php endif; ?>
@@ -86,11 +91,6 @@ try {
                                 <li><a class="dropdown-item <?= str_starts_with($currentUrl, 'admin/review') ? 'active' : '' ?>" href="<?= base_url('admin/review') ?>">Đánh giá<?php if ($pendingReviewBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReviewBadgeCount ?></span><?php endif; ?></a></li>
                                 <li><a class="dropdown-item <?= str_starts_with($currentUrl, 'admin/report') ? 'active' : '' ?>" href="<?= base_url('admin/report') ?>">Báo cáo<?php if ($pendingReportBadgeCount > 0): ?> <span class="badge rounded-pill badge-pending-count"><?= $pendingReportBadgeCount ?></span><?php endif; ?></a></li>
                             </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-nowrap <?= str_starts_with($currentUrl, 'admin/user') ? 'active' : '' ?>" href="<?= base_url('admin/user') ?>">
-                                <i class="bi bi-people me-1"></i>Người dùng
-                            </a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-nowrap <?= (str_starts_with($currentUrl, 'admin/category') || str_starts_with($currentUrl, 'admin/amenity')) ? 'active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
